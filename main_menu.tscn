@@ -1,0 +1,354 @@
+[gd_scene format=3 uid="uid://b4cbbf4bpaorb"]
+
+[ext_resource type="Texture2D" uid="uid://jvgwtqe3wwno" path="res://bg.png" id="1_06t4h"]
+[ext_resource type="Script" uid="uid://dohm1ew8uq7gi" path="res://main_menu.gd" id="1_7vrkn"]
+[ext_resource type="FontFile" uid="uid://clq2e567j5pdy" path="res://assets/fonts/1_Minecraft-Regular.otf" id="3_8qtwp"]
+[ext_resource type="AudioStream" uid="uid://dgawatgbkscts" path="res://Soul of Cinder - Yuka Kitamura.mp3" id="3_fu7sn"]
+[ext_resource type="Script" uid="uid://cb8j5flbrjtse" path="res://audio_control.gd" id="3_jix8l"]
+[ext_resource type="Texture2D" uid="uid://d3o5pvx3jdbe3" path="res://assets/button/button_normal.png" id="3_qe12f"]
+[ext_resource type="Texture2D" uid="uid://cwd4wsdmkv18q" path="res://assets/button/button_hover.png" id="4_8qtwp"]
+[ext_resource type="Script" uid="uid://1al5ra3wd6fr" path="res://fullscreen_control.gd" id="4_glbon"]
+[ext_resource type="AudioStream" uid="uid://bwe2cuheqeb7m" path="res://assets/button/button_click.mp3" id="6_0o4t1"]
+[ext_resource type="FontFile" uid="uid://b2dra3hnk4e7d" path="res://assets/fonts/Minecrafter.Reg.ttf" id="6_dy7ct"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_7vrkn"]
+texture = ExtResource("1_06t4h")
+modulate_color = Color(1.0842435, 1.0842435, 1.0842435, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dy7ct"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_iotk1"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qe12f"]
+texture = ExtResource("4_8qtwp")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8qtwp"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_w44g7"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0o4t1"]
+texture = ExtResource("4_8qtwp")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0k4wn"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cm266"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_j5v2v"]
+texture = ExtResource("4_8qtwp")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_g8g3n"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8u0te"]
+texture = ExtResource("3_qe12f")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_oiatc"]
+texture = ExtResource("4_8qtwp")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_jix8l"]
+color = Color(0.76451474, 0.5077156, 0.27346665, 1)
+thickness = 6
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_glbon"]
+color = Color(0.9870754, 0.26591486, 0, 1)
+thickness = 6
+
+[node name="MainMenu" type="Control" unique_id=295701242]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7vrkn")
+
+[node name="Background" type="Panel" parent="." unique_id=818334382]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_7vrkn")
+
+[node name="MainButtons" type="VBoxContainer" parent="." unique_id=50162196]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -331.0
+offset_top = 35.0
+offset_right = 347.0
+offset_bottom = 225.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Start Game" type="Button" parent="MainButtons" unique_id=1864314850]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/normal = SubResource("StyleBoxTexture_dy7ct")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_iotk1")
+theme_override_styles/hover = SubResource("StyleBoxTexture_qe12f")
+
+[node name="Label" type="Label" parent="MainButtons/Start Game" unique_id=53335467]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.31542173, 0.31542173, 0.31542173, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 30
+text = "Start Game"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Options" type="Button" parent="MainButtons" unique_id=1906325792]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxTexture_8qtwp")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_w44g7")
+theme_override_styles/hover = SubResource("StyleBoxTexture_0o4t1")
+
+[node name="Label" type="Label" parent="MainButtons/Options" unique_id=76226678]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.31542173, 0.31542173, 0.31542173, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 30
+text = "Options"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Quit" type="Button" parent="MainButtons" unique_id=1772524483]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("StyleBoxTexture_0k4wn")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_cm266")
+theme_override_styles/hover = SubResource("StyleBoxTexture_j5v2v")
+
+[node name="Label" type="Label" parent="MainButtons/Quit" unique_id=1632340630]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.31542173, 0.31542173, 0.31542173, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 30
+text = "Quit"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Options" type="Panel" parent="." unique_id=1422397162]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 218.0
+offset_top = 247.0
+offset_right = -197.0
+offset_bottom = -71.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Options" unique_id=1301361670]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 24.0
+offset_bottom = 95.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("6_dy7ct")
+theme_override_font_sizes/font_size = 34
+text = "Options"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Back_options" type="Button" parent="Options" unique_id=1908880957]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.90500003
+anchor_right = 0.5
+anchor_bottom = 0.90500003
+offset_left = -118.5
+offset_top = -30.650024
+offset_right = 134.5
+offset_bottom = 4.3499756
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 25
+theme_override_styles/normal = SubResource("StyleBoxTexture_g8g3n")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_8u0te")
+theme_override_styles/hover = SubResource("StyleBoxTexture_oiatc")
+
+[node name="Label" type="Label" parent="Options/Back_options" unique_id=1961142732]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.31542173, 0.31542173, 0.31542173, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 23
+text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AudioControl" type="HSlider" parent="Options" unique_id=2144091505]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -98.5
+offset_top = -106.0
+offset_right = 112.5
+offset_bottom = 47.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/slider = SubResource("StyleBoxLine_jix8l")
+theme_override_styles/grabber_area = SubResource("StyleBoxLine_glbon")
+theme_override_styles/grabber_area_highlight = SubResource("StyleBoxLine_glbon")
+min_value = -80.0
+max_value = 0.0
+script = ExtResource("3_jix8l")
+audio_bus_name = "Music"
+
+[node name="FullscreenControl" type="CheckButton" parent="Options" unique_id=978038142]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -103.5
+offset_top = 16.0
+offset_right = 104.5
+offset_bottom = 64.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("3_8qtwp")
+theme_override_font_sizes/font_size = 17
+text = "Fullscreen"
+script = ExtResource("4_glbon")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=359330870]
+stream = ExtResource("3_fu7sn")
+bus = &"Music"
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="." unique_id=383823949]
+position = Vector2(245, 359)
+stream = ExtResource("6_0o4t1")
+
+[connection signal="pressed" from="MainButtons/Start Game" to="." method="_on_start_game_pressed"]
+[connection signal="pressed" from="MainButtons/Options" to="." method="_on_options_pressed"]
+[connection signal="pressed" from="MainButtons/Quit" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="Options/Back_options" to="." method="_on_back_options_pressed"]
+[connection signal="value_changed" from="Options/AudioControl" to="Options/AudioControl" method="_on_value_changed"]
+[connection signal="toggled" from="Options/FullscreenControl" to="Options/FullscreenControl" method="_on_toggled"]
