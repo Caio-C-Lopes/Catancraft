@@ -1,2 +1,2 @@
-# Catancraft
+# Craftan
 Catan + Minecraft
