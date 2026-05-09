@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://bm2u12gnool8v"]
+
+[ext_resource type="Script" uid="uid://cj5wl1kyftmed" path="res://game_manager.gd" id="1_80nbo"]
+[ext_resource type="PackedScene" uid="uid://mhcwv5nt40sf" path="res://board.tscn" id="2_e2o6t"]
+
+[node name="Game" type="Node2D" unique_id=916513140]
+script = ExtResource("1_80nbo")
+
+[node name="Board" parent="." unique_id=1385200332 instance=ExtResource("2_e2o6t")]
+position = Vector2(1, 4)
+
+[node name="Control" type="Control" parent="." unique_id=780205186]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 5.0
+offset_top = 1.0
+offset_right = 45.0
+offset_bottom = 41.0
+
+[node name="Button" type="Button" parent="Control" unique_id=1662144680]
+layout_mode = 0
+offset_left = -6.0
+offset_top = -2.0
+offset_right = 101.0
+offset_bottom = 29.0
+text = "Passar turno"
+
+[connection signal="pressed" from="Control/Button" to="." method="_on_button_pressed"]
