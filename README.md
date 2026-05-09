@@ -1,2 +1,2 @@
 # Craftan
-Catan + Minecraft
+Minecraft + Catan
