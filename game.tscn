@@ -17,7 +17,7 @@ offset_top = 1.0
 offset_right = 45.0
 offset_bottom = 41.0
 
-[node name="Button" type="Button" parent="Control" unique_id=1662144680]
+[node name="EndTurnButton" type="Button" parent="Control" unique_id=1662144680]
 layout_mode = 0
 offset_left = -6.0
 offset_top = -2.0
@@ -25,4 +25,13 @@ offset_right = 101.0
 offset_bottom = 29.0
 text = "Passar turno"
 
-[connection signal="pressed" from="Control/Button" to="." method="_on_button_pressed"]
+[node name="RollDiceButton" type="Button" parent="Control" unique_id=1570907007]
+layout_mode = 0
+offset_left = 1026.0
+offset_top = -1.0
+offset_right = 1146.0
+offset_bottom = 30.0
+text = "Rolar Dados"
+
+[connection signal="pressed" from="Control/EndTurnButton" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="Control/RollDiceButton" to="." method="_on_roll_dice_button_pressed"]
