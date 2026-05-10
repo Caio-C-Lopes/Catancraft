@@ -73,5 +73,5 @@ func roll_dice():
 	var dice1 = randi() % 6 + 1
 	var dice2 = randi() % 6 + 1
 	var total = dice1 + dice2
-	
+
 	print("Dados:", dice1, "+", dice2, "=", total)

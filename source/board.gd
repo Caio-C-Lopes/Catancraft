@@ -1,6 +1,5 @@
 extends Node2D
 
-
 enum ResourceType { WOOD, SHEEP, WHEAT, BRICK, ORE, DESERT }
 
 @export_group("Size")
@@ -19,27 +18,33 @@ var HEX_HEIGHT = 2 * HEX_SIZE
 
 var available_resources = [
 	ResourceType.DESERT,
-	ResourceType.WOOD, ResourceType.WOOD, ResourceType.WOOD, ResourceType.WOOD,
-	ResourceType.SHEEP, ResourceType.SHEEP, ResourceType.SHEEP, ResourceType.SHEEP,
-	ResourceType.WHEAT, ResourceType.WHEAT, ResourceType.WHEAT, ResourceType.WHEAT,
-	ResourceType.BRICK, ResourceType.BRICK, ResourceType.BRICK,
-	ResourceType.ORE, ResourceType.ORE, ResourceType.ORE
+	ResourceType.WOOD,
+	ResourceType.WOOD,
+	ResourceType.WOOD,
+	ResourceType.WOOD,
+	ResourceType.SHEEP,
+	ResourceType.SHEEP,
+	ResourceType.SHEEP,
+	ResourceType.SHEEP,
+	ResourceType.WHEAT,
+	ResourceType.WHEAT,
+	ResourceType.WHEAT,
+	ResourceType.WHEAT,
+	ResourceType.BRICK,
+	ResourceType.BRICK,
+	ResourceType.BRICK,
+	ResourceType.ORE,
+	ResourceType.ORE,
+	ResourceType.ORE
 ]
 
-var available_numbers = [
-	2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12
-]
+var available_numbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 
 # Higher chance of coming = Higher size
-var number_font_sizes = {
-	2: 12, 12: 12,
-	3: 14, 11: 14,
-	4: 16, 10: 16,
-	5: 18, 9: 18,
-	6: 24, 8: 24
-}
+var number_font_sizes = {2: 12, 12: 12, 3: 14, 11: 14, 4: 16, 10: 16, 5: 18, 9: 18, 6: 24, 8: 24}
 
 var board_layout = [3, 4, 5, 4, 3]
+
 
 func _ready():
 	randomize()
@@ -47,12 +52,15 @@ func _ready():
 	available_numbers.shuffle()
 	generate_board()
 
+
 func generate_board():
 	var bg_texture = load("res://board_assets/board_bg.png")
 	var bg = Sprite2D.new()
 	bg.texture = bg_texture
 	var viewport_size = get_viewport_rect().size
-	bg.scale = Vector2(viewport_size.x / bg_texture.get_width(), viewport_size.y / bg_texture.get_height())
+	bg.scale = Vector2(
+		viewport_size.x / bg_texture.get_width(), viewport_size.y / bg_texture.get_height()
+	)
 	bg.position = viewport_size / 2.0
 	add_child(bg)
 
@@ -81,6 +89,7 @@ func generate_board():
 
 			create_hex(Vector2(pos_x, pos_y), type, number)
 
+
 func create_hex(pos: Vector2, type: ResourceType, number: int):
 	var hex_container = Node2D.new()
 	hex_container.position = pos
@@ -90,12 +99,18 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 
 	var texture_to_use: Texture2D = null
 	match type:
-		ResourceType.WOOD: texture_to_use = wood_texture
-		ResourceType.SHEEP: texture_to_use = sheep_texture
-		ResourceType.WHEAT: texture_to_use = wheat_texture
-		ResourceType.BRICK: texture_to_use = brick_texture
-		ResourceType.ORE: texture_to_use = ore_texture
-		ResourceType.DESERT: texture_to_use = desert_texture
+		ResourceType.WOOD:
+			texture_to_use = wood_texture
+		ResourceType.SHEEP:
+			texture_to_use = sheep_texture
+		ResourceType.WHEAT:
+			texture_to_use = wheat_texture
+		ResourceType.BRICK:
+			texture_to_use = brick_texture
+		ResourceType.ORE:
+			texture_to_use = ore_texture
+		ResourceType.DESERT:
+			texture_to_use = desert_texture
 
 	if texture_to_use != null:
 		var sprite = Sprite2D.new()
@@ -153,4 +168,3 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		hex_container.add_child(label)
 
 	add_child(hex_container)
-	
