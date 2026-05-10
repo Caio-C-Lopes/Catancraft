@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://mhcwv5nt40sf"]
 
-[ext_resource type="Script" uid="uid://c28u61ytk4ow7" path="res://board.gd" id="1_p0ybc"]
+[ext_resource type="Script" uid="uid://c28u61ytk4ow7" path="res://source/board.gd" id="1_p0ybc"]
 [ext_resource type="Texture2D" uid="uid://cowuy8qaufs04" path="res://board_assets/WOOD.png" id="2_rq8yp"]
 [ext_resource type="Texture2D" uid="uid://31qetgexuy1l" path="res://board_assets/SHEEP.png" id="3_rq8yp"]
 [ext_resource type="Texture2D" uid="uid://b3xlgmrsnqo32" path="res://board_assets/WHEAT.png" id="4_tngv2"]

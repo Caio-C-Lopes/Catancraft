@@ -1,0 +1,54 @@
+name: format and gdtests 
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**.gd'         
+      - '**.tscn'      
+      - '**.tres'      
+      - 'project.godot'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**.gd'
+      - '**.tscn'
+      - '**.tres'
+      - 'project.godot'
+
+jobs:
+  static-checks:
+    name: 'formatting checks'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup GDScript Toolkit
+        uses: Scony/godot-gdscript-toolkit@master 
+      
+      - name: Check formatting
+        run: gdformat --check source/
+      
+
+  tests: 
+    name: Run GUT Tests
+    needs: static-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.1
+
+          
+      - name: Generate Godot Import Cache
+        run: |
+          godot --headless --editor --quit || true
+          godot --headless --import || true
+        
+      - name: Execute GUT Tests
+        uses: ceceppa/godot-gut-ci@main
+        with:
+          godot_version: 4.6.1
