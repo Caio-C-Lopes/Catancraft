@@ -1,9 +1,10 @@
 extends Node2D
 
-var players = ["Jogador 1", "Bot 1", "Bot 2", "Bot 3"] # Change just to run CI job
+var players = ["Jogador 1", "Bot 1", "Bot 2", "Bot 3"]  # Change just to run CI job
 var current_player_index = 0
 
 @onready var button = $Control/Button
+
 
 func _ready():
 	start_turn()

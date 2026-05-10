@@ -1,6 +1,5 @@
 extends Node2D
 
-
 enum ResourceType { WOOD, SHEEP, WHEAT, BRICK, ORE, DESERT }
 
 @export_group("Size")
@@ -18,7 +17,7 @@ var HEX_WIDTH = sqrt(3) * HEX_SIZE
 var HEX_HEIGHT = 2 * HEX_SIZE
 
 var resource_colors = {
-# I'm colorblind, seems ok to me.
+	# I'm colorblind, seems ok to me.
 	ResourceType.WOOD: Color(0.13, 0.54, 0.13),
 	ResourceType.SHEEP: Color(0.56, 0.93, 0.56),
 	ResourceType.WHEAT: Color(0.96, 0.87, 0.27),
@@ -29,27 +28,33 @@ var resource_colors = {
 
 var available_resources = [
 	ResourceType.DESERT,
-	ResourceType.WOOD, ResourceType.WOOD, ResourceType.WOOD, ResourceType.WOOD,
-	ResourceType.SHEEP, ResourceType.SHEEP, ResourceType.SHEEP, ResourceType.SHEEP,
-	ResourceType.WHEAT, ResourceType.WHEAT, ResourceType.WHEAT, ResourceType.WHEAT,
-	ResourceType.BRICK, ResourceType.BRICK, ResourceType.BRICK,
-	ResourceType.ORE, ResourceType.ORE, ResourceType.ORE
+	ResourceType.WOOD,
+	ResourceType.WOOD,
+	ResourceType.WOOD,
+	ResourceType.WOOD,
+	ResourceType.SHEEP,
+	ResourceType.SHEEP,
+	ResourceType.SHEEP,
+	ResourceType.SHEEP,
+	ResourceType.WHEAT,
+	ResourceType.WHEAT,
+	ResourceType.WHEAT,
+	ResourceType.WHEAT,
+	ResourceType.BRICK,
+	ResourceType.BRICK,
+	ResourceType.BRICK,
+	ResourceType.ORE,
+	ResourceType.ORE,
+	ResourceType.ORE
 ]
 
-var available_numbers = [
-	2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12
-]
+var available_numbers = [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12]
 
 # Higher chance of coming = Higher size
-var number_font_sizes = {
-	2: 12, 12: 12, 
-	3: 14, 11: 14, 
-	4: 16, 10: 16,
-	5: 18, 9: 18,
-	6: 24, 8: 24  
-}
+var number_font_sizes = {2: 12, 12: 12, 3: 14, 11: 14, 4: 16, 10: 16, 5: 18, 9: 18, 6: 24, 8: 24}
 
 var board_layout = [3, 4, 5, 4, 3]
+
 
 func _ready():
 	randomize()
@@ -57,10 +62,11 @@ func _ready():
 	available_numbers.shuffle()
 	generate_board()
 
+
 func generate_board():
 	var resource_index = 0
 	var number_index = 0
-	
+
 	var screen_center = get_viewport_rect().size / 2.0
 	var grid_start_x = screen_center.x - (2.5 * HEX_WIDTH)
 	var grid_start_y = screen_center.y - (2 * HEX_HEIGHT * 0.75)
@@ -75,7 +81,7 @@ func generate_board():
 
 			var type = available_resources[resource_index]
 			resource_index += 1
-			
+
 			var number = 0
 			if type != ResourceType.DESERT:
 				number = available_numbers[number_index]
@@ -83,21 +89,28 @@ func generate_board():
 
 			create_hex(Vector2(pos_x, pos_y), type, number)
 
+
 func create_hex(pos: Vector2, type: ResourceType, number: int):
 	var hex_container = Node2D.new()
 	hex_container.position = pos
-	
+
 	hex_container.set_meta("resource_type", type)
 	hex_container.set_meta("dice_number", number)
 
 	var texture_to_use: Texture2D = null
 	match type:
-		ResourceType.WOOD: texture_to_use = wood_texture
-		ResourceType.SHEEP: texture_to_use = sheep_texture
-		ResourceType.WHEAT: texture_to_use = wheat_texture
-		ResourceType.BRICK: texture_to_use = brick_texture
-		ResourceType.ORE: texture_to_use = ore_texture
-		ResourceType.DESERT: texture_to_use = desert_texture
+		ResourceType.WOOD:
+			texture_to_use = wood_texture
+		ResourceType.SHEEP:
+			texture_to_use = sheep_texture
+		ResourceType.WHEAT:
+			texture_to_use = wheat_texture
+		ResourceType.BRICK:
+			texture_to_use = brick_texture
+		ResourceType.ORE:
+			texture_to_use = ore_texture
+		ResourceType.DESERT:
+			texture_to_use = desert_texture
 
 	if texture_to_use != null:
 		var sprite = Sprite2D.new()
@@ -122,7 +135,7 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 
 		hex_container.add_child(polygon)
 		hex_container.add_child(outline)
-	
+
 	if number > 0:
 		var token_bg = Polygon2D.new()
 		var circle_points = PackedVector2Array()
@@ -132,23 +145,23 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		token_bg.polygon = circle_points
 		token_bg.color = Color.WHITE
 		hex_container.add_child(token_bg)
-		
+
 		var label = Label.new()
 		label.text = str(number)
-		
+
 		if number == 6 or number == 8:
 			label.add_theme_color_override("font_color", Color.DARK_RED)
 		else:
 			label.add_theme_color_override("font_color", Color.BLACK)
-			
+
 		var font_size = number_font_sizes[number]
 		label.add_theme_font_size_override("font_size", font_size)
-		
+
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.custom_minimum_size = Vector2(40, 40)
 		label.position = Vector2(-20, -20)
-		
+
 		hex_container.add_child(label)
 
 	add_child(hex_container)
