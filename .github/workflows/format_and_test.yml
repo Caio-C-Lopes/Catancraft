@@ -1,4 +1,4 @@
-name: lint and gdtests 
+name: format and gdtests 
 on:
   push:
     branches: [ "main" ]
