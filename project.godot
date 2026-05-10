@@ -19,6 +19,13 @@ config/icon="res://icon.svg"
 
 buses/default_bus_layout="uid://dkls8wtucroe8"
 
+[debug]
+
+gdscript/warnings/directory_rules={
+"res://addons": 0,
+"res://addons/gut": 0
+}
+
 [display]
 
 window/size/mode=3
