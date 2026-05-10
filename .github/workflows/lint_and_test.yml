@@ -37,6 +37,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Generate Godot Import Cache
+        run: |
+          godot --headless --editor --quit || true
+          godot --headless --import || true
         
       - name: Execute GUT Tests
         uses: ceceppa/godot-gut-ci@main
