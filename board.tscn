@@ -1,6 +1,18 @@
 [gd_scene format=3 uid="uid://mhcwv5nt40sf"]
 
 [ext_resource type="Script" uid="uid://c28u61ytk4ow7" path="res://board.gd" id="1_p0ybc"]
+[ext_resource type="Texture2D" uid="uid://cowuy8qaufs04" path="res://board_assets/WOOD.png" id="2_rq8yp"]
+[ext_resource type="Texture2D" uid="uid://31qetgexuy1l" path="res://board_assets/SHEEP.png" id="3_rq8yp"]
+[ext_resource type="Texture2D" uid="uid://b3xlgmrsnqo32" path="res://board_assets/WHEAT.png" id="4_tngv2"]
+[ext_resource type="Texture2D" uid="uid://dwv766jsd422j" path="res://board_assets/BRICK.png" id="5_c4ttu"]
+[ext_resource type="Texture2D" uid="uid://djd56q3j2t1nv" path="res://board_assets/STONE.png" id="6_xhrpu"]
+[ext_resource type="Texture2D" uid="uid://blhj26gar8pkw" path="res://board_assets/DESERT.png" id="7_nk23n"]
 
 [node name="Board" type="Node2D" unique_id=1385200332]
 script = ExtResource("1_p0ybc")
+wood_texture = ExtResource("2_rq8yp")
+sheep_texture = ExtResource("3_rq8yp")
+wheat_texture = ExtResource("4_tngv2")
+brick_texture = ExtResource("5_c4ttu")
+ore_texture = ExtResource("6_xhrpu")
+desert_texture = ExtResource("7_nk23n")
