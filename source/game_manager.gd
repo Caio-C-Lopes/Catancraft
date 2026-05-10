@@ -22,7 +22,7 @@ func start_turn():
 	var player = players[current_player_index]
 	print("Turno de: ", player)
 
-	if player == "Jogador":
+	if player == "Jogador 1":
 		button.disabled = false
 	else:
 		button.disabled = true

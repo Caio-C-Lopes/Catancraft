@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0188obwo0a8l"
-path="res://.godot/imported/background.jpg-3c1ee7bbff6a1283595ccc69bb1d6acd.ctex"
+uid="uid://cimkjc3by76hs"
+path="res://.godot/imported/luffy xicara2.jpg-c315c9450b9275422031de4d8bad49cf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/background.jpg"
-dest_files=["res://.godot/imported/background.jpg-3c1ee7bbff6a1283595ccc69bb1d6acd.ctex"]
+source_file="res://assets/luffy xicara2.jpg"
+dest_files=["res://.godot/imported/luffy xicara2.jpg-c315c9450b9275422031de4d8bad49cf.ctex"]
 
 [params]
 
