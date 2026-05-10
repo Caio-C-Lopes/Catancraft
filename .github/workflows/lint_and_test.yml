@@ -37,6 +37,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.6.0
+
+          
       - name: Generate Godot Import Cache
         run: 
           godot --headless --editor --quit || true
@@ -45,4 +51,4 @@ jobs:
       - name: Execute GUT Tests
         uses: ceceppa/godot-gut-ci@main
         with:
-          godot_version: 4.2.2
+          godot_version: 4.6.0
