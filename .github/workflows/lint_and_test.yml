@@ -1,0 +1,44 @@
+name: lint and gdtests 
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**.gd'         
+      - '**.tscn'      
+      - '**.tres'      
+      - 'project.godot'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**.gd'
+      - '**.tscn'
+      - '**.tres'
+      - 'project.godot'
+
+jobs:
+  static-checks:
+    name: 'lint checks'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup GDScript Toolkit
+        uses: Scony/godot-gdscript-toolkit@master 
+      
+      - name: Check formatting
+        run: gdformat --check source/
+      
+      - name: Run linter
+        run: gdlint source/
+
+  tests: 
+    name: Run GUT Tests
+    needs: lint-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Execute GUT Tests
+        uses: ceceppa/godot-gut-ci@main
