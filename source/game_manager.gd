@@ -1,6 +1,6 @@
 extends Node2D
 
-var players = ["Jogador", "Bot 1", "Bot 2", "Bot 3"]
+var players = ["Jogador 1", "Bot 1", "Bot 2", "Bot 3"]
 var current_player_index = 0
 var has_rolled_dice = false
 
