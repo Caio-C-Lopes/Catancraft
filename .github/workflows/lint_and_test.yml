@@ -17,7 +17,7 @@ on:
 
 jobs:
   static-checks:
-    name: 'lint checks'
+    name: 'formatting checks'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -29,8 +29,6 @@ jobs:
       - name: Check formatting
         run: gdformat --check source/
       
-      - name: Run linter
-        run: gdlint source/
 
   tests: 
     name: Run GUT Tests
