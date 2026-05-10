@@ -34,7 +34,7 @@ jobs:
 
   tests: 
     name: Run GUT Tests
-    needs: lint-checks
+    needs: static-checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
