@@ -40,3 +40,5 @@ jobs:
         
       - name: Execute GUT Tests
         uses: ceceppa/godot-gut-ci@main
+        with:
+          godot_version: 4.2.2
