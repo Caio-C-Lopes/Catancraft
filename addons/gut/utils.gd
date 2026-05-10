@@ -43,7 +43,7 @@ enum TREAT_AS {
 }
 
 static var class_ref_by_name = {} :
-	get():
+	get:
 		if(class_ref_by_name == {}):
 			class_ref_by_name = _create_class_dictionary()
 		return class_ref_by_name;
