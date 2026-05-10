@@ -1,6 +1,5 @@
-extends Logger
+extends "res://addons/gut/logger.gd"
 class_name GutErrorTracker
-
 # ------------------------------------------------------------------------------
 # Static methods wrap around add/remove logger to make disabling the logger
 # easier and to help avoid misusing add/remove in tests.  If GUT needs to
