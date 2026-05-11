@@ -24,7 +24,8 @@ func remove_resource(resource: String, amount: int):
 	if resources.has(resource):
 		resources[resource] -= amount
 		
-func can_afford(cost: Dict):
+func can_afford(cost: Dictionary):
 	for i in cost:
-		if resources
-		
+		if resources[i] < cost[i]:
+			return false
+	return true
