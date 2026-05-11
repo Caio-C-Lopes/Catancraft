@@ -1,8 +1,13 @@
 class_name Player
+extends Resource
 
-var player_name: String
-var player_color: Color
-var ponits: int
+@export var player_name: String
+@export var player_color: Color
+@export var ponits: int = 0
+
+var roads_remaining: int = 15
+var settlements_remaining: int = 5
+var cities_remaining: int = 4
 
 var resources := {"wood": 0, "brick": 0, "wheat": 0, "sheep": 0, "ore": 0}
 
