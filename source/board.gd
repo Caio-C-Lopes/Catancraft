@@ -54,7 +54,7 @@ func _ready():
 
 
 func generate_board():
-	var bg_texture = load("res://board_assets/board_bg.png")
+	var bg_texture = load("res://board_assets/BOARD_BG.png")
 	var bg = Sprite2D.new()
 	bg.texture = bg_texture
 	var viewport_size = get_viewport_rect().size
