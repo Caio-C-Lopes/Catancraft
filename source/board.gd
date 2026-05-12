@@ -124,7 +124,8 @@ func shuffle_valid_board():
 
 
 func generate_board():
-	var bg_texture = load("res://board_assets/BOARD_BG.png")
+	var bg_index = randi() % 9 + 1
+	var bg_texture = load("res://board_assets/BOARD_BG_%d.png" % bg_index)
 	var bg = Sprite2D.new()
 	bg.texture = bg_texture
 	var viewport_size = get_viewport_rect().size
