@@ -278,12 +278,7 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		hex_container.add_child(label)
 
 	add_child(hex_container)
-<<<<<<< Updated upstream
-
-
-=======
 	
->>>>>>> Stashed changes
 func create_village_spaces(pos: Vector2):
 	var area = Area2D.new()
 	var collision = CollisionShape2D.new()
