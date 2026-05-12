@@ -163,7 +163,7 @@ func generate_board():
 func create_hex(pos: Vector2, type: ResourceType, number: int):
 	var hex_container = Node2D.new()
 	hex_container.position = pos
-	
+
 	var local_points = PackedVector2Array()
 	var global_points = PackedVector2Array()
 
@@ -278,7 +278,8 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		hex_container.add_child(label)
 
 	add_child(hex_container)
-	
+
+
 func create_village_spaces(pos: Vector2):
 	var area = Area2D.new()
 	var collision = CollisionShape2D.new()
