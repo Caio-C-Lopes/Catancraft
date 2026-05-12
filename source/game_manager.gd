@@ -5,6 +5,7 @@ signal dice_rolled(player: Player, dice1: int, dice2: int)
 var players: Array[Player] = []
 var current_player_index: int = 0
 var has_rolled_dice: bool = false
+var waiting_robber_move: bool = false
 
 @onready var end_turn_button = $Control/EndTurnButton
 @onready var dice_button = $Control/RollDiceButton
@@ -81,6 +82,26 @@ func roll_dice():
 
 	dice_rolled.emit(player, dice1, dice2)
 	dice_log.add_roll_entry(player, dice1, dice2)
+	on_dice_rolled(7)
+
+
+func on_dice_rolled(value: int):
+	if value == 7:
+		waiting_robber_move = true
+		robber_movement()
+	else:
+		resources_distribution(value)
+
+
+func robber_movement():
+	waiting_robber_move = true
+	print("Clique em um hexágono para mover o ladrão e bloquear os recursos.")
+	var board = find_child("Board")
+	if board:
+		board.show_robber_options()
+
+func resources_distribution(value: int):
+	print("TESTE")
 
 
 func village_construction_check(pos: Vector2, player_id: int, preparation: bool) -> bool:
