@@ -2,9 +2,17 @@
 
 [ext_resource type="Script" uid="uid://cj5wl1kyftmed" path="res://source/game_manager.gd" id="1_80nbo"]
 [ext_resource type="PackedScene" uid="uid://mhcwv5nt40sf" path="res://board.tscn" id="2_e2o6t"]
+[ext_resource type="Texture2D" uid="uid://c33yuw4dmkxoh" path="res://dice_assets/1.png" id="2_vef74"]
+[ext_resource type="Script" uid="uid://b7hh2fbrpglj" path="res://dice_log.gd" id="3_feb5d"]
+[ext_resource type="Texture2D" uid="uid://bgi4otb2pfxl3" path="res://dice_assets/2.png" id="3_hve3p"]
+[ext_resource type="Texture2D" uid="uid://qi6idr5w7sgy" path="res://dice_assets/3.png" id="4_mfdv2"]
+[ext_resource type="Texture2D" uid="uid://wola8xh4utyw" path="res://dice_assets/4.png" id="5_iotsf"]
+[ext_resource type="Texture2D" uid="uid://dkxuv22dkvagp" path="res://dice_assets/5.png" id="6_lc2xo"]
+[ext_resource type="Texture2D" uid="uid://bc5ibdl36oh2x" path="res://dice_assets/6.png" id="7_215e1"]
 
 [node name="Game" type="Node2D" unique_id=916513140]
 script = ExtResource("1_80nbo")
+dice_textures = Array[Texture2D]([ExtResource("2_vef74"), ExtResource("3_hve3p"), ExtResource("4_mfdv2"), ExtResource("5_iotsf"), ExtResource("6_lc2xo"), ExtResource("7_215e1")])
 
 [node name="Board" parent="." unique_id=1385200332 instance=ExtResource("2_e2o6t")]
 position = Vector2(1, 4)
@@ -32,6 +40,27 @@ offset_top = -1.0
 offset_right = 1146.0
 offset_bottom = 30.0
 text = "Rolar Dados"
+
+[node name="DiceLog" type="PanelContainer" parent="Control" unique_id=1741974377]
+layout_mode = 1
+anchors_preset = -1
+offset_left = 945.0
+offset_top = 40.0
+offset_right = 1145.0
+offset_bottom = 200.0
+script = ExtResource("3_feb5d")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/DiceLog" unique_id=1609067474]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Control/DiceLog/VBoxContainer" unique_id=873383973]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Control/DiceLog/VBoxContainer" unique_id=947098479]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/DiceLog/VBoxContainer/ScrollContainer" unique_id=653541155]
+layout_mode = 2
 
 [connection signal="pressed" from="Control/EndTurnButton" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="Control/RollDiceButton" to="." method="_on_roll_dice_button_pressed"]
