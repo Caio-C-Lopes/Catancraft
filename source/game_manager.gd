@@ -82,7 +82,7 @@ func roll_dice():
 
 	dice_rolled.emit(player, dice1, dice2)
 	dice_log.add_roll_entry(player, dice1, dice2)
-	on_dice_rolled(7)
+	on_dice_rolled(total)
 
 
 func on_dice_rolled(value: int):
