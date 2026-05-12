@@ -75,3 +75,108 @@ func roll_dice():
 	var total = dice1 + dice2
 	
 	print("Dados:", dice1, "+", dice2, "=", total)
+	
+func village_construction_check(pos: Vector2, player_id:int, preparation: bool) -> bool:
+	var key = Vector2(round(pos.x), round(pos.y))
+	
+	if BoardState.vertices[key]["owner"] != null:
+		print("Este local está ocupado")
+		return false
+	
+	for edge_key in BoardState.edges:
+		var edge = BoardState.edges[edge_key]
+		var neighbor = null
+		
+		if edge["a_vertice"] == key:
+			neighbor = edge["b_vertice"]
+		elif edge["b_vertice"] == key:
+			neighbor = edge["b_vertice"]
+		
+		if neighbor != null:
+			if BoardState.vertices[neighbor]["owner"] != null:
+				print("Muito perto de outra aldeia/cidade")
+				return false
+				
+	if not preparation:
+		var flag = false
+				
+		for edge_key in BoardState.edges:
+			var edge = BoardState.edges[edge_key]
+			if edge["a_vertice"] == key or edge["b_vertice"] == key:
+				if edge["owner"] == player_id:
+					flag = true
+					break
+		
+		if not flag:
+			print("Você não tem estrada para este vértice")
+			return false
+					
+	return true
+	
+
+func road_construction_check(pos: Vector2, player_id: int) -> bool:
+	var edge_key = Vector2(round(pos.x), round(pos.y))
+	
+	if BoardState.edges[edge_key]["owner"] != null:
+		print("Esta via já tem dono")
+		return false
+		
+	var a_vertice = BoardState.edges[edge_key]["a_vertice"]
+	var b_vertice = BoardState.edges[edge_key]["b_vertice"]
+	
+	if BoardState.vertices[a_vertice]["owner"] == player_id or BoardState.vertices[b_vertice]["owner"] == player_id:
+		return true
+		
+	for next_key in BoardState.edges:
+		if next_key == edge_key:
+			continue
+			
+		var next_edge = BoardState.edges[next_key]
+		
+		if next_edge["owner"] == player_id:
+			if (next_edge["a_vertice"] == a_vertice or next_edge["a_vertice"] == b_vertice or 
+				next_edge["b_vertice"] == a_vertice or next_edge["b_vertice"] == b_vertice):
+				return true
+
+	print("A estrada tem de estar conectada a uma construção sua!")
+	return false
+	
+func _on_selected_vertice(pos: Vector2):
+	#do: The player needs to roll the dice firt
+	var current_player = current_player_index
+	var preparation = false
+	var key = Vector2(round(pos.x), round(pos.y))
+	var vertice = BoardState.vertices[key]
+	
+	if vertice["owner"] == null:
+		if village_construction_check(pos, current_player, preparation):
+			vertice["owner"] = current_player
+			vertice["type"] = BoardState.BuildingType.VILLAGE
+			
+			print("Aldeia construída no ponto ", key)
+			
+	if vertice["owner"] != null:
+		if city_construction_check(pos, current_player):
+			vertice["type"] = BoardState.BuildingType.CITY 
+			
+			print("Cidade construida no ponto ", key)
+	
+func _on_selected_edge(pos: Vector2):
+	#do: The player needs to roll the dice firt
+	var current_player = current_player_index
+	
+	if road_construction_check(pos, current_player):
+		var key = Vector2(round(pos.x), round(pos.y))
+		BoardState.vertices[key]["owner"] = current_player
+		print("Estrada construída no ponto ", key)
+		
+func city_construction_check(pos: Vector2, player_id: int) -> bool:
+	var key = Vector2(round(pos.x), round(pos.y))
+	var vertice = BoardState.vertices[key]
+	
+	if vertice["owner"] == player_id and vertice["type"] == BoardState.BuildingType.VILLAGE:
+		return true
+
+	return false
+	
+	

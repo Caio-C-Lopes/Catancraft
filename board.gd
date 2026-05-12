@@ -17,6 +17,9 @@ enum ResourceType { WOOD, SHEEP, WHEAT, BRICK, ORE, DESERT }
 var HEX_WIDTH = sqrt(3) * HEX_SIZE
 var HEX_HEIGHT = 2 * HEX_SIZE
 
+signal selected_vertice(pos: Vector2)
+signal selected_edge(pos: Vector2)
+
 var available_resources = [
 	ResourceType.DESERT,
 	ResourceType.WOOD, ResourceType.WOOD, ResourceType.WOOD, ResourceType.WOOD,
@@ -84,6 +87,28 @@ func generate_board():
 func create_hex(pos: Vector2, type: ResourceType, number: int):
 	var hex_container = Node2D.new()
 	hex_container.position = pos
+	
+	var local_points = PackedVector2Array()
+	var global_points = PackedVector2Array()
+	
+	for i in range(6):
+		var angle_rad = deg_to_rad(60 * i - 30)
+		var local_point = (Vector2(cos(angle_rad), sin(angle_rad)) * HEX_SIZE)
+		local_points.append(local_point)
+		
+		var global_point = pos + local_point
+		global_points.append(global_point)
+		BoardState.register_vertices(global_point)
+		create_village_spaces(global_point)
+		
+		var key = Vector2(round(global_point.x), round(global_point.y))
+		BoardState.vertices[key]["links"].append(hex_container)
+
+	for i in range(6):
+		var curent_vertice = global_points[i]
+		var next_vertice = global_points[(i + 1) % 6]
+		BoardState.register_edges(curent_vertice, next_vertice)
+		create_road_spaces(curent_vertice, next_vertice)
 
 	hex_container.set_meta("resource_type", type)
 	hex_container.set_meta("dice_number", number)
@@ -106,15 +131,11 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		hex_container.add_child(sprite)
 	else:
 		var polygon = Polygon2D.new()
-		var points = PackedVector2Array()
-		for i in range(6):
-			var angle_rad = deg_to_rad(60 * i - 30)
-			points.append(Vector2(cos(angle_rad), sin(angle_rad)) * HEX_SIZE)
-		polygon.polygon = points
+		polygon.polygon = local_points
 
 		var outline = Line2D.new()
-		var outline_points = points.duplicate()
-		outline_points.append(points[0])
+		var outline_points = local_points.duplicate()
+		outline_points.append(local_points[0])
 		outline.points = outline_points
 		outline.width = 4.0
 		outline.default_color = Color(0.1, 0.1, 0.1)
@@ -154,3 +175,46 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 
 	add_child(hex_container)
 	
+func create_village_spaces(pos: Vector2):
+	var area = Area2D.new()
+	var collision = CollisionShape2D.new()
+	var shape = CircleShape2D.new()
+	
+	shape.radius = 10.0
+	collision.shape = shape
+	area.position = pos
+	area.add_child(collision)
+	
+	#do: Take out the duplicates cordinates 
+
+	area.input_event.connect(village_click_check.bind(pos))
+	
+	add_child(area)
+
+@warning_ignore("unused_parameter")
+func village_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		print("O jogador clicou no vertice ", pos)
+		selected_vertice.emit(pos)
+		
+func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
+	var center = (a_vertice + b_vertice) / 2.0
+	var area = Area2D.new()
+	var collision = CollisionShape2D.new()
+	
+	var shape = CircleShape2D.new()
+	shape.radius = 10.0 
+	collision.shape = shape
+	
+	area.position = center
+	area.add_child(collision)
+	
+	area.input_event.connect(road_click_check.bind(center))
+	
+	add_child(area)
+
+@warning_ignore("unused_parameter")
+func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		print("O jogador clicou na aresta ", pos)
+		selected_edge.emit(pos)
