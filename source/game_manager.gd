@@ -21,11 +21,10 @@ func _ready():
 func _setup_players():
 	players = [
 		Player.new("Jogador 1", Color(0.88, 0.37, 0.37)),
-		Player.new("Bot 1",     Color(0.37, 0.63, 0.88)),
-		Player.new("Bot 2",     Color(0.43, 0.78, 0.43)),
-		Player.new("Bot 3",     Color(0.88, 0.75, 0.31)),
+		Player.new("Bot 1", Color(0.37, 0.63, 0.88)),
+		Player.new("Bot 2", Color(0.43, 0.78, 0.43)),
+		Player.new("Bot 3", Color(0.88, 0.75, 0.31)),
 	]
-
 	dice_log.setup_players(players)
 	dice_log.setup_dice_textures(dice_textures)
 
