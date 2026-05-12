@@ -9,6 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://wola8xh4utyw" path="res://dice_assets/4.png" id="5_iotsf"]
 [ext_resource type="Texture2D" uid="uid://dkxuv22dkvagp" path="res://dice_assets/5.png" id="6_lc2xo"]
 [ext_resource type="Texture2D" uid="uid://bc5ibdl36oh2x" path="res://dice_assets/6.png" id="7_215e1"]
+[ext_resource type="Texture2D" uid="uid://bfn6cmu4eqld" path="res://board_assets/ROBBER.png" id="10_mfdv2"]
+[ext_resource type="Script" uid="uid://chl1ffl0modrq" path="res://source/robber.gd" id="11_iotsf"]
 
 [node name="Game" type="Node2D" unique_id=916513140]
 script = ExtResource("1_80nbo")
@@ -61,6 +63,14 @@ layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Control/DiceLog/VBoxContainer/ScrollContainer" unique_id=653541155]
 layout_mode = 2
+
+[node name="Robber" type="Sprite2D" parent="." unique_id=2129974697]
+z_index = 5
+position = Vector2(80, 57)
+scale = Vector2(0.04634382, 0.043062203)
+texture = ExtResource("10_mfdv2")
+offset = Vector2(-650, 0)
+script = ExtResource("11_iotsf")
 
 [connection signal="selected_edge" from="Board" to="." method="_on_selected_edge"]
 [connection signal="selected_vertice" from="Board" to="." method="_on_selected_vertice"]

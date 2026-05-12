@@ -160,10 +160,38 @@ func generate_board():
 
 			create_hex(Vector2(pos_x, pos_y), type, number)
 
+	for child in get_children():
+		if (
+			child.has_meta("resource_type")
+			and child.get_meta("resource_type") == ResourceType.DESERT
+		):
+			var deserto_pos = child.position
+			BoardState.set_initial_robber_pos(deserto_pos)
+
+			var robber_node = get_tree().current_scene.find_child("Robber", true, false)
+
+			if robber_node:
+				robber_node.moving_to(deserto_pos, true)
+				print("Ladrão posicionado no deserto em: ", deserto_pos)
+			else:
+				print("AVISO: Não encontrei o nó visual chamado Robber na cena!")
+			break
+
 
 func create_hex(pos: Vector2, type: ResourceType, number: int):
 	var hex_container = Node2D.new()
 	hex_container.position = pos
+
+	var area_hex = Area2D.new()
+	var collision_hex = CollisionShape2D.new()
+	var shape_hex = RectangleShape2D.new()
+	shape_hex.size = Vector2(HEX_WIDTH * 0.8, HEX_HEIGHT * 0.5)
+
+	area_hex.add_child(collision_hex)
+	collision_hex.shape = shape_hex
+	hex_container.add_child(area_hex)
+
+	area_hex.input_event.connect(_on_hex_input_event.bind(pos, type))
 
 	var local_points = PackedVector2Array()
 	var global_points = PackedVector2Array()
@@ -305,3 +333,62 @@ func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Ve
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		print("O jogador clicou na aresta ", pos)
 		selected_edge.emit(pos)
+
+
+func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var gm = get_parent()
+
+		if gm.waiting_robber_move:
+			var clicked_pos = Vector2(round(pos.x), round(pos.y))
+
+			if clicked_pos == BoardState.robber_hex_pos:
+				print("Ação inválida: O ladrão já está neste hexágono! Escolha outro.")
+				return
+
+			var robber_node = get_tree().current_scene.find_child("Robber", true, false)
+			if robber_node:
+				robber_node.moving_to(pos, false)
+
+			BoardState.update_robber_position(pos)
+
+			hide_robber_options()
+
+			gm.waiting_robber_move = false
+			print("Ladrão movido com sucesso. Jogo liberado!")
+
+
+func show_robber_options():
+	var current_robber_pos = BoardState.robber_hex_pos
+
+	for child in get_children():
+		if child is Node2D and child.has_meta("resource_type"):
+			var hex_pos = Vector2(round(child.position.x), round(child.position.y))
+
+			if hex_pos != current_robber_pos:
+				var highlight = Polygon2D.new()
+
+				var circle_points = PackedVector2Array()
+				for i in range(32):
+					var angle = (i / 32.0) * TAU
+					circle_points.append(Vector2(cos(angle), sin(angle)) * 30.0)
+
+				highlight.polygon = circle_points
+				highlight.color = Color(1, 1, 1, 0.3)
+				highlight.add_to_group("hex_highlights")
+				child.add_child(highlight)
+
+				var area = Area2D.new()
+				var collision = CollisionShape2D.new()
+				var shape = CircleShape2D.new()
+				shape.radius = 30.0
+				collision.shape = shape
+				area.add_child(collision)
+				highlight.add_child(area)
+
+				area.mouse_entered.connect(func(): highlight.color = Color(1, 0, 0, 0.5))
+				area.mouse_exited.connect(func(): highlight.color = Color(1, 1, 1, 0.3))
+
+
+func hide_robber_options():
+	get_tree().call_group("hex_highlights", "queue_free")

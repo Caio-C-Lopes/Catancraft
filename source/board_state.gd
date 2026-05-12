@@ -4,6 +4,16 @@ enum BuildingType { NONE, VILLAGE, CITY }
 
 var vertices: Dictionary = {}
 var edges: Dictionary = {}
+var robber_hex_pos: Vector2
+
+
+func set_initial_robber_pos(pos: Vector2):
+	robber_hex_pos = Vector2(round(pos.x), round(pos.y))
+
+
+func update_robber_position(pos: Vector2):
+	robber_hex_pos = Vector2(round(pos.x), round(pos.y))
+	print("Estado do Tabuleiro: Ladrão agora está em ", robber_hex_pos)
 
 
 func register_vertices(pos: Vector2):
