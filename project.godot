@@ -21,7 +21,11 @@ buses/default_bus_layout="uid://dkls8wtucroe8"
 
 [autoload]
 
+<<<<<<< Updated upstream
 BoardState="*uid://1duulihndb74"
+=======
+BoardState="*uid://ctoody0rlkilc"
+>>>>>>> Stashed changes
 
 [display]
 

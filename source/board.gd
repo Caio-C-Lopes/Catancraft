@@ -163,6 +163,28 @@ func generate_board():
 func create_hex(pos: Vector2, type: ResourceType, number: int):
 	var hex_container = Node2D.new()
 	hex_container.position = pos
+	
+	var local_points = PackedVector2Array()
+	var global_points = PackedVector2Array()
+
+	for i in range(6):
+		var angle_rad = deg_to_rad(60 * i - 30)
+		var local_point = Vector2(cos(angle_rad), sin(angle_rad)) * HEX_SIZE
+		local_points.append(local_point)
+
+		var global_point = pos + local_point
+		global_points.append(global_point)
+		BoardState.register_vertices(global_point)
+		create_village_spaces(global_point)
+
+		var key = Vector2(round(global_point.x), round(global_point.y))
+		BoardState.vertices[key]["links"].append(hex_container)
+
+	for i in range(6):
+		var curent_vertice = global_points[i]
+		var next_vertice = global_points[(i + 1) % 6]
+		BoardState.register_edges(curent_vertice, next_vertice)
+		create_road_spaces(curent_vertice, next_vertice)
 
 	var local_points = PackedVector2Array()
 	var global_points = PackedVector2Array()
@@ -256,8 +278,12 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		hex_container.add_child(label)
 
 	add_child(hex_container)
+<<<<<<< Updated upstream
 
 
+=======
+	
+>>>>>>> Stashed changes
 func create_village_spaces(pos: Vector2):
 	var area = Area2D.new()
 	var collision = CollisionShape2D.new()
