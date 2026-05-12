@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bm2u12gnool8v"]
 
-[ext_resource type="Script" uid="uid://cj5wl1kyftmed" path="res://game_manager.gd" id="1_80nbo"]
+[ext_resource type="Script" uid="uid://cj5wl1kyftmed" path="res://source/game_manager.gd" id="1_80nbo"]
 [ext_resource type="PackedScene" uid="uid://mhcwv5nt40sf" path="res://board.tscn" id="2_e2o6t"]
 
 [node name="Game" type="Node2D" unique_id=916513140]

@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://b4cbbf4bpaorb"]
 
 [ext_resource type="Texture2D" uid="uid://jvgwtqe3wwno" path="res://bg.png" id="1_06t4h"]
-[ext_resource type="Script" uid="uid://dohm1ew8uq7gi" path="res://main_menu.gd" id="1_7vrkn"]
+[ext_resource type="Script" uid="uid://dohm1ew8uq7gi" path="res://source/main_menu.gd" id="1_7vrkn"]
 [ext_resource type="FontFile" uid="uid://clq2e567j5pdy" path="res://assets/fonts/1_Minecraft-Regular.otf" id="3_8qtwp"]
 [ext_resource type="AudioStream" uid="uid://dgawatgbkscts" path="res://Soul of Cinder - Yuka Kitamura.mp3" id="3_fu7sn"]
-[ext_resource type="Script" uid="uid://cb8j5flbrjtse" path="res://audio_control.gd" id="3_jix8l"]
+[ext_resource type="Script" uid="uid://cb8j5flbrjtse" path="res://source/audio_control.gd" id="3_jix8l"]
 [ext_resource type="Texture2D" uid="uid://d3o5pvx3jdbe3" path="res://assets/button/button_normal.png" id="3_qe12f"]
 [ext_resource type="Texture2D" uid="uid://cwd4wsdmkv18q" path="res://assets/button/button_hover.png" id="4_8qtwp"]
-[ext_resource type="Script" uid="uid://1al5ra3wd6fr" path="res://fullscreen_control.gd" id="4_glbon"]
+[ext_resource type="Script" uid="uid://1al5ra3wd6fr" path="res://source/fullscreen_control.gd" id="4_glbon"]
 [ext_resource type="AudioStream" uid="uid://bwe2cuheqeb7m" path="res://assets/button/button_click.mp3" id="6_0o4t1"]
 [ext_resource type="FontFile" uid="uid://b2dra3hnk4e7d" path="res://assets/fonts/Minecrafter.Reg.ttf" id="6_dy7ct"]
 
