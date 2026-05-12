@@ -100,6 +100,7 @@ func robber_movement():
 	if board:
 		board.show_robber_options()
 
+
 func resources_distribution(value: int):
 	print("TESTE")
 
