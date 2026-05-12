@@ -216,7 +216,7 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		polygon.polygon = local_points
 
 		var outline = Line2D.new()
-		var outline_points = poilocal_pointsnts.duplicate()
+		var outline_points = local_points.duplicate()
 		outline_points.append(local_points[0])
 		outline.points = outline_points
 		outline.width = 4.0
