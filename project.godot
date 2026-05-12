@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 buses/default_bus_layout="uid://dkls8wtucroe8"
 
+[autoload]
+
+BoardState="*uid://ctoody0rlkilc"
+
 [display]
 
 window/size/mode=3

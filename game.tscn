@@ -62,5 +62,7 @@ layout_mode = 2
 [node name="VBoxContainer" type="VBoxContainer" parent="Control/DiceLog/VBoxContainer/ScrollContainer" unique_id=653541155]
 layout_mode = 2
 
+[connection signal="selected_edge" from="Board" to="." method="_on_selected_edge"]
+[connection signal="selected_vertice" from="Board" to="." method="_on_selected_vertice"]
 [connection signal="pressed" from="Control/EndTurnButton" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="Control/RollDiceButton" to="." method="_on_roll_dice_button_pressed"]
