@@ -19,6 +19,7 @@ var HEX_HEIGHT = 2       * HEX_SIZE
 signal selected_vertice(pos: Vector2)
 signal selected_edge(pos: Vector2)
 
+# key (Vector2 arredondada) → { container, circle, shadow, area }
 var _vertice_nodes: Dictionary = {}
 
 var available_resources = [
@@ -40,6 +41,10 @@ func _ready():
 	shuffle_valid_board()
 	generate_board()
 
+
+# ══════════════════════════════════════════════
+# GERAÇÃO DO TABULEIRO
+# ══════════════════════════════════════════════
 
 func shuffle_valid_board():
 	var adjacencies = [
@@ -129,6 +134,9 @@ func generate_board():
 			var robber_node = get_tree().current_scene.find_child("Robber", true, false)
 			if robber_node:
 				robber_node.moving_to(deserto_pos, true)
+				print("Ladrão posicionado no deserto em: ", deserto_pos)
+			else:
+				print("AVISO: Não encontrei o nó visual chamado Robber na cena!")
 			break
 
 
@@ -160,8 +168,10 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		BoardState.vertices[key]["links"].append(hex_container)
 
 	for i in range(6):
-		BoardState.register_edges(global_points[i], global_points[(i + 1) % 6])
-		create_road_spaces(global_points[i], global_points[(i + 1) % 6])
+		var current_vertice = global_points[i]
+		var next_vertice    = global_points[(i + 1) % 6]
+		BoardState.register_edges(current_vertice, next_vertice)
+		create_road_spaces(current_vertice, next_vertice)
 
 	hex_container.set_meta("resource_type", type)
 	hex_container.set_meta("dice_number",   number)
@@ -184,10 +194,10 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 		var polygon = Polygon2D.new()
 		polygon.polygon = local_points
 		var outline = Line2D.new()
-		var ol_pts  = local_points.duplicate()
-		ol_pts.append(local_points[0])
-		outline.points = ol_pts
-		outline.width  = 4.0
+		var outline_points = local_points.duplicate()
+		outline_points.append(local_points[0])
+		outline.points        = outline_points
+		outline.width         = 4.0
 		outline.default_color = Color(0.1, 0.1, 0.1)
 		hex_container.add_child(polygon)
 		hex_container.add_child(outline)
@@ -220,6 +230,10 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 	add_child(hex_container)
 
 
+# ══════════════════════════════════════════════
+# VÉRTICES — NÓ VISUAL + ÁREA DE CLIQUE
+# ══════════════════════════════════════════════
+
 func _create_vertice_node(pos: Vector2):
 	var key = Vector2(round(pos.x), round(pos.y))
 	if _vertice_nodes.has(key):
@@ -230,15 +244,19 @@ func _create_vertice_node(pos: Vector2):
 	container.z_index  = 10
 	container.visible  = false
 
-	var shadow = _make_circle_poly(10.0, Color(0, 0, 0, 0.55))
+	# 1) Sombra escura — contorno preto bem visível
+	var shadow = _make_circle_poly(20.0, Color(0, 0, 0, 0.55))
 	container.add_child(shadow)
 
+	# 2) Preenchimento principal branco translúcido
 	var circle = _make_circle_poly(17.0, Color(1, 1, 1, 0.55))
 	container.add_child(circle)
 
+	# 3) Borda interna fina escura
 	var border = _make_circle_outline(17.0, 2.5, Color(0.15, 0.15, 0.15, 0.9))
 	container.add_child(border)
 
+	# Área de clique
 	var area      = Area2D.new()
 	var collision = CollisionShape2D.new()
 	var shape     = CircleShape2D.new()
@@ -247,6 +265,7 @@ func _create_vertice_node(pos: Vector2):
 	area.add_child(collision)
 	container.add_child(area)
 
+	# Hover: laranja ao entrar, branco ao sair
 	area.mouse_entered.connect(func():
 		circle.color = Color(1.0, 0.75, 0.1, 0.9)
 		shadow.color = Color(0, 0, 0, 0.7)
@@ -267,6 +286,17 @@ func _create_vertice_node(pos: Vector2):
 	add_child(container)
 
 
+func _make_circle_poly(radius: float, color: Color) -> Polygon2D:
+	var poly = Polygon2D.new()
+	var pts  = PackedVector2Array()
+	for i in range(24):
+		var angle = (i / 24.0) * TAU
+		pts.append(Vector2(cos(angle), sin(angle)) * radius)
+	poly.polygon = pts
+	poly.color   = color
+	return poly
+
+
 func _make_circle_outline(radius: float, width: float, color: Color) -> Line2D:
 	var line = Line2D.new()
 	var pts  = PackedVector2Array()
@@ -279,34 +309,24 @@ func _make_circle_outline(radius: float, width: float, color: Color) -> Line2D:
 	return line
 
 
-func _make_circle_poly(radius: float, color: Color) -> Polygon2D:
-	var poly = Polygon2D.new()
-	var pts  = PackedVector2Array()
-	for i in range(24):
-		var angle = (i / 24.0) * TAU
-		pts.append(Vector2(cos(angle), sin(angle)) * radius)
-	poly.polygon = pts
-	poly.color   = color
-	return poly
-
-
-func _on_vertice_hover(_key: Vector2, _entered: bool):
-	pass
-
-
 @warning_ignore("unused_parameter")
 func _on_vertice_input(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var key = Vector2(round(pos.x), round(pos.y))
 		if _vertice_nodes.has(key) and _vertice_nodes[key]["container"].visible:
+			print("O jogador clicou no vértice ", pos)
 			selected_vertice.emit(pos)
 
+
+# ══════════════════════════════════════════════
+# API PÚBLICA — highlights
+# ══════════════════════════════════════════════
 
 func show_settlement_highlights(player_id: int, is_preparation: bool, gm: Node):
 	for key in _vertice_nodes:
 		var valid = gm.village_construction_check(key, player_id, is_preparation)
-		_vertice_nodes[key]["container"].visible       = valid
-		_vertice_nodes[key]["area"].input_pickable     = valid
+		_vertice_nodes[key]["container"].visible   = valid
+		_vertice_nodes[key]["area"].input_pickable = valid
 
 
 func hide_settlement_highlights():
@@ -315,6 +335,10 @@ func hide_settlement_highlights():
 		_vertice_nodes[key]["area"].input_pickable = false
 
 
+# ══════════════════════════════════════════════
+# VISUAL — ALDEIA CONSTRUÍDA
+# ══════════════════════════════════════════════
+
 func spawn_settlement_visual(pos: Vector2, color: Color):
 	var key = Vector2(round(pos.x), round(pos.y))
 
@@ -322,15 +346,15 @@ func spawn_settlement_visual(pos: Vector2, color: Color):
 		_vertice_nodes[key]["container"].visible   = false
 		_vertice_nodes[key]["area"].input_pickable = false
 
-	var settlement   = Node2D.new()
+	var settlement    = Node2D.new()
 	settlement.position = pos
 	settlement.z_index  = 10
 
 	var texture_path = _get_house_texture_path(color)
 	var texture      = load(texture_path)
 
-	var sprite     = Sprite2D.new()
-	sprite.texture = texture
+	var sprite      = Sprite2D.new()
+	sprite.texture  = texture
 	var target_size = 36.0
 	sprite.scale    = Vector2(
 		target_size / texture.get_width(),
@@ -357,6 +381,10 @@ func _get_house_texture_path(color: Color) -> String:
 	return "res://board_assets/house_purple.png"
 
 
+# ══════════════════════════════════════════════
+# ESTRADAS
+# ══════════════════════════════════════════════
+
 func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 	var center    = (a_vertice + b_vertice) / 2.0
 	var area      = Area2D.new()
@@ -373,8 +401,13 @@ func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 @warning_ignore("unused_parameter")
 func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		print("O jogador clicou na aresta ", pos)
 		selected_edge.emit(pos)
 
+
+# ══════════════════════════════════════════════
+# LADRÃO
+# ══════════════════════════════════════════════
 
 func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -382,7 +415,7 @@ func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
 		if gm.waiting_robber_move:
 			var clicked_pos = Vector2(round(pos.x), round(pos.y))
 			if clicked_pos == BoardState.robber_hex_pos:
-				print("O ladrão já está aqui! Escolha outro hexágono.")
+				print("Ação inválida: O ladrão já está neste hexágono! Escolha outro.")
 				return
 			var robber_node = get_tree().current_scene.find_child("Robber", true, false)
 			if robber_node:
@@ -390,6 +423,7 @@ func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
 			BoardState.update_robber_position(pos)
 			hide_robber_options()
 			gm.waiting_robber_move = false
+			print("Ladrão movido com sucesso. Jogo liberado!")
 
 
 func show_robber_options():
