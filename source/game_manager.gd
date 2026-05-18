@@ -2,16 +2,14 @@ extends Node2D
 
 signal dice_rolled(player: Player, dice1: int, dice2: int)
 
-
 enum GamePhase { PREPARATION, PLAYING }
 
 var game_phase: GamePhase = GamePhase.PREPARATION
 
 # Ordem de colocação na preparação: ida (0→N-1) + volta (N-1→0)
 var preparation_order: Array[int] = []
-var preparation_step:  int  = 0
-var preparation_done:  bool = false
-
+var preparation_step: int = 0
+var preparation_done: bool = false
 
 var players: Array[Player] = []
 
@@ -20,9 +18,9 @@ var has_rolled_dice: bool = false
 var waiting_robber_move: bool = false
 
 @onready var end_turn_button = $Control/EndTurnButton
-@onready var dice_button     = $Control/RollDiceButton
-@onready var dice_log        = $Control/DiceLog
-@export  var dice_textures: Array[Texture2D]
+@onready var dice_button = $Control/RollDiceButton
+@onready var dice_log = $Control/DiceLog
+@export var dice_textures: Array[Texture2D]
 
 
 func _ready():
@@ -36,9 +34,9 @@ func _ready():
 func _setup_players():
 	players = [
 		Player.new("Jogador 1", Color(0.88, 0.37, 0.37)),
-		Player.new("Bot 1",     Color(0.37, 0.63, 0.88)),
-		Player.new("Bot 2",     Color(0.43, 0.78, 0.43)),
-		Player.new("Bot 3",     Color(0.88, 0.75, 0.31)),
+		Player.new("Bot 1", Color(0.37, 0.63, 0.88)),
+		Player.new("Bot 2", Color(0.43, 0.78, 0.43)),
+		Player.new("Bot 3", Color(0.88, 0.75, 0.31)),
 	]
 	dice_log.setup_players(players)
 	dice_log.setup_dice_textures(dice_textures)
@@ -54,11 +52,11 @@ func _build_preparation_order():
 
 
 func start_preparation_phase():
-	game_phase       = GamePhase.PREPARATION
+	game_phase = GamePhase.PREPARATION
 	preparation_step = 0
 	preparation_done = false
 
-	dice_button.disabled     = true
+	dice_button.disabled = true
 	end_turn_button.disabled = true
 
 	_preparation_next_player()
@@ -70,14 +68,15 @@ func _preparation_next_player():
 		return
 
 	current_player_index = preparation_order[preparation_step]
-	var player   = players[current_player_index]
-	var is_human = (current_player_index == 0)
+	var player = players[current_player_index]
+	var is_human = current_player_index == 0
 
-	print("[PREPARAÇÃO %d/%d] Vez de %s colocar uma casa." % [
-		preparation_step + 1,
-		preparation_order.size(),
-		player.player_name
-	])
+	print(
+		(
+			"[PREPARAÇÃO %d/%d] Vez de %s colocar uma casa."
+			% [preparation_step + 1, preparation_order.size(), player.player_name]
+		)
+	)
 
 	if is_human:
 		_show_highlights_for_current(true)
@@ -98,13 +97,11 @@ func _on_preparation_vertice_selected(pos: Vector2):
 		_show_highlights_for_current(true)
 
 
-const NUMBER_SCORE = {
-	2: 1, 3: 2, 4: 3, 5: 4, 6: 5,
-	8: 5, 9: 4, 10: 3, 11: 2, 12: 1
-}
+const NUMBER_SCORE = {2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
+
 
 func _bot_place_settlement():
-	var best_score     : float = -1.0
+	var best_score: float = -1.0
 	var best_candidates: Array = []
 
 	for key in BoardState.vertices:
@@ -114,7 +111,7 @@ func _bot_place_settlement():
 		var score = _score_vertex(key)
 
 		if score > best_score:
-			best_score      = score
+			best_score = score
 			best_candidates = [key]
 		elif score == best_score:
 			best_candidates.append(key)
@@ -123,7 +120,12 @@ func _bot_place_settlement():
 		print("Bot %s sem vértice válido." % players[current_player_index].player_name)
 	else:
 		var best_key = best_candidates[randi() % best_candidates.size()]
-		print("%s escolheu vértice com score %.1f" % [players[current_player_index].player_name, best_score])
+		print(
+			(
+				"%s escolheu vértice com score %.1f"
+				% [players[current_player_index].player_name, best_score]
+			)
+		)
 		_try_place_settlement(best_key, current_player_index, true)
 
 	preparation_step += 1
@@ -131,16 +133,16 @@ func _bot_place_settlement():
 
 
 func _score_vertex(key: Vector2) -> float:
-	var hex_links    = BoardState.vertices[key]["links"]
-	var total_prob   : float = 0.0
-	var resource_set : Array = []
+	var hex_links = BoardState.vertices[key]["links"]
+	var total_prob: float = 0.0
+	var resource_set: Array = []
 
 	for hex in hex_links:
 		if not is_instance_valid(hex):
 			continue
 
-		var number = hex.get_meta("dice_number")   if hex.has_meta("dice_number")   else 0
-		var rtype  = hex.get_meta("resource_type") if hex.has_meta("resource_type") else -1
+		var number = hex.get_meta("dice_number") if hex.has_meta("dice_number") else 0
+		var rtype = hex.get_meta("resource_type") if hex.has_meta("resource_type") else -1
 
 		if number == 0:
 			continue
@@ -151,30 +153,29 @@ func _score_vertex(key: Vector2) -> float:
 		if rtype != -1 and rtype not in resource_set:
 			resource_set.append(rtype)
 
-	var diversity_bonus : float = (resource_set.size() - 1) * 2.0
-	var coverage_bonus  : float = 3.0 if resource_set.size() == 3 else 0.0
+	var diversity_bonus: float = (resource_set.size() - 1) * 2.0
+	var coverage_bonus: float = 3.0 if resource_set.size() == 3 else 0.0
 
 	return total_prob + diversity_bonus + coverage_bonus
 
 
 func _finish_preparation():
-	preparation_done     = true
-	game_phase           = GamePhase.PLAYING
+	preparation_done = true
+	game_phase = GamePhase.PLAYING
 	current_player_index = 0
 	_hide_highlights()
 	print("=== Preparação concluída! O jogo começa. ===")
 	start_turn()
 
 
-
 func start_turn():
 	has_rolled_dice = false
-	var player   = players[current_player_index]
-	var is_human = (current_player_index == 0)
+	var player = players[current_player_index]
+	var is_human = current_player_index == 0
 
 	print("Turno de: ", player.player_name)
 	end_turn_button.disabled = not is_human
-	dice_button.disabled     = not is_human
+	dice_button.disabled = not is_human
 
 	if not is_human:
 		play_bot_turn()
@@ -213,9 +214,9 @@ func _on_roll_dice_button_pressed():
 
 
 func roll_dice():
-	var dice1  = randi() % 6 + 1
-	var dice2  = randi() % 6 + 1
-	var total  = dice1 + dice2
+	var dice1 = randi() % 6 + 1
+	var dice2 = randi() % 6 + 1
+	var total = dice1 + dice2
 	var player = players[current_player_index]
 
 	has_rolled_dice = true
@@ -246,7 +247,6 @@ func resources_distribution(_value: int):
 	pass  # TODO: implementar distribuição de recursos
 
 
-
 func _try_place_settlement(pos: Vector2, player_id: int, is_preparation: bool) -> bool:
 	var key = Vector2(round(pos.x), round(pos.y))
 
@@ -267,17 +267,15 @@ func _try_place_settlement(pos: Vector2, player_id: int, is_preparation: bool) -
 			player.remove_resource(resource, cost[resource])
 
 	BoardState.vertices[key]["owner"] = player_id
-	BoardState.vertices[key]["type"]  = BoardState.BuildingType.VILLAGE
-	player.settlements_remaining     -= 1
-	player.ponits                    += 1
+	BoardState.vertices[key]["type"] = BoardState.BuildingType.VILLAGE
+	player.settlements_remaining -= 1
+	player.ponits += 1
 
 	var board = find_child("Board")
 	if board:
 		board.spawn_settlement_visual(key, player.player_color)
 
-	print("%s construiu aldeia em %s (pontos: %d)" % [
-		player.player_name, str(key), player.ponits
-	])
+	print("%s construiu aldeia em %s (pontos: %d)" % [player.player_name, str(key), player.ponits])
 	return true
 
 
@@ -293,8 +291,8 @@ func village_construction_check(pos: Vector2, player_id: int, preparation: bool)
 
 	# Regra da distância — nenhum vizinho pode ter construção
 	for edge_key in BoardState.edges:
-		var edge     = BoardState.edges[edge_key]
-		var neighbor : Variant = null
+		var edge = BoardState.edges[edge_key]
+		var neighbor: Variant = null
 
 		if edge["a_vertice"] == key:
 			neighbor = edge["b_vertice"]
@@ -333,7 +331,10 @@ func road_construction_check(pos: Vector2, player_id: int) -> bool:
 	var b_v = BoardState.edges[edge_key]["b_vertice"]
 
 	# Conectada a uma construção própria?
-	if BoardState.vertices[a_v]["owner"] == player_id or BoardState.vertices[b_v]["owner"] == player_id:
+	if (
+		BoardState.vertices[a_v]["owner"] == player_id
+		or BoardState.vertices[b_v]["owner"] == player_id
+	):
 		return true
 
 	# Conectada a outra estrada própria?
@@ -343,16 +344,19 @@ func road_construction_check(pos: Vector2, player_id: int) -> bool:
 		var next_edge = BoardState.edges[next_key]
 		if next_edge["owner"] == player_id:
 			if (
-				next_edge["a_vertice"] == a_v or next_edge["a_vertice"] == b_v
-				or next_edge["b_vertice"] == a_v or next_edge["b_vertice"] == b_v
+				next_edge["a_vertice"] == a_v
+				or next_edge["a_vertice"] == b_v
+				or next_edge["b_vertice"] == a_v
+				or next_edge["b_vertice"] == b_v
 			):
 				return true
 
 	print("A estrada tem de estar conectada a uma construção sua!")
 	return false
 
+
 func city_construction_check(pos: Vector2, player_id: int) -> bool:
-	var key     = Vector2(round(pos.x), round(pos.y))
+	var key = Vector2(round(pos.x), round(pos.y))
 	var vertice = BoardState.vertices[key]
 
 	if vertice["owner"] == player_id and vertice["type"] == BoardState.BuildingType.VILLAGE:
@@ -384,7 +388,10 @@ func _on_selected_vertice(pos: Vector2):
 		if vertice["owner"] == null:
 			if _try_place_settlement(pos, current_player_index, false):
 				_show_highlights_for_current(false)
-		elif vertice["owner"] == current_player_index and vertice["type"] == BoardState.BuildingType.VILLAGE:
+		elif (
+			vertice["owner"] == current_player_index
+			and vertice["type"] == BoardState.BuildingType.VILLAGE
+		):
 			if city_construction_check(pos, current_player_index):
 				vertice["type"] = BoardState.BuildingType.CITY
 				players[current_player_index].ponits += 1
