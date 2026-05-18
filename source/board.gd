@@ -351,8 +351,6 @@ func _make_circle_outline(radius: float, width: float, color: Color) -> Line2D:
 
 
 @warning_ignore("unused_parameter")
-
-
 func _on_vertice_input(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var key = Vector2(round(pos.x), round(pos.y))
@@ -442,8 +440,6 @@ func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 
 
 @warning_ignore("unused_parameter")
-
-
 func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		print("O jogador clicou na aresta ", pos)
