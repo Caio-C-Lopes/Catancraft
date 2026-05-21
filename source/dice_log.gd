@@ -14,7 +14,7 @@ func _ready():
 	entries_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	
+
 	var log_texture = load("res://board_assets/LOG_BG.png")
 	var style = StyleBoxTexture.new()
 	style.texture = log_texture
