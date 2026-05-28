@@ -43,8 +43,17 @@ func add_roll_entry(player: Player, dice1: int, dice2: int):
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)
 
-	var name_label = _make_label(player.player_name, player.player_color.darkened(0.3), true)
-	hbox.add_child(name_label)
+	if player.icon_texture:
+		var icon_rect = TextureRect.new()
+		icon_rect.texture = player.icon_texture
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.custom_minimum_size = Vector2(16, 16)
+		icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hbox.add_child(icon_rect)
+	else:
+		hbox.add_child(_make_label(player.player_name, player.player_color.darkened(0.3), true))
 	hbox.add_child(_make_label(" rolou ", Color(0.2, 0.2, 0.2)))
 	hbox.add_child(_make_dice_sprite(dice1))
 	hbox.add_child(_make_dice_sprite(dice2))

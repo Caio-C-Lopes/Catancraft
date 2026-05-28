@@ -11,20 +11,12 @@
 [ext_resource type="Texture2D" uid="uid://bc5ibdl36oh2x" path="res://dice_assets/6.png" id="7_215e1"]
 [ext_resource type="Script" uid="uid://b5fkan78m2618" path="res://source/player_hud.gd" id="10_iotsf"]
 [ext_resource type="Texture2D" uid="uid://bfn6cmu4eqld" path="res://board_assets/ROBBER.png" id="10_mfdv2"]
-[ext_resource type="Texture2D" uid="uid://cgyglpa3kvn7j" path="res://card_assets/resources/WOOD.png" id="11_f1jbl"]
+[ext_resource type="Texture2D" uid="uid://cgyglpa3kvn7j" path="res://card_assets/resources/WOOD.png" id="11_e8heu"]
 [ext_resource type="Script" uid="uid://chl1ffl0modrq" path="res://source/robber.gd" id="11_iotsf"]
-[ext_resource type="Texture2D" uid="uid://baivgwg10442e" path="res://card_assets/resources/BRICK.png" id="12_vaj68"]
-[ext_resource type="Texture2D" uid="uid://dtcts6uyrv3ue" path="res://card_assets/resources/WHEAT.png" id="13_i2p71"]
-[ext_resource type="Texture2D" uid="uid://dbhlp0kbi8hk1" path="res://card_assets/resources/SHEEP.png" id="14_xa8c5"]
-[ext_resource type="Texture2D" uid="uid://ircpybl8ww1y" path="res://card_assets/resources/STONE.png" id="15_5b14r"]
-[ext_resource type="Texture2D" uid="uid://d1nefuneoily8" path="res://board_assets/city_purple.png" id="16_bnpwn"]
-[ext_resource type="Texture2D" uid="uid://b7icele5glwy4" path="res://card_assets/development/development.png" id="17_36jdj"]
-[ext_resource type="Texture2D" uid="uid://w3qt8wxfkc6j" path="res://board_assets/house_purple.png" id="18_xfvwf"]
-[ext_resource type="Texture2D" uid="uid://wfof8ji7hxf" path="res://board_assets/trade.png" id="19_dhpj7"]
-[ext_resource type="Texture2D" uid="uid://bytdjvab2ragm" path="res://board_assets/road_purple.png" id="20_7knny"]
-[ext_resource type="Texture2D" uid="uid://d1cga0kq1ee6g" path="res://board_assets/icon-08.png" id="21_082n1"]
-[ext_resource type="Texture2D" uid="uid://dmm1f4m6c5pe8" path="res://board_assets/icon-06.png" id="22_xex6t"]
-[ext_resource type="Script" uid="uid://1ryb1he5gib4" path="res://source/bank_panel.gd" id="23_vaj68"]
+[ext_resource type="Texture2D" uid="uid://baivgwg10442e" path="res://card_assets/resources/BRICK.png" id="12_rvswv"]
+[ext_resource type="Texture2D" uid="uid://dtcts6uyrv3ue" path="res://card_assets/resources/WHEAT.png" id="13_boyg6"]
+[ext_resource type="Texture2D" uid="uid://dbhlp0kbi8hk1" path="res://card_assets/resources/SHEEP.png" id="14_e36ub"]
+[ext_resource type="Texture2D" uid="uid://ircpybl8ww1y" path="res://card_assets/resources/STONE.png" id="15_hb5m1"]
 
 [node name="Game" type="Node2D" unique_id=916513140]
 script = ExtResource("1_80nbo")
@@ -40,6 +32,22 @@ offset_left = 5.0
 offset_top = 1.0
 offset_right = 45.0
 offset_bottom = 41.0
+
+[node name="EndTurnButton" type="Button" parent="Control" unique_id=1662144680]
+layout_mode = 0
+offset_left = -6.0
+offset_top = -2.0
+offset_right = 101.0
+offset_bottom = 29.0
+text = "Passar turno"
+
+[node name="RollDiceButton" type="Button" parent="Control" unique_id=1570907007]
+layout_mode = 0
+offset_left = 1026.0
+offset_top = -1.0
+offset_right = 1146.0
+offset_bottom = 30.0
+text = "Rolar Dados"
 
 [node name="DiceLog" type="PanelContainer" parent="Control" unique_id=1741974377]
 layout_mode = 1
@@ -65,30 +73,16 @@ layout_mode = 2
 [node name="PlayerHUD" type="Control" parent="Control" unique_id=942500235]
 anchors_preset = 0
 script = ExtResource("10_iotsf")
-wood_icon = ExtResource("11_f1jbl")
-brick_icon = ExtResource("12_vaj68")
-wheat_icon = ExtResource("13_i2p71")
-sheep_icon = ExtResource("14_xa8c5")
-ore_icon = ExtResource("15_5b14r")
-city_icon = ExtResource("16_bnpwn")
-cards_icon = ExtResource("17_36jdj")
-house_icon = ExtResource("18_xfvwf")
-trade_icon = ExtResource("19_dhpj7")
-road_icon = ExtResource("20_7knny")
-end_turn_icon_active = ExtResource("21_082n1")
-end_turn_icon_inactive = ExtResource("22_xex6t")
-dice_face_textures = Array[Texture2D]([ExtResource("2_vef74"), ExtResource("6_lc2xo")])
+wood_icon = ExtResource("11_e8heu")
+brick_icon = ExtResource("12_rvswv")
+wheat_icon = ExtResource("13_boyg6")
+sheep_icon = ExtResource("14_e36ub")
+ore_icon = ExtResource("15_hb5m1")
 
 [node name="TopLeft" type="VBoxContainer" parent="Control/PlayerHUD" unique_id=571363943]
 layout_mode = 0
 offset_right = 40.0
-offset_bottom = 50.0
-
-[node name="PlayerIcon" type="TextureRect" parent="Control/PlayerHUD/TopLeft" unique_id=1044263687]
-custom_minimum_size = Vector2(32, 32)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
+offset_bottom = 40.0
 
 [node name="PlayerNameLabel" type="Label" parent="Control/PlayerHUD/TopLeft" unique_id=1388834612]
 layout_mode = 2
@@ -96,11 +90,10 @@ layout_mode = 2
 [node name="TimerLabel" type="Label" parent="Control/PlayerHUD/TopLeft" unique_id=1053607487]
 layout_mode = 2
 
-[node name="BottomLeft" type="HBoxContainer" parent="Control/PlayerHUD" unique_id=1487148583]
+[node name="BottomLeft" type="VBoxContainer" parent="Control/PlayerHUD" unique_id=2128019679]
 layout_mode = 0
-offset_top = 350.0
-offset_right = 208.0
-offset_bottom = 454.0
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="ActionButtons" type="GridContainer" parent="Control/PlayerHUD/BottomLeft" unique_id=1417700199]
 layout_mode = 2
@@ -108,50 +101,11 @@ columns = 2
 
 [node name="BottomBar" type="HBoxContainer" parent="Control/PlayerHUD" unique_id=1896261956]
 layout_mode = 0
-offset_top = 570.0
 offset_right = 40.0
-offset_bottom = 610.0
+offset_bottom = 40.0
 
 [node name="ResourceBar" type="HBoxContainer" parent="Control/PlayerHUD/BottomBar" unique_id=1216647029]
 layout_mode = 2
-
-[node name="DiceContainer" type="HBoxContainer" parent="Control/PlayerHUD" unique_id=1847520780]
-layout_mode = 0
-offset_left = 150.0
-offset_top = 480.0
-offset_right = 262.0
-offset_bottom = 584.0
-alignment = 1
-
-[node name="Dice1" type="TextureButton" parent="Control/PlayerHUD/DiceContainer" unique_id=1336207807]
-custom_minimum_size = Vector2(54, 54)
-layout_mode = 2
-texture_normal = ExtResource("2_vef74")
-texture_pressed = ExtResource("2_vef74")
-texture_hover = ExtResource("2_vef74")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="Dice2" type="TextureButton" parent="Control/PlayerHUD/DiceContainer" unique_id=93490792]
-custom_minimum_size = Vector2(54, 54)
-layout_mode = 2
-texture_normal = ExtResource("6_lc2xo")
-texture_pressed = ExtResource("6_lc2xo")
-texture_hover = ExtResource("6_lc2xo")
-ignore_texture_size = true
-stretch_mode = 5
-
-[node name="BankPanel" type="PanelContainer" parent="Control" unique_id=1805510841]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-script = ExtResource("23_vaj68")
-wood_icon = ExtResource("11_f1jbl")
-brick_icon = ExtResource("12_vaj68")
-wheat_icon = ExtResource("13_i2p71")
-sheep_icon = ExtResource("14_xa8c5")
-ore_icon = ExtResource("15_5b14r")
-dev_card_icon = ExtResource("17_36jdj")
 
 [node name="Robber" type="Sprite2D" parent="." unique_id=2129974697]
 z_index = 5
@@ -163,3 +117,5 @@ script = ExtResource("11_iotsf")
 
 [connection signal="selected_edge" from="Board" to="." method="_on_selected_edge"]
 [connection signal="selected_vertice" from="Board" to="." method="_on_selected_vertice"]
+[connection signal="pressed" from="Control/EndTurnButton" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="Control/RollDiceButton" to="." method="_on_roll_dice_button_pressed"]
