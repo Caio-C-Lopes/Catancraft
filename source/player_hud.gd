@@ -5,8 +5,10 @@ signal dice_clicked
 @onready var dice1 = $DiceContainer/Dice1
 @onready var dice2 = $DiceContainer/Dice2
 
+
 func _on_dice_pressed():
 	emit_signal("dice_clicked")
+
 
 @onready var player_name_label = $TopLeft/PlayerNameLabel
 @onready var timer_label = $TopLeft/TimerLabel
@@ -20,7 +22,6 @@ var font: Font
 var resource_icons: Dictionary = {}
 var resource_labels: Dictionary = {}
 var piece_labels: Dictionary = {}
-
 
 @export var wood_icon: Texture2D
 @export var brick_icon: Texture2D
@@ -76,6 +77,7 @@ func _ready():
 		_player_icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		_player_icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_player_icon_rect.size = Vector2(40, 40)
+
 
 func _process(delta):
 	if not timer_running:
@@ -227,12 +229,22 @@ func _build_action_buttons():
 	action_buttons.add_theme_constant_override("v_separation", 4)
 
 	var buttons = [
-		{"icon": city_icon,              "signal": "build_city_pressed",  "store": "city",     "piece": "city"},
-		{"icon": cards_icon,             "signal": "cards_pressed",       "store": "",          "piece": ""},
-		{"icon": house_icon,             "signal": "build_house_pressed", "store": "house",    "piece": "settlement"},
-		{"icon": trade_icon,             "signal": "trade_pressed",       "store": "",          "piece": ""},
-		{"icon": road_icon,              "signal": "build_road_pressed",  "store": "road",     "piece": "road"},
-		{"icon": end_turn_icon_inactive, "signal": "end_turn_pressed",    "store": "end_turn", "piece": ""},
+		{"icon": city_icon, "signal": "build_city_pressed", "store": "city", "piece": "city"},
+		{"icon": cards_icon, "signal": "cards_pressed", "store": "", "piece": ""},
+		{
+			"icon": house_icon,
+			"signal": "build_house_pressed",
+			"store": "house",
+			"piece": "settlement"
+		},
+		{"icon": trade_icon, "signal": "trade_pressed", "store": "", "piece": ""},
+		{"icon": road_icon, "signal": "build_road_pressed", "store": "road", "piece": "road"},
+		{
+			"icon": end_turn_icon_inactive,
+			"signal": "end_turn_pressed",
+			"store": "end_turn",
+			"piece": ""
+		},
 	]
 
 	for b in buttons:
@@ -246,24 +258,28 @@ func _build_action_buttons():
 		btn.ignore_texture_size = true
 		btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+		btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		var sig_name = b["signal"]
 		btn.pressed.connect(func(): emit_signal(sig_name))
 
-		if b["store"] == "end_turn": _end_turn_btn = btn
-		elif b["store"] == "house":  _house_btn = btn
-		elif b["store"] == "road":   _road_btn  = btn
-		elif b["store"] == "city":   _city_btn  = btn
+		if b["store"] == "end_turn":
+			_end_turn_btn = btn
+		elif b["store"] == "house":
+			_house_btn = btn
+		elif b["store"] == "road":
+			_road_btn = btn
+		elif b["store"] == "city":
+			_city_btn = btn
 
 		if b["piece"] != "":
 			var vbox = VBoxContainer.new()
 			vbox.add_theme_constant_override("separation", 0)
 			vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			vbox.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+			vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 			btn.custom_minimum_size = Vector2(64, 46)
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			btn.size_flags_vertical   = Control.SIZE_SHRINK_BEGIN
+			btn.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 			vbox.add_child(btn)
 
 			var count_lbl = Label.new()
@@ -274,7 +290,7 @@ func _build_action_buttons():
 			count_lbl.add_theme_color_override("font_color", Color.BLACK)
 			count_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			count_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			count_lbl.size_flags_vertical   = Control.SIZE_SHRINK_END
+			count_lbl.size_flags_vertical = Control.SIZE_SHRINK_END
 			vbox.add_child(count_lbl)
 
 			piece_labels[b["piece"]] = count_lbl
@@ -288,14 +304,17 @@ func _build_action_buttons():
 func apply_player_color(color_name: String):
 	var base = "res://board_assets/"
 	var h = load(base + "house_" + color_name + ".png")
-	var r = load(base + "road_"  + color_name + ".png")
-	var c = load(base + "city_"  + color_name + ".png")
-	if h and _house_btn: _house_btn.texture_normal = h
-	if r and _road_btn:  _road_btn.texture_normal  = r
-	if c and _city_btn:  _city_btn.texture_normal  = c
+	var r = load(base + "road_" + color_name + ".png")
+	var c = load(base + "city_" + color_name + ".png")
+	if h and _house_btn:
+		_house_btn.texture_normal = h
+	if r and _road_btn:
+		_road_btn.texture_normal = r
+	if c and _city_btn:
+		_city_btn.texture_normal = c
 	house_icon = h
-	road_icon  = r
-	city_icon  = c
+	road_icon = r
+	city_icon = c
 
 
 func _setup_dice_display():

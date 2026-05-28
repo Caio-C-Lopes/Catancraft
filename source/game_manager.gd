@@ -35,14 +35,16 @@ func _ready():
 	_build_preparation_order()
 	start_preparation_phase()
 	player_hud.end_turn_pressed.connect(_on_button_pressed)
-	player_hud.build_house_pressed.connect(func():
-		if game_phase == GamePhase.PLAYING:
-			_show_highlights_for_current(false)
+	player_hud.build_house_pressed.connect(
+		func():
+			if game_phase == GamePhase.PLAYING:
+				_show_highlights_for_current(false)
 	)
 
+
 func _setup_players():
-	var p_color  = GameConfig.player_color
-	var p_icon   = load("res://icons_assets/%s.png" % GameConfig.player_icon_name) as Texture2D
+	var p_color = GameConfig.player_color
+	var p_icon = load("res://icons_assets/%s.png" % GameConfig.player_icon_name) as Texture2D
 
 	var all_color_names = ["blue", "green", "red", "purple"]
 	var bot_color_names_available: Array = []
@@ -51,9 +53,9 @@ func _setup_players():
 			bot_color_names_available.append(cn)
 
 	var bot_color_map = {
-		"red":    Color(0.85, 0.25, 0.25),
-		"blue":   Color(0.22, 0.54, 0.87),
-		"green":  Color(0.27, 0.65, 0.27),
+		"red": Color(0.85, 0.25, 0.25),
+		"blue": Color(0.22, 0.54, 0.87),
+		"green": Color(0.27, 0.65, 0.27),
 		"purple": Color(0.55, 0.27, 0.80),
 	}
 
@@ -99,13 +101,19 @@ func _refresh_bot_huds():
 
 var _first_player_index: int = 0
 
+
 func _build_preparation_order():
 	var n = players.size()
 	preparation_order.clear()
 
 	# Sorteia aleatoriamente quem começa (equivalente ao "jogador mais velho" do Catan)
 	_first_player_index = randi() % n
-	print("Jogador sorteado para começar: %s (índice %d)" % [players[_first_player_index].player_name, _first_player_index])
+	print(
+		(
+			"Jogador sorteado para começar: %s (índice %d)"
+			% [players[_first_player_index].player_name, _first_player_index]
+		)
+	)
 
 	# Ida: começa no sorteado e percorre em ordem crescente de índice circular
 	for i in range(n):
@@ -236,7 +244,12 @@ func _finish_preparation():
 	# O primeiro turno começa com o mesmo jogador que abriu a preparação
 	current_player_index = _first_player_index
 	_hide_highlights()
-	print("=== Preparação concluída! O jogo começa com %s. ===" % players[current_player_index].player_name)
+	print(
+		(
+			"=== Preparação concluída! O jogo começa com %s. ==="
+			% players[current_player_index].player_name
+		)
+	)
 	start_turn()
 
 
@@ -367,7 +380,6 @@ func robber_movement():
 	var board = find_child("Board")
 	if board:
 		board.show_robber_options()
-
 
 
 func _try_place_settlement(pos: Vector2, player_id: int, is_preparation: bool) -> bool:

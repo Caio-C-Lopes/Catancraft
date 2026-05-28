@@ -1,17 +1,17 @@
 extends Control
 
 const COLORS: Array[Dictionary] = [
-	{"name": "red",    "label": "Vermelho", "color": Color(0.85, 0.25, 0.25)},
-	{"name": "blue",   "label": "Azul",    "color": Color(0.22, 0.54, 0.87)},
-	{"name": "green",  "label": "Verde",   "color": Color(0.27, 0.65, 0.27)},
-	{"name": "purple", "label": "Roxo",    "color": Color(0.55, 0.27, 0.80)},
+	{"name": "red", "label": "Vermelho", "color": Color(0.85, 0.25, 0.25)},
+	{"name": "blue", "label": "Azul", "color": Color(0.22, 0.54, 0.87)},
+	{"name": "green", "label": "Verde", "color": Color(0.27, 0.65, 0.27)},
+	{"name": "purple", "label": "Roxo", "color": Color(0.55, 0.27, 0.80)},
 ]
 
 const BOT_COLORS: Array[Dictionary] = [
-	{"name": "blue",   "color": Color(0.22, 0.54, 0.87)},
-	{"name": "green",  "color": Color(0.27, 0.65, 0.27)},
+	{"name": "blue", "color": Color(0.22, 0.54, 0.87)},
+	{"name": "green", "color": Color(0.27, 0.65, 0.27)},
 	{"name": "purple", "color": Color(0.55, 0.27, 0.80)},
-	{"name": "red",    "color": Color(0.85, 0.25, 0.25)},
+	{"name": "red", "color": Color(0.85, 0.25, 0.25)},
 ]
 
 const ICONS: Array[String] = ["steve", "creeper", "zombie", "pig"]
@@ -22,11 +22,11 @@ var selected_player_icon: int = -1
 var selected_bot_icons: Array[int] = [-1, -1, -1]
 
 @onready var color_row: HBoxContainer = $Panel/MarginContainer/VBoxContainer/ColorRow
-@onready var bot_row: HBoxContainer   = $Panel/MarginContainer/VBoxContainer/BotRow
-@onready var preview: VBoxContainer   = $Panel/MarginContainer/VBoxContainer/Preview
+@onready var bot_row: HBoxContainer = $Panel/MarginContainer/VBoxContainer/BotRow
+@onready var preview: VBoxContainer = $Panel/MarginContainer/VBoxContainer/Preview
 
 var _color_btns: Array[Button] = []
-var _bot_btns:   Array[Button] = []
+var _bot_btns: Array[Button] = []
 
 var _player_icon_row: HBoxContainer = null
 var _bot_icon_rows: Array[HBoxContainer] = []
@@ -43,9 +43,9 @@ func _ready():
 	if panel:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color(0, 0, 0, 0.55)
-		style.corner_radius_top_left     = 10
-		style.corner_radius_top_right    = 10
-		style.corner_radius_bottom_left  = 10
+		style.corner_radius_top_left = 10
+		style.corner_radius_top_right = 10
+		style.corner_radius_bottom_left = 10
 		style.corner_radius_bottom_right = 10
 		panel.add_theme_stylebox_override("panel", style)
 
@@ -53,17 +53,17 @@ func _ready():
 func _add_background():
 	var bg := TextureRect.new()
 	bg.texture = load("res://lobby_bg.png")
-	bg.anchor_left   = 0.0
-	bg.anchor_top    = 0.0
-	bg.anchor_right  = 1.0
+	bg.anchor_left = 0.0
+	bg.anchor_top = 0.0
+	bg.anchor_right = 1.0
 	bg.anchor_bottom = 1.0
-	bg.offset_left   = 0
-	bg.offset_top    = 0
-	bg.offset_right  = 0
+	bg.offset_left = 0
+	bg.offset_top = 0
+	bg.offset_right = 0
 	bg.offset_bottom = 0
-	bg.expand_mode   = TextureRect.EXPAND_IGNORE_SIZE
-	bg.stretch_mode  = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	bg.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	move_child(bg, 0)
 
@@ -92,18 +92,19 @@ func _build_color_buttons():
 		btn.tooltip_text = COLORS[i]["label"]
 		var style_normal := StyleBoxFlat.new()
 		style_normal.bg_color = COLORS[i]["color"]
-		style_normal.corner_radius_top_left    = 8
-		style_normal.corner_radius_top_right   = 8
+		style_normal.corner_radius_top_left = 8
+		style_normal.corner_radius_top_right = 8
 		style_normal.corner_radius_bottom_left = 8
 		style_normal.corner_radius_bottom_right = 8
-		btn.add_theme_stylebox_override("normal",  style_normal)
-		btn.add_theme_stylebox_override("hover",   style_normal)
+		btn.add_theme_stylebox_override("normal", style_normal)
+		btn.add_theme_stylebox_override("hover", style_normal)
 		btn.add_theme_stylebox_override("pressed", style_normal)
 		var idx: int = i
-		btn.pressed.connect(func():
-			selected_color_index = idx
-			_refresh_color_highlight()
-			_update_preview()
+		btn.pressed.connect(
+			func():
+				selected_color_index = idx
+				_refresh_color_highlight()
+				_update_preview()
 		)
 		color_row.add_child(btn)
 		_color_btns.append(btn)
@@ -115,21 +116,21 @@ func _refresh_color_highlight():
 		var btn := _color_btns[i]
 		var style := StyleBoxFlat.new()
 		style.bg_color = COLORS[i]["color"]
-		style.corner_radius_top_left    = 8
-		style.corner_radius_top_right   = 8
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
 		style.corner_radius_bottom_left = 8
 		style.corner_radius_bottom_right = 8
 		if i == selected_color_index:
-			style.border_width_top    = 3
+			style.border_width_top = 3
 			style.border_width_bottom = 3
-			style.border_width_left   = 3
-			style.border_width_right  = 3
+			style.border_width_left = 3
+			style.border_width_right = 3
 			style.border_color = Color.WHITE
 			btn.modulate = Color(1, 1, 1, 1.0)
 		else:
 			btn.modulate = Color(1, 1, 1, 0.65)
-		btn.add_theme_stylebox_override("normal",  style)
-		btn.add_theme_stylebox_override("hover",   style)
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
 		btn.add_theme_stylebox_override("pressed", style)
 
 
@@ -141,12 +142,13 @@ func _build_bot_buttons():
 		btn.toggle_mode = true
 		btn.button_pressed = (n == selected_bot_count)
 		var count: int = n
-		btn.toggled.connect(func(pressed: bool):
-			if pressed:
-				selected_bot_count = count
-				_refresh_bot_highlight()
-				_rebuild_icon_section()
-				_update_preview()
+		btn.toggled.connect(
+			func(pressed: bool):
+				if pressed:
+					selected_bot_count = count
+					_refresh_bot_highlight()
+					_rebuild_icon_section()
+					_update_preview()
 		)
 		bot_row.add_child(btn)
 		_bot_btns.append(btn)
@@ -168,7 +170,10 @@ func _build_icon_section():
 	vbox.add_child(title)
 	vbox.move_child(title, _get_insert_index())
 
-	_player_icon_row = _make_icon_row("Você", ICONS, selected_player_icon,
+	_player_icon_row = _make_icon_row(
+		"Você",
+		ICONS,
+		selected_player_icon,
 		func(idx: int):
 			_steal_icon(-1, idx)
 			selected_player_icon = idx
@@ -214,7 +219,10 @@ func _make_bot_icon_row(b: int) -> HBoxContainer:
 	while selected_bot_icons.size() <= b:
 		selected_bot_icons.append(-1)
 	var slot := b
-	return _make_icon_row("Bot " + str(b + 1), ICONS, selected_bot_icons[b],
+	return _make_icon_row(
+		"Bot " + str(b + 1),
+		ICONS,
+		selected_bot_icons[b],
 		func(idx: int):
 			_steal_icon(slot, idx)
 			selected_bot_icons[slot] = idx
@@ -237,7 +245,9 @@ func _refresh_all_icon_rows():
 		_refresh_icon_row(_bot_icon_rows[b], selected_bot_icons[b])
 
 
-func _make_icon_row(label_text: String, icons: Array[String], current: int, on_select: Callable) -> HBoxContainer:
+func _make_icon_row(
+	label_text: String, icons: Array[String], current: int, on_select: Callable
+) -> HBoxContainer:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 6)
 
@@ -265,7 +275,10 @@ func _make_icon_row(label_text: String, icons: Array[String], current: int, on_s
 
 func _refresh_icon_row(row: HBoxContainer, selected: int):
 	for i in range(1, row.get_child_count()):
-		row.get_child(i).modulate = Color(1, 1, 1, 1.0) if (i - 1) == selected else Color(1, 1, 1, 0.5)
+		row.get_child(i).modulate = (
+			Color(1, 1, 1, 1.0) if (i - 1) == selected else Color(1, 1, 1, 0.5)
+		)
+
 
 func _update_preview():
 	for child in preview.get_children():
@@ -314,8 +327,8 @@ func _add_preview_row(pname: String, col: Color, tag: String, icon: Texture2D = 
 	# Bolinha de cor
 	var dot_style := StyleBoxFlat.new()
 	dot_style.bg_color = col
-	dot_style.corner_radius_top_left    = 8
-	dot_style.corner_radius_top_right   = 8
+	dot_style.corner_radius_top_left = 8
+	dot_style.corner_radius_top_right = 8
 	dot_style.corner_radius_bottom_left = 8
 	dot_style.corner_radius_bottom_right = 8
 	var dot := PanelContainer.new()
@@ -349,8 +362,8 @@ func _on_start_pressed() -> void:
 			return
 
 	GameConfig.player_color_name = COLORS[selected_color_index]["name"]
-	GameConfig.player_icon_name  = ICONS[selected_player_icon]
-	GameConfig.bot_count         = selected_bot_count
+	GameConfig.player_icon_name = ICONS[selected_player_icon]
+	GameConfig.bot_count = selected_bot_count
 	GameConfig.bot_icon_names.clear()
 	for i in range(selected_bot_count):
 		while GameConfig.bot_icon_names.size() <= i:

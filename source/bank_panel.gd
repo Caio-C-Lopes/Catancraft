@@ -1,11 +1,11 @@
 extends PanelContainer
 
 const BANK_INITIAL = {
-	"wood":  19,
+	"wood": 19,
 	"brick": 19,
 	"wheat": 19,
 	"sheep": 19,
-	"ore":   19,
+	"ore": 19,
 }
 const DEV_CARDS_INITIAL = 25
 
@@ -17,11 +17,11 @@ var _count_labels: Dictionary = {}
 var _dev_label: Label = null
 var font: Font
 
-@export var wood_icon:  Texture2D
+@export var wood_icon: Texture2D
 @export var brick_icon: Texture2D
 @export var wheat_icon: Texture2D
 @export var sheep_icon: Texture2D
-@export var ore_icon:   Texture2D
+@export var ore_icon: Texture2D
 @export var dev_card_icon: Texture2D
 
 
@@ -33,14 +33,14 @@ func _ready():
 
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 0.92)
-	style.border_width_left   = 2
-	style.border_width_right  = 2
-	style.border_width_top    = 2
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
 	style.border_width_bottom = 2
 	style.border_color = Color(0, 0, 0, 1)
-	style.corner_radius_top_left     = 4
-	style.corner_radius_top_right    = 4
-	style.corner_radius_bottom_left  = 4
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
 	style.corner_radius_bottom_right = 4
 	add_theme_stylebox_override("panel", style)
 
@@ -55,26 +55,26 @@ func _snap_below_dice_log():
 	if not dice_log:
 		return
 
-	anchor_left   = dice_log.anchor_left
-	anchor_right  = dice_log.anchor_right
-	anchor_top    = dice_log.anchor_top
+	anchor_left = dice_log.anchor_left
+	anchor_right = dice_log.anchor_right
+	anchor_top = dice_log.anchor_top
 	anchor_bottom = dice_log.anchor_bottom
 
-	var gap        = 6.0
-	var panel_w    = 6 * 38 + 24
-	var panel_h    = 82.0
+	var gap = 6.0
+	var panel_w = 6 * 38 + 24
+	var panel_h = 82.0
 
-	offset_right  = dice_log.offset_right
-	offset_left   = dice_log.offset_right - panel_w
-	offset_top    = dice_log.offset_bottom + gap
+	offset_right = dice_log.offset_right
+	offset_left = dice_log.offset_right - panel_w
+	offset_top = dice_log.offset_bottom + gap
 	offset_bottom = offset_top + panel_h
 
 
 func _build_ui():
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left",   6)
-	margin.add_theme_constant_override("margin_right",  6)
-	margin.add_theme_constant_override("margin_top",    5)
+	margin.add_theme_constant_override("margin_left", 6)
+	margin.add_theme_constant_override("margin_right", 6)
+	margin.add_theme_constant_override("margin_top", 5)
 	margin.add_theme_constant_override("margin_bottom", 5)
 	add_child(margin)
 
@@ -83,11 +83,11 @@ func _build_ui():
 	margin.add_child(root_vbox)
 
 	var icons = {
-		"wood":  wood_icon,
+		"wood": wood_icon,
 		"brick": brick_icon,
 		"wheat": wheat_icon,
 		"sheep": sheep_icon,
-		"ore":   ore_icon,
+		"ore": ore_icon,
 	}
 
 	var grid = HBoxContainer.new()
@@ -96,7 +96,9 @@ func _build_ui():
 	root_vbox.add_child(grid)
 
 	for res in RESOURCE_ORDER:
-		grid.add_child(_make_cell(icons[res], str(bank_amounts[res]), func(lbl): _count_labels[res] = lbl))
+		grid.add_child(
+			_make_cell(icons[res], str(bank_amounts[res]), func(lbl): _count_labels[res] = lbl)
+		)
 
 	grid.add_child(_make_cell(dev_card_icon, str(dev_cards_remaining), func(lbl): _dev_label = lbl))
 
@@ -147,5 +149,6 @@ func _refresh_dev_label():
 	if not _dev_label:
 		return
 	_dev_label.text = str(dev_cards_remaining)
-	_dev_label.add_theme_color_override("font_color",
-		Color(0.8, 0.1, 0.1) if dev_cards_remaining <= 3 else Color(0.1, 0.1, 0.1))
+	_dev_label.add_theme_color_override(
+		"font_color", Color(0.8, 0.1, 0.1) if dev_cards_remaining <= 3 else Color(0.1, 0.1, 0.1)
+	)

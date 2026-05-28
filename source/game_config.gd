@@ -10,8 +10,8 @@ var player_color: Color:
 		return COLOR_MAP.get(player_color_name, Color.RED)
 
 const COLOR_MAP: Dictionary = {
-	"red":    Color(0.85, 0.25, 0.25),
-	"blue":   Color(0.22, 0.54, 0.87),
-	"green":  Color(0.27, 0.65, 0.27),
+	"red": Color(0.85, 0.25, 0.25),
+	"blue": Color(0.22, 0.54, 0.87),
+	"green": Color(0.27, 0.65, 0.27),
 	"purple": Color(0.55, 0.27, 0.80),
 }

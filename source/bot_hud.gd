@@ -4,37 +4,37 @@ var bot_index: int = 1
 var _player: Player = null
 var font: Font
 
-var _total_cards_lbl:  Label = null
-var _dev_cards_lbl:    Label = null
-var _points_lbl:       Label = null
-var _knights_lbl:      Label = null
-var _roads_lbl:        Label = null
-var _settlements_lbl:  Label = null
-var _cities_lbl:       Label = null
+var _total_cards_lbl: Label = null
+var _dev_cards_lbl: Label = null
+var _points_lbl: Label = null
+var _knights_lbl: Label = null
+var _roads_lbl: Label = null
+var _settlements_lbl: Label = null
+var _cities_lbl: Label = null
 
-@export var trophy_icon:    Texture2D
+@export var trophy_icon: Texture2D
 @export var iron_golem_icon: Texture2D
-@export var roads_icon:     Texture2D
+@export var roads_icon: Texture2D
 @export var dev_card_back_icon: Texture2D
 @export var resource_card_icon: Texture2D
 
-@export var house_red_icon:    Texture2D
-@export var house_blue_icon:   Texture2D
-@export var house_green_icon:  Texture2D
+@export var house_red_icon: Texture2D
+@export var house_blue_icon: Texture2D
+@export var house_green_icon: Texture2D
 @export var house_purple_icon: Texture2D
-@export var city_red_icon:     Texture2D
-@export var city_blue_icon:    Texture2D
-@export var city_green_icon:   Texture2D
-@export var city_purple_icon:  Texture2D
-@export var road_red_icon:     Texture2D
-@export var road_blue_icon:    Texture2D
-@export var road_green_icon:   Texture2D
-@export var road_purple_icon:  Texture2D
+@export var city_red_icon: Texture2D
+@export var city_blue_icon: Texture2D
+@export var city_green_icon: Texture2D
+@export var city_purple_icon: Texture2D
+@export var road_red_icon: Texture2D
+@export var road_blue_icon: Texture2D
+@export var road_green_icon: Texture2D
+@export var road_purple_icon: Texture2D
 
-var _bot_icon_rect:   TextureRect = null
+var _bot_icon_rect: TextureRect = null
 var _house_icon_rect: TextureRect = null
-var _city_icon_rect:  TextureRect = null
-var _road_icon_rect:  TextureRect = null
+var _city_icon_rect: TextureRect = null
+var _road_icon_rect: TextureRect = null
 
 
 func _ready():
@@ -48,14 +48,14 @@ func _ready():
 func _apply_style():
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 0.92)
-	style.border_width_left   = 2
-	style.border_width_right  = 2
-	style.border_width_top    = 2
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
 	style.border_width_bottom = 2
 	style.border_color = Color(0, 0, 0, 1)
-	style.corner_radius_top_left     = 4
-	style.corner_radius_top_right    = 4
-	style.corner_radius_bottom_left  = 4
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
 	style.corner_radius_bottom_right = 4
 	add_theme_stylebox_override("panel", style)
 
@@ -65,25 +65,25 @@ func _snap_position():
 	if not bank_panel:
 		return
 
-	anchor_left   = bank_panel.anchor_left
-	anchor_right  = bank_panel.anchor_right
-	anchor_top    = bank_panel.anchor_top
+	anchor_left = bank_panel.anchor_left
+	anchor_right = bank_panel.anchor_right
+	anchor_top = bank_panel.anchor_top
 	anchor_bottom = bank_panel.anchor_bottom
 
-	var gap     = 6.0
+	var gap = 6.0
 	var panel_h = 95.0
 
-	offset_right  = bank_panel.offset_right
-	offset_left   = bank_panel.offset_left
-	offset_top    = bank_panel.offset_bottom + gap + (bot_index - 1) * (panel_h + gap)
+	offset_right = bank_panel.offset_right
+	offset_left = bank_panel.offset_left
+	offset_top = bank_panel.offset_bottom + gap + (bot_index - 1) * (panel_h + gap)
 	offset_bottom = offset_top + panel_h
 
 
 func _build_ui():
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left",   6)
-	margin.add_theme_constant_override("margin_right",  6)
-	margin.add_theme_constant_override("margin_top",    4)
+	margin.add_theme_constant_override("margin_left", 6)
+	margin.add_theme_constant_override("margin_right", 6)
+	margin.add_theme_constant_override("margin_top", 4)
 	margin.add_theme_constant_override("margin_bottom", 4)
 	add_child(margin)
 
@@ -104,20 +104,18 @@ func _build_ui():
 	top_row.add_child(icon_rect)
 
 	# Cartas de recurso na mão (carta azul com ?)
-	top_row.add_child(_make_icon_counter(resource_card_icon, "0",
-		func(lbl): _total_cards_lbl = lbl))
+	top_row.add_child(
+		_make_icon_counter(resource_card_icon, "0", func(lbl): _total_cards_lbl = lbl)
+	)
 
 	# Cartas de desenvolvimento na mão (carta roxa)
-	top_row.add_child(_make_icon_counter(dev_card_back_icon, "0",
-		func(lbl): _dev_cards_lbl = lbl))
+	top_row.add_child(_make_icon_counter(dev_card_back_icon, "0", func(lbl): _dev_cards_lbl = lbl))
 
 	# Pontos de vitória (troféu)
-	top_row.add_child(_make_icon_counter(trophy_icon, "0",
-		func(lbl): _points_lbl = lbl))
+	top_row.add_child(_make_icon_counter(trophy_icon, "0", func(lbl): _points_lbl = lbl))
 
 	# Cavaleiros jogados (golem de ferro)
-	top_row.add_child(_make_icon_counter(iron_golem_icon, "0",
-		func(lbl): _knights_lbl = lbl))
+	top_row.add_child(_make_icon_counter(iron_golem_icon, "0", func(lbl): _knights_lbl = lbl))
 
 	var bot_row = HBoxContainer.new()
 	bot_row.add_theme_constant_override("separation", 8)
@@ -229,18 +227,24 @@ func refresh():
 func _apply_piece_icons(color_name: String):
 	var base = "res://board_assets/"
 	var h = load(base + "house_" + color_name + ".png") as Texture2D
-	var r = load(base + "road_"  + color_name + ".png") as Texture2D
-	var c = load(base + "city_"  + color_name + ".png") as Texture2D
-	if _house_icon_rect and h: _house_icon_rect.texture = h
-	if _road_icon_rect  and r: _road_icon_rect.texture  = r
-	if _city_icon_rect  and c: _city_icon_rect.texture  = c
+	var r = load(base + "road_" + color_name + ".png") as Texture2D
+	var c = load(base + "city_" + color_name + ".png") as Texture2D
+	if _house_icon_rect and h:
+		_house_icon_rect.texture = h
+	if _road_icon_rect and r:
+		_road_icon_rect.texture = r
+	if _city_icon_rect and c:
+		_city_icon_rect.texture = c
 
 
 func _color_name_from(color: Color) -> String:
 	var r = color.r
 	var g = color.g
 	var b = color.b
-	if r > 0.6 and g < 0.5 and b < 0.5: return "red"
-	if b > 0.6 and r < 0.5 and g < 0.7: return "blue"
-	if g > 0.6 and r < 0.5 and b < 0.5: return "green"
+	if r > 0.6 and g < 0.5 and b < 0.5:
+		return "red"
+	if b > 0.6 and r < 0.5 and g < 0.7:
+		return "blue"
+	if g > 0.6 and r < 0.5 and b < 0.5:
+		return "green"
 	return "purple"
