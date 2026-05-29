@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dco1t38ylv6vm"]
+
+[ext_resource type="Script" uid="uid://meb0k8oe0o40" path="res://source/bot_hud.gd" id="1_a5sek"]
+[ext_resource type="Texture2D" uid="uid://btwcx6a717asv" path="res://icons_assets/trophy.png" id="2_exmbu"]
+[ext_resource type="Texture2D" uid="uid://dewtlpo56ne1r" path="res://icons_assets/iron_golem.png" id="3_ie8mp"]
+[ext_resource type="Texture2D" uid="uid://crxpk4eehh0xx" path="res://icons_assets/roads.png" id="4_jxiyr"]
+[ext_resource type="Texture2D" uid="uid://b7icele5glwy4" path="res://card_assets/development/development.png" id="5_nspbg"]
+[ext_resource type="Texture2D" uid="uid://cxm8r2j3j33fq" path="res://icons_assets/cards.png" id="6_ifxcm"]
+[ext_resource type="Texture2D" uid="uid://nxnm0beda6dp" path="res://board_assets/house_red.png" id="7_s1am1"]
+[ext_resource type="Texture2D" uid="uid://brr6rkxd6f2ex" path="res://board_assets/house_blue.png" id="8_amrb7"]
+[ext_resource type="Texture2D" uid="uid://ctjy4klj6o5n8" path="res://board_assets/house_green.png" id="9_khya2"]
+[ext_resource type="Texture2D" uid="uid://w3qt8wxfkc6j" path="res://board_assets/house_purple.png" id="10_msg83"]
+[ext_resource type="Texture2D" uid="uid://pyxjdap77t6j" path="res://board_assets/city_red.png" id="11_u218s"]
+[ext_resource type="Texture2D" uid="uid://bmiviuwlaa462" path="res://board_assets/city_blue.png" id="12_j1kr5"]
+[ext_resource type="Texture2D" uid="uid://m2kd6qxovd6" path="res://board_assets/city_green.png" id="13_mbpry"]
+[ext_resource type="Texture2D" uid="uid://d1nefuneoily8" path="res://board_assets/city_purple.png" id="14_fgjft"]
+[ext_resource type="Texture2D" uid="uid://ydjvhaoyy86" path="res://board_assets/road_red.png" id="15_frowy"]
+[ext_resource type="Texture2D" uid="uid://bt7g0ogn2mkbp" path="res://board_assets/road_blue.png" id="16_2b08u"]
+[ext_resource type="Texture2D" uid="uid://dird0txupuvo" path="res://board_assets/road_green.png" id="17_uk4bq"]
+[ext_resource type="Texture2D" uid="uid://bytdjvab2ragm" path="res://board_assets/road_purple.png" id="18_6btu1"]
+
+[node name="BotHud" type="PanelContainer" unique_id=1436461201]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_a5sek")
+trophy_icon = ExtResource("2_exmbu")
+iron_golem_icon = ExtResource("3_ie8mp")
+roads_icon = ExtResource("4_jxiyr")
+dev_card_back_icon = ExtResource("5_nspbg")
+resource_card_icon = ExtResource("6_ifxcm")
+house_red_icon = ExtResource("7_s1am1")
+house_blue_icon = ExtResource("8_amrb7")
+house_green_icon = ExtResource("9_khya2")
+house_purple_icon = ExtResource("10_msg83")
+city_red_icon = ExtResource("11_u218s")
+city_blue_icon = ExtResource("12_j1kr5")
+city_green_icon = ExtResource("13_mbpry")
+city_purple_icon = ExtResource("14_fgjft")
+road_red_icon = ExtResource("15_frowy")
+road_blue_icon = ExtResource("16_2b08u")
+road_green_icon = ExtResource("17_uk4bq")
+road_purple_icon = ExtResource("18_6btu1")

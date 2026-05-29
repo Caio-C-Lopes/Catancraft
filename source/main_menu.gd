@@ -20,7 +20,7 @@ func _process(delta: float) -> void:
 func _on_start_game_pressed() -> void:
 	audio_player.play()
 	print("Playing...")
-	get_tree().change_scene_to_file("res://game.tscn")
+	get_tree().change_scene_to_file("res://lobby.tscn")
 
 
 func _on_options_pressed() -> void:

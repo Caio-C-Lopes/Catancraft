@@ -22,6 +22,7 @@ buses/default_bus_layout="uid://dkls8wtucroe8"
 [autoload]
 
 BoardState="*uid://ctoody0rlkilc"
+GameConfig="*uid://bnc6xw73akpaq"
 
 [display]
 

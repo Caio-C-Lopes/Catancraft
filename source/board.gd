@@ -19,7 +19,6 @@ var HEX_HEIGHT = 2 * HEX_SIZE
 signal selected_vertice(pos: Vector2)
 signal selected_edge(pos: Vector2)
 
-# key (Vector2 arredondada) → { container, circle, shadow, area }
 var _vertice_nodes: Dictionary = {}
 
 var available_resources = [
@@ -53,11 +52,6 @@ func _ready():
 	randomize()
 	shuffle_valid_board()
 	generate_board()
-
-
-# ══════════════════════════════════════════════
-# GERAÇÃO DO TABULEIRO
-# ══════════════════════════════════════════════
 
 
 func shuffle_valid_board():
@@ -268,11 +262,6 @@ func create_hex(pos: Vector2, type: ResourceType, number: int):
 	add_child(hex_container)
 
 
-# ══════════════════════════════════════════════
-# VÉRTICES — NÓ VISUAL + ÁREA DE CLIQUE
-# ══════════════════════════════════════════════
-
-
 func _create_vertice_node(pos: Vector2):
 	var key = Vector2(round(pos.x), round(pos.y))
 	if _vertice_nodes.has(key):
@@ -283,19 +272,15 @@ func _create_vertice_node(pos: Vector2):
 	container.z_index = 10
 	container.visible = false
 
-	# 1) Sombra escura — contorno preto bem visível
 	var shadow = _make_circle_poly(20.0, Color(0, 0, 0, 0.55))
 	container.add_child(shadow)
 
-	# 2) Preenchimento principal branco translúcido
 	var circle = _make_circle_poly(17.0, Color(1, 1, 1, 0.55))
 	container.add_child(circle)
 
-	# 3) Borda interna fina escura
 	var border = _make_circle_outline(17.0, 2.5, Color(0.15, 0.15, 0.15, 0.9))
 	container.add_child(border)
 
-	# Área de clique
 	var area = Area2D.new()
 	var collision = CollisionShape2D.new()
 	var shape = CircleShape2D.new()
@@ -304,7 +289,6 @@ func _create_vertice_node(pos: Vector2):
 	area.add_child(collision)
 	container.add_child(area)
 
-	# Hover: laranja ao entrar, branco ao sair
 	area.mouse_entered.connect(
 		func():
 			circle.color = Color(1.0, 0.75, 0.1, 0.9)
@@ -359,11 +343,6 @@ func _on_vertice_input(viewport: Node, event: InputEvent, shape_idx: int, pos: V
 			selected_vertice.emit(pos)
 
 
-# ══════════════════════════════════════════════
-# API PÚBLICA — highlights
-# ══════════════════════════════════════════════
-
-
 func show_settlement_highlights(player_id: int, is_preparation: bool, gm: Node):
 	for key in _vertice_nodes:
 		var valid = gm.village_construction_check(key, player_id, is_preparation)
@@ -375,11 +354,6 @@ func hide_settlement_highlights():
 	for key in _vertice_nodes:
 		_vertice_nodes[key]["container"].visible = false
 		_vertice_nodes[key]["area"].input_pickable = false
-
-
-# ══════════════════════════════════════════════
-# VISUAL — ALDEIA CONSTRUÍDA
-# ══════════════════════════════════════════════
 
 
 func spawn_settlement_visual(pos: Vector2, color: Color):
@@ -421,11 +395,6 @@ func _get_house_texture_path(color: Color) -> String:
 	return "res://board_assets/house_purple.png"
 
 
-# ══════════════════════════════════════════════
-# ESTRADAS
-# ══════════════════════════════════════════════
-
-
 func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 	var center = (a_vertice + b_vertice) / 2.0
 	var area = Area2D.new()
@@ -444,11 +413,6 @@ func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Ve
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		print("O jogador clicou na aresta ", pos)
 		selected_edge.emit(pos)
-
-
-# ══════════════════════════════════════════════
-# LADRÃO
-# ══════════════════════════════════════════════
 
 
 func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
