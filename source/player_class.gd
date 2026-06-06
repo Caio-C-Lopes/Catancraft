@@ -19,13 +19,9 @@ func _init(name: String, color: Color, icon: Texture2D = null):
 	player_color = color
 	icon_texture = icon
 
-var resources := {
-	"wood": 0,
-	"brick": 0,
-	"wheat": 0,
-	"sheep": 0,
-	"ore": 0
-}
+
+var resources := {"wood": 0, "brick": 0, "wheat": 0, "sheep": 0, "ore": 0}
+
 
 func add_resource(type: String, amount: int):
 	if not resources.has(type):
