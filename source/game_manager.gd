@@ -48,6 +48,12 @@ func _ready():
 			if game_phase == GamePhase.PLAYING:
 				_show_highlights_for_current(false)
 	)
+	
+	player_hud.trade_pressed.connect(_on_trade_pressed)
+
+
+func _on_trade_pressed():
+	trade_with_bank(0, "wood", "brick")
 
 
 func _setup_players():
@@ -665,3 +671,30 @@ func _refresh_resource_ui():
 
 	# bots
 	_refresh_bot_huds()
+
+
+func trade_with_bank(player_id: int, give_resource: String, receive_resource: String):
+	var player = players[player_id]
+
+	# checa se tem recurso suficiente
+	if player.resources.get(give_resource, 0) < 4:
+		print("Recursos insuficientes")
+		return
+
+	# checa se o banco tem o recurso desejado
+	if bank_panel.bank_amounts.get(receive_resource, 0) <= 0:
+		print("Banco sem recurso")
+		return
+
+	# remove do player
+	player.add_resource(give_resource, -4)
+
+	# adiciona ao player
+	player.add_resource(receive_resource, 1)
+
+	# atualiza banco
+	bank_panel.add_resource(give_resource, 4)
+	bank_panel.take_resource(receive_resource, 1)
+	
+	_refresh_resource_ui()
+	print("Troca realizada:", give_resource, "->", receive_resource)

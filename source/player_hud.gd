@@ -77,7 +77,8 @@ func _ready():
 		_player_icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		_player_icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_player_icon_rect.size = Vector2(40, 40)
-
+	
+	
 
 func _process(delta):
 	if not timer_running:

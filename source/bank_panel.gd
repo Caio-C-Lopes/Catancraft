@@ -175,3 +175,11 @@ func take_resource(resource: String, amount: int) -> bool:
 	_refresh_label(resource)
 
 	return true
+
+
+func add_resource(resource: String, amount: int):
+	if not bank_amounts.has(resource):
+		return
+
+	bank_amounts[resource] += amount
+	_refresh_label(resource)
