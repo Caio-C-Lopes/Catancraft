@@ -15,6 +15,7 @@ enum ResourceType { WOOD, SHEEP, WHEAT, BRICK, ORE, DESERT }
 
 var HEX_WIDTH = sqrt(3) * HEX_SIZE
 var HEX_HEIGHT = 2 * HEX_SIZE
+var final_hex_numbers = []
 
 signal selected_vertice(pos: Vector2)
 signal selected_edge(pos: Vector2)
@@ -115,6 +116,7 @@ func shuffle_valid_board():
 					break
 
 		if is_valid:
+			final_hex_numbers = hex_numbers.duplicate()
 			break
 
 
@@ -142,10 +144,7 @@ func generate_board():
 			var pos_y = grid_start_y + (row * HEX_HEIGHT * 0.75)
 			var type = available_resources[resource_index]
 			resource_index += 1
-			var number = 0
-			if type != ResourceType.DESERT:
-				number = available_numbers[number_index]
-				number_index += 1
+			var number = final_hex_numbers[resource_index - 1]
 			create_hex(Vector2(pos_x, pos_y), type, number)
 
 	for child in get_children():

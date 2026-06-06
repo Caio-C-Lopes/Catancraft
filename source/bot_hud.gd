@@ -203,7 +203,10 @@ func refresh():
 		return
 
 	if _total_cards_lbl:
-		_total_cards_lbl.text = "0"
+		var total = 0
+		for r in _player.resources:
+			total += _player.resources[r]
+		_total_cards_lbl.text = str(total)
 
 	if _dev_cards_lbl:
 		_dev_cards_lbl.text = str(_player.dev_cards_in_hand)
