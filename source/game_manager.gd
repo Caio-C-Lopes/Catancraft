@@ -35,6 +35,22 @@ func resource_type_to_string(type: int) -> String:
 		4: return "ore"
 		_: return ""
 
+func resource_type_to_string(type: int) -> String:
+	match type:
+		0:
+			return "wood"
+		1:
+			return "sheep"
+		2:
+			return "wheat"
+		3:
+			return "brick"
+		4:
+			return "ore"
+		_:
+			return ""
+
+
 func _ready():
 	player_hud.dice_clicked.connect(roll_dice)
 	randomize()
@@ -389,6 +405,7 @@ func on_dice_rolled(value: int):
 	else:
 		produce_resources(value)
 
+
 func robber_movement():
 	waiting_robber_move = true
 	print("Clique em um hexágono para mover o ladrão.")
@@ -583,6 +600,7 @@ func give_initial_resources(vertex_pos: Vector2, player_id: int):
 			print("Banco sem", resource_name)
 	_refresh_resource_ui()
 
+
 func _on_selected_edge(pos: Vector2):
 	if game_phase != GamePhase.PLAYING or current_player_index != 0:
 		return
@@ -655,6 +673,7 @@ func produce_resources(dice_value: int):
 			print("------")
 			if resource == "":
 					continue
+				continue
 
 			var bank = get_node("Control/BankPanel")
 
@@ -664,6 +683,7 @@ func produce_resources(dice_value: int):
 			else:
 				print("Banco sem", resource)
 				_refresh_resource_ui()
+
 
 func _refresh_resource_ui():
 	# jogador humano

@@ -149,8 +149,7 @@ func _refresh_label(resource: String):
 	lbl.text = str(bank_amounts[resource])
 
 	lbl.add_theme_color_override(
-		"font_color",
-		Color(0.8, 0.1, 0.1) if bank_amounts[resource] <= 3 else Color(0.1, 0.1, 0.1)
+		"font_color", Color(0.8, 0.1, 0.1) if bank_amounts[resource] <= 3 else Color(0.1, 0.1, 0.1)
 	)
 
 
