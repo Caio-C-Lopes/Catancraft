@@ -25,6 +25,7 @@
 [ext_resource type="Texture2D" uid="uid://d1cga0kq1ee6g" path="res://board_assets/icon-08.png" id="21_082n1"]
 [ext_resource type="Texture2D" uid="uid://dmm1f4m6c5pe8" path="res://board_assets/icon-06.png" id="22_xex6t"]
 [ext_resource type="Script" uid="uid://1ryb1he5gib4" path="res://source/bank_panel.gd" id="23_vaj68"]
+[ext_resource type="PackedScene" uid="uid://oxiqxcmiek37" path="res://pause_menu.tscn" id="26_i2p71"]
 
 [node name="Game" type="Node2D" unique_id=916513140]
 script = ExtResource("1_80nbo")
@@ -160,6 +161,9 @@ scale = Vector2(0.04634382, 0.043062203)
 texture = ExtResource("10_mfdv2")
 offset = Vector2(-650, 0)
 script = ExtResource("11_iotsf")
+
+[node name="PauseMenu" parent="." unique_id=834423069 instance=ExtResource("26_i2p71")]
+visible = false
 
 [connection signal="selected_edge" from="Board" to="." method="_on_selected_edge"]
 [connection signal="selected_vertice" from="Board" to="." method="_on_selected_vertice"]

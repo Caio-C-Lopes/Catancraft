@@ -1,0 +1,113 @@
+[gd_scene load_steps=9 format=3 uid="uid://pausemenu12345"]
+
+[ext_resource type="Script" path="res://source/pause_menu.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://b2dra3hnk4e7d" path="res://assets/fonts/Minecrafter.Reg.ttf" id="2_title_font"]
+[ext_resource type="Texture2D" uid="uid://d3o5pvx3jdbe3" path="res://assets/button/button_normal.png" id="3_btn_normal"]
+[ext_resource type="Texture2D" uid="uid://cwd4wsdmkv18q" path="res://assets/button/button_hover.png" id="4_btn_hover"]
+[ext_resource type="FontFile" uid="uid://clq2e567j5pdy" path="res://assets/fonts/1_Minecraft-Regular.otf" id="5_btn_font"]
+[ext_resource type="AudioStream" uid="uid://bwe2cuheqeb7m" path="res://assets/button/button_click.mp3" id="6_audio"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_normal"]
+texture = ExtResource("3_btn_normal")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hover"]
+texture = ExtResource("4_btn_hover")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.588)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -175.0
+offset_top = -90.0
+offset_right = 175.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_title_font")
+theme_override_font_sizes/font_size = 40
+text = "PAUSADO"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_normal")
+
+[node name="Label" type="Label" parent="VBoxContainer/ResumeButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.31542173, 0.31542173, 0.31542173, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("5_btn_font")
+theme_override_font_sizes/font_size = 25
+text = "Voltar ao Jogo"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="QuitButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_normal")
+theme_override_styles/hover = SubResource("StyleBoxTexture_hover")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_normal")
+
+[node name="Label" type="Label" parent="VBoxContainer/QuitButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.31542173, 0.31542173, 0.31542173, 1)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("5_btn_font")
+theme_override_font_sizes/font_size = 25
+text = "Sair para o Menu"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_audio")
+
+[connection signal="pressed" from="VBoxContainer/ResumeButton" to="." method="_on_resume_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
