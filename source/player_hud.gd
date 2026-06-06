@@ -123,8 +123,10 @@ func setup_preparation_turn(player: Player):
 	update_pieces(player)
 
 
-func update_resources(_player: Player):
-	pass
+func update_resources(player: Player):
+	for res in resource_labels.keys():
+		if player.resources.has(res):
+			resource_labels[res].text = str(player.resources[res])
 
 
 func update_pieces(player: Player):

@@ -18,13 +18,29 @@ var auto_roll_time: float = 5.0
 var turn_time: float = 60.0
 var preparation_turn_time: float = 60.0
 var waiting_robber_move: bool = false
-
+var is_setup_phase = true
 @onready var player_hud = $Control/PlayerHUD
 @onready var dice_log = $Control/DiceLog
 @onready var bank_panel = $Control/BankPanel
 @export var dice_textures: Array[Texture2D]
 
 var _bot_huds: Array = []
+
+
+func resource_type_to_string(type: int) -> String:
+	match type:
+		0:
+			return "wood"
+		1:
+			return "sheep"
+		2:
+			return "wheat"
+		3:
+			return "brick"
+		4:
+			return "ore"
+		_:
+			return ""
 
 
 func _ready():
@@ -372,6 +388,8 @@ func on_dice_rolled(value: int):
 	if value == 7:
 		waiting_robber_move = true
 		robber_movement()
+	else:
+		produce_resources(value)
 
 
 func robber_movement():
@@ -409,7 +427,8 @@ func _try_place_settlement(pos: Vector2, player_id: int, is_preparation: bool) -
 	var board = find_child("Board")
 	if board:
 		board.spawn_settlement_visual(key, player.player_color)
-
+		if is_setup_phase and player.settlements_remaining == 3:
+			give_initial_resources(pos, player_id)
 	# Atualiza HUD de peças
 	if player_id == 0:
 		player_hud.update_pieces(player)
@@ -538,6 +557,36 @@ func _on_selected_vertice(pos: Vector2):
 				print("Cidade construída em ", key)
 
 
+func give_initial_resources(vertex_pos: Vector2, player_id: int):
+	var key = Vector2(round(vertex_pos.x), round(vertex_pos.y))
+
+	if not BoardState.vertices.has(key):
+		return
+
+	var player = players[player_id]
+	var hexes = BoardState.vertices[key]["links"]
+
+	for hex in hexes:
+		if not hex.has_meta("resource_type"):
+			continue
+
+		var type = hex.get_meta("resource_type")
+
+		# deserto
+		if type == 5:
+			continue
+
+		var resource_name = resource_type_to_string(type)
+
+		print("INITIAL RESOURCE:", resource_name)
+
+		if bank_panel.take_resource(resource_name, 1):
+			player.add_resource(resource_name, 1)
+		else:
+			print("Banco sem", resource_name)
+	_refresh_resource_ui()
+
+
 func _on_selected_edge(pos: Vector2):
 	if game_phase != GamePhase.PLAYING or current_player_index != 0:
 		return
@@ -559,3 +608,71 @@ func _hide_highlights():
 	var board = find_child("Board")
 	if board and board.has_method("hide_settlement_highlights"):
 		board.hide_settlement_highlights()
+
+
+func produce_resources(dice_value: int):
+	print("Produzindo recursos para valor:", dice_value)
+
+	for vert_key in BoardState.vertices:
+		var vert = BoardState.vertices[vert_key]
+
+		if vert["owner"] == null:
+			continue
+
+		var player_id = vert["owner"]
+		var player = players[player_id]
+
+		var building_type = vert["type"]
+		var amount = 0
+
+		if building_type == BoardState.BuildingType.VILLAGE:
+			amount = 1
+		elif building_type == BoardState.BuildingType.CITY:
+			amount = 2
+		else:
+			continue
+
+		for hex in vert["links"]:
+			if not is_instance_valid(hex):
+				continue
+
+			var number = hex.get_meta("dice_number") if hex.has_meta("dice_number") else 0
+
+			if number != dice_value:
+				continue
+
+			# bloqueio do ladrão
+			var hex_pos = Vector2(round(hex.global_position.x), round(hex.global_position.y))
+			if hex_pos == BoardState.robber_hex_pos:
+				continue
+			var resource_id = hex.get_meta("resource_type")
+			var resource = resource_type_to_string(resource_id)
+
+			print("------")
+			print("PLAYER:", player_id)
+			print("VERTEX:", vert_key)
+			print("HEX NODE:", hex)
+			print("DICE:", number)
+			print("RESOURCE_ID:", resource_id)
+			print("RESOURCE:", resource)
+			print("POS:", hex.global_position)
+			print("------")
+			if resource == "":
+				continue
+
+			var bank = get_node("Control/BankPanel")
+
+			if bank.take_resource(resource, amount):
+				player.add_resource(resource, amount)
+				_refresh_resource_ui()
+			else:
+				print("Banco sem", resource)
+				_refresh_resource_ui()
+
+
+func _refresh_resource_ui():
+	# jogador humano
+	player_hud.update_resources(players[0])
+
+	# bots
+	_refresh_bot_huds()

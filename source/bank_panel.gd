@@ -141,8 +141,16 @@ func get_dev_cards_remaining() -> int:
 	return dev_cards_remaining
 
 
-func _refresh_label(_resource: String):
-	pass
+func _refresh_label(resource: String):
+	if not _count_labels.has(resource):
+		return
+
+	var lbl = _count_labels[resource]
+	lbl.text = str(bank_amounts[resource])
+
+	lbl.add_theme_color_override(
+		"font_color", Color(0.8, 0.1, 0.1) if bank_amounts[resource] <= 3 else Color(0.1, 0.1, 0.1)
+	)
 
 
 func _refresh_dev_label():
@@ -152,3 +160,17 @@ func _refresh_dev_label():
 	_dev_label.add_theme_color_override(
 		"font_color", Color(0.8, 0.1, 0.1) if dev_cards_remaining <= 3 else Color(0.1, 0.1, 0.1)
 	)
+
+
+func take_resource(resource: String, amount: int) -> bool:
+	if not bank_amounts.has(resource):
+		return false
+
+	if bank_amounts[resource] < amount:
+		print("Banco sem recurso:", resource)
+		return false
+
+	bank_amounts[resource] -= amount
+	_refresh_label(resource)
+
+	return true
