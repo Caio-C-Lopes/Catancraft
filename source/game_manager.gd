@@ -26,6 +26,9 @@ var is_setup_phase = true
 
 var _bot_huds: Array = []
 
+var _pending_trade_give: Array = []
+var _pending_trade_recv: Array = []
+
 # ── Baralho de cartas de desenvolvimento ──────────────────────────────────────
 # Mapeamento: CardType int → quantidades conforme o Catan (25 cartas total)
 # KNIGHT=0, ROAD_BUILDING=1, YEAR_OF_PLENTY=2, MONOPOLY=3,
@@ -146,6 +149,152 @@ func _connect_trade_panel() -> void:
 		return
 	if not tp.is_connected("bank_trade_requested", _on_bank_trade_requested):
 		tp.bank_trade_requested.connect(_on_bank_trade_requested)
+	if not tp.is_connected("player_trade_requested", _on_player_trade_requested):
+		tp.player_trade_requested.connect(_on_player_trade_requested)
+	if not tp.is_connected("trade_partner_chosen", _on_trade_partner_chosen):
+		tp.trade_partner_chosen.connect(_on_trade_partner_chosen)
+
+
+func _on_player_trade_requested(give_res: Array, recv_res: Array) -> void:
+	if current_player_index != 0 or not has_rolled_dice:
+		print("Troca bloqueada: role os dados primeiro ou aguarde seu turno.")
+		return
+
+	var human := players[0]
+	var give_counts := _count_resources(give_res)
+	for res in give_counts:
+		if human.resources.get(res, 0) < give_counts[res]:
+			print("Humano não tem recursos suficientes para a oferta.")
+			player_hud._trade_panel.show_trade_result([])
+			return
+
+	var accepted_by: Array = []
+	for i in range(1, players.size()):
+		if _bot_accepts_trade(i, give_res, recv_res):
+			accepted_by.append(players[i])
+
+	if accepted_by.is_empty():
+		player_hud._trade_panel.show_trade_result([])
+		return
+
+	if accepted_by.size() == 1:
+		# Só um bot aceitou — executa direto
+		var bot_id := players.find(accepted_by[0])
+		_execute_player_trade(0, bot_id, give_res, recv_res)
+		player_hud._trade_panel.show_trade_result([accepted_by[0]])
+	else:
+		# Vários aceitaram — guarda estado e pede ao humano escolher
+		_pending_trade_give = give_res.duplicate()
+		_pending_trade_recv = recv_res.duplicate()
+		player_hud._trade_panel.show_trade_offers(accepted_by, give_res, recv_res)
+
+
+func _on_trade_partner_chosen(chosen_bot: Player) -> void:
+	if _pending_trade_give.is_empty() or _pending_trade_recv.is_empty():
+		return
+
+	var bot_id := players.find(chosen_bot)
+	if bot_id == -1:
+		return
+
+	# Revalida — o estado pode ter mudado enquanto o humano escolhia
+	var recv_counts := _count_resources(_pending_trade_recv)
+	for res in recv_counts:
+		if chosen_bot.resources.get(res, 0) < recv_counts[res]:
+			print("%s não tem mais recursos suficientes." % chosen_bot.player_name)
+			_pending_trade_give.clear()
+			_pending_trade_recv.clear()
+			return
+
+	_execute_player_trade(0, bot_id, _pending_trade_give, _pending_trade_recv)
+	_pending_trade_give.clear()
+	_pending_trade_recv.clear()
+	_refresh_resource_ui()
+
+
+## Conta quantas de cada recurso há em um array de strings
+func _count_resources(res_array: Array) -> Dictionary:
+	var counts := {}
+	for r in res_array:
+		counts[r] = counts.get(r, 0) + 1
+	return counts
+
+
+## Lógica de decisão do bot: aceita a troca se conseguir o que precisa
+## e não for desperdiçar recursos escassos demais
+func _bot_accepts_trade(bot_id: int, give_res: Array, recv_res: Array) -> bool:
+	var bot := players[bot_id]
+
+	# Bot precisa ter todos os recursos pedidos pelo humano (recv_res = o que o bot vai dar)
+	var need_counts := _count_resources(recv_res)
+	for res in need_counts:
+		if bot.resources.get(res, 0) < need_counts[res]:
+			return false  # Não tem o que o humano quer
+
+	# Calcula o "valor" da troca para o bot
+	# Valor positivo = bot ganha algo que precisa
+	# Valor negativo = bot está dando algo valioso sem precisar do que recebe
+	var score := 0
+
+	# O que o bot VAI RECEBER (give_res do humano)
+	for res in give_res:
+		var current: int = bot.resources.get(res, 0)
+		# Quanto menos tiver, mais valioso é receber
+		if current == 0:
+			score += 3
+		elif current <= 2:
+			score += 2
+		else:
+			score += 1
+
+	# O que o bot VAI DAR (recv_res do humano)
+	var give_counts := _count_resources(recv_res)
+	for res in give_counts:
+		var current: int = bot.resources.get(res, 0)
+		var giving: int = give_counts[res]
+		var remaining: int = current - giving
+		# Penaliza se ficar com poucos recursos importantes
+		if remaining == 0:
+			score -= 2
+		elif remaining == 1:
+			score -= 1
+
+	# Aceita se o score for >= 0 (troca neutra ou vantajosa)
+	print("%s avaliou troca: score=%d → %s" % [
+	bot.player_name, score, "ACEITA" if score >= 0 else "RECUSA"
+	])
+	return score >= 0
+
+
+## Transfere recursos entre dois jogadores
+func _execute_player_trade(
+	player_a_id: int, player_b_id: int,
+	a_gives: Array, b_gives: Array
+) -> void:
+	var player_a := players[player_a_id]
+	var player_b := players[player_b_id]
+
+	# A dá para B
+	var a_give_counts := _count_resources(a_gives)
+	for res in a_give_counts:
+		player_a.remove_resource(res, a_give_counts[res])
+		player_b.add_resource(res, a_give_counts[res])
+
+	# B dá para A
+	var b_give_counts := _count_resources(b_gives)
+	for res in b_give_counts:
+		player_b.remove_resource(res, b_give_counts[res])
+		player_a.add_resource(res, b_give_counts[res])
+
+	print("%s trocou com %s: deu %s, recebeu %s" % [
+		player_a.player_name, player_b.player_name,
+		str(a_gives), str(b_gives)
+	])
+
+	# Log visual (reutiliza a entrada de troca do DiceLog)
+	dice_log.add_trade_entry(player_a, a_gives, b_gives, player_b)
+
+	_refresh_resource_ui()
 
 
 func _on_bank_trade_requested(give_res: String, recv_res: String) -> void:

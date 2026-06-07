@@ -4,6 +4,8 @@ extends Control
 signal trade_confirmed
 signal trade_cancelled
 signal bank_trade_requested(give_res: String, recv_res: String)
+signal player_trade_requested(give_res: Array, recv_res: Array)
+signal trade_partner_chosen(bot_id: int)
 
 # ── Constantes ────────────────────────────────────────────────────────────────
 const RESOURCES = ["wood", "brick", "wheat", "sheep", "ore"]
@@ -555,8 +557,87 @@ func _on_confirm():
 	if _trade_with_bank:
 		_try_bank_trade()
 	else:
-		emit_signal("trade_confirmed")
+		_try_player_trade()
+
+
+func _try_player_trade():
+	var give = get_give_resources()
+	var recv = get_recv_resources()
+	if give.size() < 1 or recv.size() < 1:
+		_show_error("Selecione ao menos 1 carta em cada lado.")
+		return
+	_hide_error()
+	emit_signal("player_trade_requested", give.duplicate(), recv.duplicate())
+
+
+func show_trade_result(accepted_by: Array): 
+	_clear_all_slots()
+	_hide_error()
+
+	var result_label = Label.new()
+	result_label.add_theme_font_override("font", _font)
+	result_label.add_theme_font_size_override("font_size", 14)
+	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	result_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	if accepted_by.is_empty():
+		result_label.text = "Nenhum jogador aceitou a troca."
+		result_label.add_theme_color_override("font_color", Color(0.8, 0.1, 0.1))
+	else:
+		var names = accepted_by.map(func(p): return p.player_name)
+		result_label.text = "%s aceitou a troca!" % ", ".join(names)
+		result_label.add_theme_color_override("font_color", Color(0.1, 0.6, 0.1))
+
+	_inject_temp_widget(result_label)
+	await get_tree().create_timer(2.0).timeout
+	result_label.queue_free()
+	close_trade()
+
+
+func show_trade_offers(acceptors: Array, give_res: Array, recv_res: Array) -> void:
+	_clear_all_slots()
+	_hide_error()
+
+	var vbox = _get_main_vbox()
+	if vbox == null:
+		return
+
+	var label = Label.new()
+	label.text = "Escolha com quem trocar:"
+	label.add_theme_font_override("font", _font)
+	label.add_theme_font_size_override("font_size", 14)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_inject_temp_widget(label)
+
+	var btn_row = HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 12)
+	_inject_temp_widget(btn_row)
+
+	for bot in acceptors:
+		var btn = Button.new()
+		btn.text = bot.player_name
+		btn.add_theme_font_override("font", _font)
+		btn.add_theme_font_size_override("font_size", 13)
+		btn.custom_minimum_size = Vector2(100, 48)
+		var bot_ref = bot
+		btn.pressed.connect(func():
+			emit_signal("trade_partner_chosen", bot_ref)
+			close_trade()
+		)
+		btn_row.add_child(btn)
+
+	# Botão de cancelar a escolha
+	var btn_cancel = Button.new()
+	btn_cancel.text = "Cancelar"
+	btn_cancel.add_theme_font_override("font", _font)
+	btn_cancel.add_theme_font_size_override("font_size", 13)
+	btn_cancel.custom_minimum_size = Vector2(100, 48)
+	btn_cancel.pressed.connect(func():
 		close_trade()
+	)
+	btn_row.add_child(btn_cancel)
 
 
 func _try_bank_trade():
@@ -599,3 +680,19 @@ func _on_cancel():
 		_hud.hud_reset_preview()
 	emit_signal("trade_cancelled")
 	close_trade()
+
+
+func _get_main_vbox() -> VBoxContainer:
+	var panel = get_child(0)
+	if panel == null:
+		return null
+	return panel.get_child(0)
+
+
+func _inject_temp_widget(widget: Control) -> void:
+	var vbox = _get_main_vbox()
+	if vbox == null:
+		return
+	# Insere antes da última linha (linha dos botões check/cancel)
+	vbox.add_child(widget)
+	vbox.move_child(widget, vbox.get_child_count() - 2)
