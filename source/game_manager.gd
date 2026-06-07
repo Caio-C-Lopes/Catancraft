@@ -88,8 +88,33 @@ func _ready():
 	if _dev_card_panel and _dev_card_panel.has_signal("card_played"):
 		_dev_card_panel.card_played.connect(_on_human_card_played)
 
-	# Conecta o sinal de troca com o banco após o trade_panel ser construído
-	_connect_trade_panel.call_deferred()
+	# Popula as texturas de recursos no DiceLog para que os sprites apareçam
+	# nas entradas de troca, produção e preparação.
+	_setup_dice_log_resource_textures()
+
+	# Aguarda até o _trade_panel existir antes de conectar bank_trade_requested
+	_connect_trade_panel_deferred.call_deferred()
+
+func _setup_dice_log_resource_textures() -> void:
+	var textures: Dictionary = {
+		"wood":  load("res://card_assets/resources/WOOD.png"),
+		"brick": load("res://card_assets/resources/BRICK.png"),
+		"wheat": load("res://card_assets/resources/WHEAT.png"),
+		"sheep": load("res://card_assets/resources/SHEEP.png"),
+		"ore":   load("res://card_assets/resources/STONE.png"),
+	}
+	dice_log.setup_resource_textures(textures)
+
+
+func _connect_trade_panel_deferred() -> void:
+	# Aguarda até o _trade_panel existir de fato (pode levar mais de 2 frames
+	# se o PlayerHUD usar call_deferred para criá-lo).
+	var max_attempts := 10
+	for _i in range(max_attempts):
+		await get_tree().process_frame
+		if player_hud._trade_panel != null:
+			break
+	_connect_trade_panel()
 
 
 # ── Baralho ────────────────────────────────────────────────────────────────────
@@ -99,7 +124,7 @@ func _ready():
 func _connect_trade_panel() -> void:
 	var tp = player_hud._trade_panel
 	if tp == null:
-		push_warning("game_manager: trade_panel ainda não existe ao conectar.")
+		push_error("game_manager: trade_panel não existe após aguardar — verifique PlayerHUD._build_trade_panel().")
 		return
 	if not tp.is_connected("bank_trade_requested", _on_bank_trade_requested):
 		tp.bank_trade_requested.connect(_on_bank_trade_requested)
