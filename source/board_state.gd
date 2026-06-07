@@ -7,6 +7,13 @@ var edges: Dictionary = {}
 var robber_hex_pos: Vector2
 
 
+func reset_state() -> void:
+	vertices.clear()
+	edges.clear()
+	robber_hex_pos = Vector2.ZERO
+	print("Estado do tabuleiro resetado com sucesso!")
+	
+
 func set_initial_robber_pos(pos: Vector2):
 	robber_hex_pos = Vector2(round(pos.x), round(pos.y))
 

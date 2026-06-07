@@ -26,4 +26,5 @@ func _on_resume_button_pressed() -> void:
 func _on_quit_button_pressed() -> void:
 	audio_player.play()
 	get_tree().paused = false
+	BoardState.reset_state() 
 	get_tree().change_scene_to_file("res://main_menu.tscn")
