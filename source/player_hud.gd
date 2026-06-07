@@ -217,14 +217,18 @@ func _set_btn_affordable(btn: TextureButton, affordable: bool):
 	btn.modulate = COLOR_ON if affordable else COLOR_OFF
 
 
-func update_pieces(player: Player):
+func update_pieces(_ignored: Player = null):
+	# Sempre exibe as peças do jogador humano, independente de quem está jogando
+	var p = _human_player
+	if p == null:
+		return
 	if piece_labels.has("road"):
-		piece_labels["road"].text = str(player.roads_remaining)
+		piece_labels["road"].text = str(p.roads_remaining)
 	if piece_labels.has("settlement"):
-		piece_labels["settlement"].text = str(player.settlements_remaining)
+		piece_labels["settlement"].text = str(p.settlements_remaining)
 	if piece_labels.has("city"):
-		piece_labels["city"].text = str(player.cities_remaining)
-	update_action_buttons(player)
+		piece_labels["city"].text = str(p.cities_remaining)
+	update_action_buttons(p)
 
 
 func update_vp_and_knights(player: Player = null):

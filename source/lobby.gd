@@ -7,7 +7,7 @@ const COLORS: Array[Dictionary] = [
 	{"name": "purple", "label": "Roxo", "color": Color(0.55, 0.27, 0.80)},
 ]
 
-const ICONS: Array[String] = ["steve", "creeper", "pig"]
+const ICONS: Array[String] = ["steve", "creeper", "pig", "zombie"]
 
 var selected_color_index: int = 0
 var selected_bot_count: int = 3

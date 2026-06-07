@@ -22,6 +22,8 @@ signal selected_edge(pos: Vector2)
 signal robber_placed(pos: Vector2)
 
 var _vertice_nodes: Dictionary = {}
+var _edge_nodes: Dictionary = {}  # key (Vector2) -> { area, highlight_poly }
+var _road_mode_active: bool = false
 
 var available_resources = [
 	ResourceType.DESERT,
@@ -269,7 +271,7 @@ func _create_vertice_node(pos: Vector2):
 
 	var container = Node2D.new()
 	container.position = pos
-	container.z_index = 10
+	container.z_index = 20
 	container.visible = false
 
 	var shadow = _make_circle_poly(20.0, Color(0, 0, 0, 0.55))
@@ -365,7 +367,7 @@ func spawn_settlement_visual(pos: Vector2, color: Color):
 
 	var settlement = Node2D.new()
 	settlement.position = pos
-	settlement.z_index = 10
+	settlement.z_index = 15
 
 	var texture_path = _get_house_texture_path(color)
 	var texture = load(texture_path)
@@ -395,17 +397,136 @@ func _get_house_texture_path(color: Color) -> String:
 	return "res://board_assets/house_purple.png"
 
 
+func show_city_highlights(player_id: int):
+	# Mostra highlights apenas nas aldeias do proprio jogador (unicas que podem virar cidade)
+	for key in _vertice_nodes:
+		var vertice = BoardState.vertices.get(key, {})
+		var valid = (
+			vertice.get("owner") == player_id
+			and vertice.get("type") == BoardState.BuildingType.VILLAGE
+		)
+		_vertice_nodes[key]["container"].visible = valid
+		_vertice_nodes[key]["area"].input_pickable = valid
+
+
+func hide_city_highlights():
+	for key in _vertice_nodes:
+		_vertice_nodes[key]["container"].visible = false
+		_vertice_nodes[key]["area"].input_pickable = false
+
+
+func upgrade_settlement_to_city(pos: Vector2, color: Color):
+	var key = Vector2(round(pos.x), round(pos.y))
+
+	# Remove o sprite de aldeia existente nessa posicao
+	for child in get_children():
+		if (
+			child.is_in_group("settlements")
+			and Vector2(round(child.position.x), round(child.position.y)) == key
+		):
+			child.queue_free()
+			break
+
+	# Oculta o highlight do vertice
+	if _vertice_nodes.has(key):
+		_vertice_nodes[key]["container"].visible = false
+		_vertice_nodes[key]["area"].input_pickable = false
+
+	var texture_path = _get_city_texture_path(color)
+	var texture = load(texture_path)
+	if texture == null:
+		push_error("Sprite de cidade nao encontrado: " + texture_path)
+		return
+
+	var city = Node2D.new()
+	city.position = pos
+	city.z_index = 15
+
+	var sprite = Sprite2D.new()
+	sprite.texture = texture
+	var target_size = 42.0
+	sprite.scale = Vector2(target_size / texture.get_width(), target_size / texture.get_height())
+	sprite.position = Vector2(0, -target_size * 0.4)
+
+	city.add_child(sprite)
+	city.add_to_group("cities")
+	add_child(city)
+
+
+func _get_city_texture_path(color: Color) -> String:
+	var r = color.r
+	var g = color.g
+	var b = color.b
+
+	if r > 0.6 and g < 0.5 and b < 0.5:
+		return "res://board_assets/city_red.png"
+	if b > 0.6 and r < 0.5 and g < 0.7:
+		return "res://board_assets/city_blue.png"
+	if g > 0.6 and r < 0.5 and b < 0.5:
+		return "res://board_assets/city_green.png"
+	return "res://board_assets/city_purple.png"
+
+
 func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 	var center = (a_vertice + b_vertice) / 2.0
+	var key = Vector2(round(center.x), round(center.y))
+
+	if _edge_nodes.has(key):
+		return
+
+	var container = Node2D.new()
+	container.position = center
+	container.z_index = 8
+
+	# Calcular ângulo da aresta para rotacionar o highlight
+	var diff = b_vertice - a_vertice
+	var angle = diff.angle()
+
+	# Highlight visual: retângulo estreito representando a estrada
+	var highlight = Polygon2D.new()
+	var hw = diff.length() * 0.45  # metade do comprimento
+	var hh = 7.0  # metade da largura
+	var pts = PackedVector2Array(
+		[
+			Vector2(-hw, -hh).rotated(angle),
+			Vector2(hw, -hh).rotated(angle),
+			Vector2(hw, hh).rotated(angle),
+			Vector2(-hw, hh).rotated(angle),
+		]
+	)
+	highlight.polygon = pts
+	highlight.color = Color(1, 1, 1, 0.45)
+	highlight.visible = false
+	container.add_child(highlight)
+
 	var area = Area2D.new()
 	var collision = CollisionShape2D.new()
-	var shape = CircleShape2D.new()
-	shape.radius = 10.0
+	var shape = CapsuleShape2D.new()
+	shape.radius = 9.0
+	shape.height = diff.length() * 0.7
 	collision.shape = shape
-	area.position = center
+	collision.rotation = angle + deg_to_rad(90.0)
 	area.add_child(collision)
-	area.input_event.connect(road_click_check.bind(center))
-	add_child(area)
+	area.input_pickable = false
+	container.add_child(area)
+
+	area.mouse_entered.connect(func(): highlight.color = Color(1.0, 0.85, 0.2, 0.85))
+	area.mouse_exited.connect(func(): highlight.color = Color(1, 1, 1, 0.45))
+	area.input_event.connect(_on_edge_input.bind(center))
+
+	_edge_nodes[key] = {
+		"container": container, "highlight": highlight, "area": area, "angle": angle
+	}
+	add_child(container)
+
+
+@warning_ignore("unused_parameter")
+func _on_edge_input(viewport: Node, event: InputEvent, shape_idx: int, pos: Vector2):
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var key = Vector2(round(pos.x), round(pos.y))
+		if _edge_nodes.has(key) and _edge_nodes[key]["area"].input_pickable:
+			print("O jogador clicou na aresta ", pos)
+			selected_edge.emit(pos)
 
 
 @warning_ignore("unused_parameter")
@@ -413,6 +534,86 @@ func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Ve
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		print("O jogador clicou na aresta ", pos)
 		selected_edge.emit(pos)
+
+
+func show_road_highlights(player_id: int, gm: Node):
+	_road_mode_active = true
+	for key in _edge_nodes:
+		var valid = gm.road_construction_check(key, player_id)
+		var node = _edge_nodes[key]
+		node["highlight"].visible = valid
+		node["area"].input_pickable = valid
+
+
+func hide_road_highlights():
+	_road_mode_active = false
+	for key in _edge_nodes:
+		var node = _edge_nodes[key]
+		node["highlight"].visible = false
+		node["area"].input_pickable = false
+
+
+func spawn_road_visual(pos: Vector2, color: Color):
+	var key = Vector2(round(pos.x), round(pos.y))
+
+	# Oculta o highlight da aresta ocupada
+	if _edge_nodes.has(key):
+		_edge_nodes[key]["highlight"].visible = false
+		_edge_nodes[key]["area"].input_pickable = false
+
+	if not BoardState.edges.has(key):
+		return
+
+	var edge = BoardState.edges[key]
+	var a_v = edge["a_vertice"]
+	var b_v = edge["b_vertice"]
+	var diff = b_v - a_v
+
+	# Determina orientação: vertical | diagonal_right | diagonal_left
+	# O ângulo do vetor diff (em graus, normalizado para [0, 180)) define os 3 casos:
+	#   diagonal_right  ~  30 deg  (aresta superior-direita / inferior-esquerda)
+	#   vertical        ~  90 deg  (aresta esquerda / direita do hex)
+	#   diagonal_left   ~ 150 deg  (aresta superior-esquerda / inferior-direita)
+	var angle_deg = fmod(rad_to_deg(diff.angle()) + 360.0, 180.0)
+	var orientation: String
+	if angle_deg < 60.0:
+		orientation = "diagonal_left"
+	elif angle_deg < 120.0:
+		orientation = "vertical"
+	else:
+		orientation = "diagonal_right"
+
+	var texture_path = _get_road_texture_path(color, orientation)
+	var texture = load(texture_path)
+	if texture == null:
+		push_error("Sprite de estrada nao encontrado: " + texture_path)
+		return
+
+	var road = Sprite2D.new()
+	road.texture = texture
+	road.position = pos
+	road.scale = Vector2(0.75, 0.75)
+	road.z_index = 5
+	road.add_to_group("roads")
+	add_child(road)
+
+
+func _get_road_texture_path(color: Color, orientation: String) -> String:
+	var r = color.r
+	var g = color.g
+	var b = color.b
+
+	var color_name: String
+	if r > 0.6 and g < 0.5 and b < 0.5:
+		color_name = "red"
+	elif b > 0.6 and r < 0.5 and g < 0.7:
+		color_name = "blue"
+	elif g > 0.6 and r < 0.5 and b < 0.5:
+		color_name = "green"
+	else:
+		color_name = "purple"
+
+	return "res://board_assets/road_%s_%s.png" % [color_name, orientation]
 
 
 func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
