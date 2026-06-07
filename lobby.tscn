@@ -1,8 +1,63 @@
 [gd_scene format=3 uid="uid://c4ce4ccjqr4cg"]
 
 [ext_resource type="Script" uid="uid://b48hve6rnfu2v" path="res://source/lobby.gd" id="1_ll2xe"]
+[ext_resource type="Texture2D" uid="uid://d3o5pvx3jdbe3" path="res://assets/button/button_normal.png" id="2_2wvic"]
+[ext_resource type="Texture2D" uid="uid://cwd4wsdmkv18q" path="res://assets/button/button_hover.png" id="3_tftiq"]
+[ext_resource type="FontFile" uid="uid://clq2e567j5pdy" path="res://assets/fonts/1_Minecraft-Regular.otf" id="4_tftiq"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ll2xe"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_1gg6n"]
+texture = ExtResource("2_2wvic")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_x4164"]
+texture = ExtResource("2_2wvic")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8ldoj"]
+texture = ExtResource("3_tftiq")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tftiq"]
+texture = ExtResource("2_2wvic")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ein8w"]
+texture = ExtResource("2_2wvic")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_gm5bj"]
+texture = ExtResource("3_tftiq")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 2
+axis_stretch_vertical = 2
 
 [node name="Lobby" type="Control" unique_id=1713394772]
 custom_minimum_size = Vector2(1.1, 1.1)
@@ -21,13 +76,12 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -166.0
+offset_top = -204.0
+offset_right = 174.0
+offset_bottom = 196.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxEmpty_ll2xe")
 
 [node name="MarginContainer" type="MarginContainer" parent="Panel" unique_id=207385835]
 layout_mode = 1
@@ -73,11 +127,49 @@ layout_mode = 2
 
 [node name="Start" type="Button" parent="Panel/MarginContainer/VBoxContainer" unique_id=657797661]
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_1gg6n")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_x4164")
+theme_override_styles/hover = SubResource("StyleBoxTexture_8ldoj")
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/Start" unique_id=1651269160]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("4_tftiq")
+theme_override_font_sizes/font_size = 15
 text = "Start"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Back" type="Button" parent="Panel/MarginContainer/VBoxContainer" unique_id=2066550726]
 layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxTexture_tftiq")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_ein8w")
+theme_override_styles/hover = SubResource("StyleBoxTexture_gm5bj")
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBoxContainer/Back" unique_id=1914675817]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_constants/shadow_offset_x = 5
+theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("4_tftiq")
+theme_override_font_sizes/font_size = 15
 text = "Back"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [connection signal="pressed" from="Panel/MarginContainer/VBoxContainer/Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="Panel/MarginContainer/VBoxContainer/Back" to="." method="_on_back_pressed"]

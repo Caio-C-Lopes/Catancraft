@@ -174,3 +174,17 @@ func take_resource(resource: String, amount: int) -> bool:
 	_refresh_label(resource)
 
 	return true
+
+
+## Devolve recursos ao banco (usado ao construir, comprar cartas, etc.)
+func return_resource(resource: String, amount: int) -> void:
+	if not bank_amounts.has(resource):
+		return
+	bank_amounts[resource] = min(bank_amounts[resource] + amount, BANK_INITIAL[resource])
+	_refresh_label(resource)
+
+
+## Devolve uma carta de desenvolvimento ao banco (carta jogada/descartada)
+func return_dev_card() -> void:
+	dev_cards_remaining = min(dev_cards_remaining + 1, DEV_CARDS_INITIAL)
+	_refresh_dev_label()
