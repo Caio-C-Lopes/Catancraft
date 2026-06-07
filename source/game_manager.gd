@@ -260,16 +260,18 @@ func _bot_accepts_trade(bot_id: int, give_res: Array, recv_res: Array) -> bool:
 			score -= 1
 
 	# Aceita se o score for >= 0 (troca neutra ou vantajosa)
-	print("%s avaliou troca: score=%d → %s" % [
-	bot.player_name, score, "ACEITA" if score >= 0 else "RECUSA"
-	])
+	print(
+		(
+			"%s avaliou troca: score=%d → %s"
+			% [bot.player_name, score, "ACEITA" if score >= 0 else "RECUSA"]
+		)
+	)
 	return score >= 0
 
 
 ## Transfere recursos entre dois jogadores
 func _execute_player_trade(
-	player_a_id: int, player_b_id: int,
-	a_gives: Array, b_gives: Array
+	player_a_id: int, player_b_id: int, a_gives: Array, b_gives: Array
 ) -> void:
 	var player_a := players[player_a_id]
 	var player_b := players[player_b_id]
@@ -286,10 +288,12 @@ func _execute_player_trade(
 		player_b.remove_resource(res, b_give_counts[res])
 		player_a.add_resource(res, b_give_counts[res])
 
-	print("%s trocou com %s: deu %s, recebeu %s" % [
-		player_a.player_name, player_b.player_name,
-		str(a_gives), str(b_gives)
-	])
+	print(
+		(
+			"%s trocou com %s: deu %s, recebeu %s"
+			% [player_a.player_name, player_b.player_name, str(a_gives), str(b_gives)]
+		)
+	)
 
 	# Log visual (reutiliza a entrada de troca do DiceLog)
 	dice_log.add_trade_entry(player_a, a_gives, b_gives, player_b)

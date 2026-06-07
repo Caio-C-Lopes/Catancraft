@@ -570,7 +570,7 @@ func _try_player_trade():
 	emit_signal("player_trade_requested", give.duplicate(), recv.duplicate())
 
 
-func show_trade_result(accepted_by: Array): 
+func show_trade_result(accepted_by: Array):
 	_clear_all_slots()
 	_hide_error()
 
@@ -622,9 +622,10 @@ func show_trade_offers(acceptors: Array, give_res: Array, recv_res: Array) -> vo
 		btn.add_theme_font_size_override("font_size", 13)
 		btn.custom_minimum_size = Vector2(100, 48)
 		var bot_ref = bot
-		btn.pressed.connect(func():
-			emit_signal("trade_partner_chosen", bot_ref)
-			close_trade()
+		btn.pressed.connect(
+			func():
+				emit_signal("trade_partner_chosen", bot_ref)
+				close_trade()
 		)
 		btn_row.add_child(btn)
 
@@ -634,9 +635,7 @@ func show_trade_offers(acceptors: Array, give_res: Array, recv_res: Array) -> vo
 	btn_cancel.add_theme_font_override("font", _font)
 	btn_cancel.add_theme_font_size_override("font_size", 13)
 	btn_cancel.custom_minimum_size = Vector2(100, 48)
-	btn_cancel.pressed.connect(func():
-		close_trade()
-	)
+	btn_cancel.pressed.connect(func(): close_trade())
 	btn_row.add_child(btn_cancel)
 
 
