@@ -420,7 +420,10 @@ func upgrade_settlement_to_city(pos: Vector2, color: Color):
 
 	# Remove o sprite de aldeia existente nessa posicao
 	for child in get_children():
-		if child.is_in_group("settlements") and Vector2(round(child.position.x), round(child.position.y)) == key:
+		if (
+			child.is_in_group("settlements")
+			and Vector2(round(child.position.x), round(child.position.y)) == key
+		):
 			child.queue_free()
 			break
 
@@ -482,13 +485,15 @@ func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 	# Highlight visual: retângulo estreito representando a estrada
 	var highlight = Polygon2D.new()
 	var hw = diff.length() * 0.45  # metade do comprimento
-	var hh = 7.0                    # metade da largura
-	var pts = PackedVector2Array([
-		Vector2(-hw, -hh).rotated(angle),
-		Vector2(hw, -hh).rotated(angle),
-		Vector2(hw, hh).rotated(angle),
-		Vector2(-hw, hh).rotated(angle),
-	])
+	var hh = 7.0  # metade da largura
+	var pts = PackedVector2Array(
+		[
+			Vector2(-hw, -hh).rotated(angle),
+			Vector2(hw, -hh).rotated(angle),
+			Vector2(hw, hh).rotated(angle),
+			Vector2(-hw, hh).rotated(angle),
+		]
+	)
 	highlight.polygon = pts
 	highlight.color = Color(1, 1, 1, 0.45)
 	highlight.visible = false
@@ -509,7 +514,9 @@ func create_road_spaces(a_vertice: Vector2, b_vertice: Vector2):
 	area.mouse_exited.connect(func(): highlight.color = Color(1, 1, 1, 0.45))
 	area.input_event.connect(_on_edge_input.bind(center))
 
-	_edge_nodes[key] = {"container": container, "highlight": highlight, "area": area, "angle": angle}
+	_edge_nodes[key] = {
+		"container": container, "highlight": highlight, "area": area, "angle": angle
+	}
 	add_child(container)
 
 

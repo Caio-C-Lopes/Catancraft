@@ -53,9 +53,9 @@ var longest_road_owner: int = -1  # índice do jogador com maior estrada
 
 # ── Estado de carta em uso ────────────────────────────────────────────────────
 var _pending_road_building_roads: int = 0  # quantas estradas gratuitas restam
-var _road_mode_active: bool = false      # true quando o jogador está no modo de construir estrada
+var _road_mode_active: bool = false  # true quando o jogador está no modo de construir estrada
 var _settlement_mode_active: bool = false  # true quando o jogador está no modo de construir aldeia
-var _city_mode_active: bool = false        # true quando o jogador está no modo de construir cidade
+var _city_mode_active: bool = false  # true quando o jogador está no modo de construir cidade
 
 # ── Monopoly/YoP aguardando input ─────────────────────────────────────────────
 var _waiting_monopoly: bool = false
@@ -1280,7 +1280,9 @@ func _on_selected_vertice(pos: Vector2):
 				# Spawn visual: substitui aldeia por cidade
 				var board_node := find_child("Board")
 				if board_node and board_node.has_method("upgrade_settlement_to_city"):
-					board_node.upgrade_settlement_to_city(key, players[current_player_index].player_color)
+					board_node.upgrade_settlement_to_city(
+						key, players[current_player_index].player_color
+					)
 				# Sai do modo
 				_city_mode_active = false
 				_hide_highlights()
@@ -1387,7 +1389,9 @@ func _on_build_house_pressed():
 	# Verifica custo: madeira + argila + lã + trigo
 	var cost = {"wood": 1, "brick": 1, "sheep": 1, "wheat": 1}
 	if not players[0].can_afford(cost):
-		print("Recursos insuficientes para construir uma aldeia (1 madeira + 1 argila + 1 lã + 1 trigo).")
+		print(
+			"Recursos insuficientes para construir uma aldeia (1 madeira + 1 argila + 1 lã + 1 trigo)."
+		)
 		return
 	if players[0].settlements_remaining <= 0:
 		print("Sem peças de aldeia disponíveis!")
