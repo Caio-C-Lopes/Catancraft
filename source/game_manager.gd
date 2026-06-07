@@ -53,6 +53,9 @@ var longest_road_owner: int = -1  # índice do jogador com maior estrada
 
 # ── Estado de carta em uso ────────────────────────────────────────────────────
 var _pending_road_building_roads: int = 0  # quantas estradas gratuitas restam
+var _road_mode_active: bool = false      # true quando o jogador está no modo de construir estrada
+var _settlement_mode_active: bool = false  # true quando o jogador está no modo de construir aldeia
+var _city_mode_active: bool = false        # true quando o jogador está no modo de construir cidade
 
 # ── Monopoly/YoP aguardando input ─────────────────────────────────────────────
 var _waiting_monopoly: bool = false
@@ -85,11 +88,16 @@ func _ready():
 	_build_dev_deck()
 	start_preparation_phase()
 	player_hud.end_turn_pressed.connect(_on_button_pressed)
-	player_hud.build_house_pressed.connect(
-		func():
-			if game_phase == GamePhase.PLAYING:
-				_show_highlights_for_current(false)
-	)
+	player_hud.build_house_pressed.connect(_on_build_house_pressed)
+	player_hud.build_road_pressed.connect(_on_build_road_pressed)
+	player_hud.build_city_pressed.connect(_on_build_city_pressed)
+	# Conecta sinais do tabuleiro (caso não estejam conectados no Inspector)
+	var board = find_child("Board")
+	if board:
+		if not board.selected_vertice.is_connected(_on_selected_vertice):
+			board.selected_vertice.connect(_on_selected_vertice)
+		if not board.selected_edge.is_connected(_on_selected_edge):
+			board.selected_edge.connect(_on_selected_edge)
 	# Conecta o sinal do painel de cartas (apenas humano)
 	if _dev_card_panel and _dev_card_panel.has_signal("card_played"):
 		_dev_card_panel.card_played.connect(_on_human_card_played)
@@ -359,12 +367,11 @@ func _apply_road_building(player_id: int) -> void:
 	)
 	if player_id == 0:
 		_pending_road_building_roads = 2
+		_road_mode_active = true
 		# Mostra highlights de estrada para o humano
 		var board := find_child("Board")
 		if board and board.has_method("show_road_highlights"):
 			board.show_road_highlights(player_id, self)
-		# TODO: após cada estrada colocada decrementar _pending_road_building_roads
-		# e voltar a mostrar highlights se ainda restar 1.
 	else:
 		# Bot coloca 2 estradas aleatórias válidas
 		for _i in range(2):
@@ -379,6 +386,10 @@ func _bot_place_free_road(player_id: int) -> void:
 		if road_construction_check(edge_key, player_id):
 			BoardState.edges[edge_key]["owner"] = player_id
 			players[player_id].roads_remaining -= 1
+			# Spawn visual da estrada do bot
+			var board := find_child("Board")
+			if board and board.has_method("spawn_road_visual"):
+				board.spawn_road_visual(edge_key, players[player_id].player_color)
 			print(
 				(
 					"Bot %s colocou estrada gratuita em %s"
@@ -891,6 +902,10 @@ func play_bot_turn():
 
 func end_turn():
 	_hide_highlights()
+	_road_mode_active = false
+	_settlement_mode_active = false
+	_city_mode_active = false
+	_pending_road_building_roads = 0
 	player_hud.stop_timer()
 	# Fecha o painel de troca se estiver aberto (fim de turno ou timeout)
 	if player_hud._trade_panel != null and player_hud._trade_panel.visible:
@@ -1246,18 +1261,29 @@ func _on_selected_vertice(pos: Vector2):
 			return
 
 		var vertice = BoardState.vertices[key]
-		if vertice["owner"] == null:
+		if vertice["owner"] == null and _settlement_mode_active:
 			if _try_place_settlement(pos, current_player_index, false):
-				_show_highlights_for_current(false)
+				# Sai do modo após construir
+				_settlement_mode_active = false
+				_hide_highlights()
+				_refresh_resource_ui()
 		elif (
 			vertice["owner"] == current_player_index
 			and vertice["type"] == BoardState.BuildingType.VILLAGE
+			and _city_mode_active
 		):
 			if city_construction_check(pos, current_player_index):
 				vertice["type"] = BoardState.BuildingType.CITY
 				players[current_player_index].cities_remaining -= 1
 				players[current_player_index].settlements_remaining += 1
 				players[current_player_index].points += 1
+				# Spawn visual: substitui aldeia por cidade
+				var board_node := find_child("Board")
+				if board_node and board_node.has_method("upgrade_settlement_to_city"):
+					board_node.upgrade_settlement_to_city(key, players[current_player_index].player_color)
+				# Sai do modo
+				_city_mode_active = false
+				_hide_highlights()
 				_refresh_resource_ui()
 				print("Cidade construída em ", key)
 				_check_victory(current_player_index)
@@ -1297,11 +1323,122 @@ func give_initial_resources(vertex_pos: Vector2, player_id: int):
 	dice_log.add_preparation_resources_entry(player, resources_gained)
 
 
+func _on_build_city_pressed():
+	if game_phase != GamePhase.PLAYING or current_player_index != 0:
+		return
+	if not has_rolled_dice:
+		print("Role os dados antes de construir cidades!")
+		return
+
+	var board := find_child("Board")
+	if board == null:
+		return
+
+	# Toggle: se ja esta no modo, cancela
+	if _city_mode_active:
+		_city_mode_active = false
+		_hide_highlights()
+		print("Modo de construção de cidade cancelado.")
+		return
+
+	# Verifica custo: 3 minerio + 2 trigo
+	var cost = {"ore": 3, "wheat": 2}
+	if not players[0].can_afford(cost):
+		print("Recursos insuficientes para construir uma cidade (3 minério + 2 trigo).")
+		return
+	if players[0].cities_remaining <= 0:
+		print("Sem peças de cidade disponíveis!")
+		return
+
+	# Verifica se o jogador tem pelo menos uma aldeia para promover
+	var has_village = false
+	for key in BoardState.vertices:
+		var v = BoardState.vertices[key]
+		if v["owner"] == 0 and v["type"] == BoardState.BuildingType.VILLAGE:
+			has_village = true
+			break
+	if not has_village:
+		print("Você não tem aldeias para promover a cidade!")
+		return
+
+	_city_mode_active = true
+	board.show_city_highlights(current_player_index)
+	print("Modo de construção de cidade ativado — clique numa aldeia sua.")
+
+
+func _on_build_house_pressed():
+	if game_phase != GamePhase.PLAYING or current_player_index != 0:
+		return
+	if not has_rolled_dice:
+		print("Role os dados antes de construir aldeias!")
+		return
+
+	var board := find_child("Board")
+	if board == null:
+		return
+
+	# Toggle: se já está no modo, cancela
+	if _settlement_mode_active:
+		_settlement_mode_active = false
+		_hide_highlights()
+		print("Modo de construção de aldeia cancelado.")
+		return
+
+	# Verifica custo: madeira + argila + lã + trigo
+	var cost = {"wood": 1, "brick": 1, "sheep": 1, "wheat": 1}
+	if not players[0].can_afford(cost):
+		print("Recursos insuficientes para construir uma aldeia (1 madeira + 1 argila + 1 lã + 1 trigo).")
+		return
+	if players[0].settlements_remaining <= 0:
+		print("Sem peças de aldeia disponíveis!")
+		return
+
+	_settlement_mode_active = true
+	_show_highlights_for_current(false)
+	print("Modo de construção de aldeia ativado — clique numa encruzilhada válida.")
+
+
+func _on_build_road_pressed():
+	if game_phase != GamePhase.PLAYING or current_player_index != 0:
+		return
+	if not has_rolled_dice and _pending_road_building_roads == 0:
+		print("Role os dados antes de construir estradas!")
+		return
+
+	var board := find_child("Board")
+	if board == null:
+		return
+
+	# Toggle: se já está no modo de estrada, cancela
+	if _road_mode_active:
+		_road_mode_active = false
+		board.hide_road_highlights()
+		print("Modo de construção de estrada cancelado.")
+		return
+
+	# Verifica se o jogador pode pagar (ou tem estradas gratuitas pela carta)
+	if _pending_road_building_roads == 0:
+		var cost = {"wood": 1, "brick": 1}
+		if not players[0].can_afford(cost):
+			print("Recursos insuficientes para construir uma estrada (1 madeira + 1 tijolo).")
+			return
+		if players[0].roads_remaining <= 0:
+			print("Sem peças de estrada disponíveis!")
+			return
+
+	_road_mode_active = true
+	board.show_road_highlights(current_player_index, self)
+	print("Modo de construção de estrada ativado — clique numa posição válida.")
+
+
 func _on_selected_edge(pos: Vector2):
 	if game_phase != GamePhase.PLAYING or current_player_index != 0:
 		return
 	if not has_rolled_dice and _pending_road_building_roads == 0:
 		print("Role os dados antes de construir estradas!")
+		return
+	# Só processa o clique se o modo de estrada estiver ativo
+	if not _road_mode_active and _pending_road_building_roads == 0:
 		return
 	if road_construction_check(pos, current_player_index):
 		var key = Vector2(round(pos.x), round(pos.y))
@@ -1309,19 +1446,33 @@ func _on_selected_edge(pos: Vector2):
 		players[current_player_index].roads_remaining -= 1
 		_check_longest_road(current_player_index)
 
+		# Spawn do sprite visual da estrada
+		var board := find_child("Board")
+		if board and board.has_method("spawn_road_visual"):
+			board.spawn_road_visual(key, players[current_player_index].player_color)
+
 		# Se for construção de estrada gratuita (carta)
 		if _pending_road_building_roads > 0:
 			_pending_road_building_roads -= 1
 			if _pending_road_building_roads > 0:
-				var board := find_child("Board")
+				# Ainda tem 1 estrada gratuita — mantém modo ativo e atualiza highlights
 				if board and board.has_method("show_road_highlights"):
 					board.show_road_highlights(current_player_index, self)
-			# Não consome recursos
+			else:
+				# Acabaram as estradas gratuitas — sai do modo
+				_road_mode_active = false
+				if board and board.has_method("hide_road_highlights"):
+					board.hide_road_highlights()
 		else:
+			# Consome recursos normais
 			players[current_player_index].remove_resource("wood", 1)
 			players[current_player_index].remove_resource("brick", 1)
 			bank_panel.return_resource("wood", 1)
 			bank_panel.return_resource("brick", 1)
+			# Sai do modo de construção após colocar a estrada
+			_road_mode_active = false
+			if board and board.has_method("hide_road_highlights"):
+				board.hide_road_highlights()
 
 		_refresh_resource_ui()
 		print("Estrada construída em ", pos)
@@ -1335,8 +1486,13 @@ func _show_highlights_for_current(is_preparation: bool):
 
 func _hide_highlights():
 	var board = find_child("Board")
-	if board and board.has_method("hide_settlement_highlights"):
-		board.hide_settlement_highlights()
+	if board:
+		if board.has_method("hide_settlement_highlights"):
+			board.hide_settlement_highlights()
+		if board.has_method("hide_road_highlights"):
+			board.hide_road_highlights()
+		if board.has_method("hide_city_highlights"):
+			board.hide_city_highlights()
 
 
 func produce_resources(dice_value: int) -> Dictionary:

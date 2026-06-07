@@ -21,7 +21,7 @@
 [ext_resource type="Texture2D" uid="uid://b7icele5glwy4" path="res://card_assets/development/development.png" id="17_36jdj"]
 [ext_resource type="Texture2D" uid="uid://w3qt8wxfkc6j" path="res://board_assets/house_purple.png" id="18_xfvwf"]
 [ext_resource type="Texture2D" uid="uid://wfof8ji7hxf" path="res://board_assets/trade.png" id="19_dhpj7"]
-[ext_resource type="Texture2D" uid="uid://bytdjvab2ragm" path="res://board_assets/road_purple.png" id="20_7knny"]
+[ext_resource type="Texture2D" uid="uid://dl32ifqofb0lo" path="res://board_assets/road_purple.png" id="20_7knny"]
 [ext_resource type="Texture2D" uid="uid://d1cga0kq1ee6g" path="res://board_assets/icon-08.png" id="21_082n1"]
 [ext_resource type="Texture2D" uid="uid://dmm1f4m6c5pe8" path="res://board_assets/icon-06.png" id="22_xex6t"]
 [ext_resource type="Texture2D" uid="uid://btwcx6a717asv" path="res://icons_assets/trophy.png" id="23_5b14r"]

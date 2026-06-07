@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dl32ifqofb0lo"
-path="res://.godot/imported/road_purple.png-f47a0ac70bb75b15f18cb4101ae1faeb.ctex"
+uid="uid://cg534q3oy4v4c"
+path="res://.godot/imported/road_purple_diagonal_right.png-af5e9fa1aa882b0c497118067a96f405.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://board_assets/road_purple.png"
-dest_files=["res://.godot/imported/road_purple.png-f47a0ac70bb75b15f18cb4101ae1faeb.ctex"]
+source_file="res://board_assets/road_purple_diagonal_right.png"
+dest_files=["res://.godot/imported/road_purple_diagonal_right.png-af5e9fa1aa882b0c497118067a96f405.ctex"]
 
 [params]
 
