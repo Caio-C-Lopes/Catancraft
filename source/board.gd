@@ -19,6 +19,7 @@ var final_hex_numbers = []
 
 signal selected_vertice(pos: Vector2)
 signal selected_edge(pos: Vector2)
+signal robber_placed(pos: Vector2)
 
 var _vertice_nodes: Dictionary = {}
 
@@ -417,18 +418,22 @@ func road_click_check(viewport: Node, event: InputEvent, shape_idx: int, pos: Ve
 func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var gm = get_parent()
-		if gm.waiting_robber_move:
+		if gm.waiting_robber_move and gm.current_player_index == 0:
 			var clicked_pos = Vector2(round(pos.x), round(pos.y))
 			if clicked_pos == BoardState.robber_hex_pos:
 				print("Ação inválida: O ladrão já está neste hexágono! Escolha outro.")
 				return
-			var robber_node = get_tree().current_scene.find_child("Robber", true, false)
-			if robber_node:
-				robber_node.moving_to(pos, false)
-			BoardState.update_robber_position(pos)
-			hide_robber_options()
-			gm.waiting_robber_move = false
-			print("Ladrão movido com sucesso. Jogo liberado!")
+			_commit_robber_move(pos)
+
+
+func _commit_robber_move(pos: Vector2):
+	var robber_node = get_tree().current_scene.find_child("Robber", true, false)
+	if robber_node:
+		robber_node.moving_to(pos, false)
+	BoardState.update_robber_position(pos)
+	hide_robber_options()
+	print("Ladrão movido para: ", pos)
+	robber_placed.emit(pos)
 
 
 func show_robber_options():
@@ -448,8 +453,22 @@ func show_robber_options():
 				collision.shape = shape
 				area.add_child(collision)
 				highlight.add_child(area)
-				area.mouse_entered.connect(func(): highlight.color = Color(1, 0, 0, 0.5))
+				area.mouse_entered.connect(func(): highlight.color = Color(1, 0.3, 0.0, 0.55))
 				area.mouse_exited.connect(func(): highlight.color = Color(1, 1, 1, 0.3))
+
+				# Captura o pos do hex via closure para o clique do humano
+				var hex_world_pos = child.position
+				area.input_event.connect(
+					func(_vp, ev, _si):
+						if (
+							ev is InputEventMouseButton
+							and ev.pressed
+							and ev.button_index == MOUSE_BUTTON_LEFT
+						):
+							var gm = get_parent()
+							if gm.waiting_robber_move and gm.current_player_index == 0:
+								_commit_robber_move(hex_world_pos)
+				)
 
 
 func hide_robber_options():

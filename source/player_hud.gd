@@ -18,9 +18,13 @@ func _on_dice_pressed():
 @onready var _dice2_rect: TextureButton = $DiceContainer/Dice2
 @onready var _player_icon_rect: TextureRect = $TopLeft/PlayerIcon
 
+# Referência ao DevCardPanel (filho direto deste nó ou ajuste o caminho)
+@onready var _dev_card_panel = $DevCardPanel
+
 var font: Font
 var resource_icons: Dictionary = {}
 var resource_labels: Dictionary = {}
+var resource_panels: Dictionary = {}  # "wood" -> PanelContainer (para show/hide)
 var piece_labels: Dictionary = {}
 
 @export var wood_icon: Texture2D
@@ -38,11 +42,27 @@ var piece_labels: Dictionary = {}
 @export var end_turn_icon_inactive: Texture2D
 @export var dice_face_textures: Array[Texture2D]
 
+@export var trophy_icon: Texture2D
+@export var knight_icon: Texture2D
+
 var _house_btn: TextureButton = null
 var _road_btn: TextureButton = null
 var _city_btn: TextureButton = null
+var _cards_btn: TextureButton = null
+
+var _vp_label: Label = null
+var _knights_label: Label = null
+
+# Referência fixa ao jogador humano — definida uma única vez pelo game_manager
+var _human_player: Player = null
+
+
+func bind_human_player(player: Player):
+	_human_player = player
+
 
 var _end_turn_btn: TextureButton = null
+var _trade_panel: Control = null
 var time_remaining: float = 0.0
 var timer_running: bool = false
 var _on_timeout_callback: Callable = Callable()
@@ -69,6 +89,7 @@ func _ready():
 	}
 	_build_resource_bar()
 	_build_action_buttons()
+	_build_stats_panel()
 	_setup_dice_display()
 	if _player_icon_rect:
 		_player_icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -77,6 +98,30 @@ func _ready():
 		_player_icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		_player_icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_player_icon_rect.size = Vector2(40, 40)
+
+	# Conecta o botão de cartas ao game_manager
+	cards_pressed.connect(_on_cards_pressed)
+
+	# Constrói o painel de trade — deve ser o ÚLTIMO passo do _ready
+	# para garantir que o tamanho do PlayerHUD já foi calculado
+	_build_trade_panel.call_deferred()
+
+
+func _get_game_manager():
+	return get_tree().get_root().find_child("Game", true, false)
+
+
+func _is_human_turn_and_rolled() -> bool:
+	var gm = _get_game_manager()
+	if gm == null:
+		return false
+	return gm.current_player_index == 0 and gm.has_rolled_dice
+
+
+func _on_cards_pressed():
+	var gm = _get_game_manager()
+	if gm and gm.has_method("buy_dev_card"):
+		gm.buy_dev_card(0)
 
 
 func _process(delta):
@@ -113,6 +158,8 @@ func setup_turn(player: Player):
 	if _player_icon_rect and player.icon_texture:
 		_player_icon_rect.texture = player.icon_texture
 	update_pieces(player)
+	update_action_buttons(player)
+	update_vp_and_knights(player)
 
 
 func setup_preparation_turn(player: Player):
@@ -121,12 +168,53 @@ func setup_preparation_turn(player: Player):
 	if _player_icon_rect and player.icon_texture:
 		_player_icon_rect.texture = player.icon_texture
 	update_pieces(player)
+	update_action_buttons(player)
+	update_vp_and_knights(player)
 
 
 func update_resources(player: Player):
 	for res in resource_labels.keys():
-		if player.resources.has(res):
-			resource_labels[res].text = str(player.resources[res])
+		var qty: int = player.resources.get(res, 0)
+		resource_labels[res].text = str(qty)
+		if resource_panels.has(res):
+			resource_panels[res].visible = qty > 0
+	update_action_buttons(player)
+	update_vp_and_knights(player)
+
+
+# Custos oficiais do Catan
+const COSTS = {
+	"road": {"wood": 1, "brick": 1},
+	"house": {"wood": 1, "brick": 1, "wheat": 1, "sheep": 1},
+	"city": {"ore": 3, "wheat": 2},
+	"cards": {"ore": 1, "wheat": 1, "sheep": 1},
+}
+
+const COLOR_ON = Color(1.0, 1.0, 1.0, 1.0)
+const COLOR_OFF = Color(1.0, 1.0, 1.0, 0.5)
+
+
+func update_action_buttons(_ignored: Player = null):
+	# Sempre avalia com base nos recursos do jogador humano, nunca dos bots
+	if _human_player == null:
+		return
+	_set_btn_affordable(
+		_road_btn, _human_player.can_afford(COSTS["road"]) and _human_player.roads_remaining > 0
+	)
+	_set_btn_affordable(
+		_house_btn,
+		_human_player.can_afford(COSTS["house"]) and _human_player.settlements_remaining > 0
+	)
+	_set_btn_affordable(
+		_city_btn, _human_player.can_afford(COSTS["city"]) and _human_player.cities_remaining > 0
+	)
+	_set_btn_affordable(_cards_btn, _human_player.can_afford(COSTS["cards"]))
+
+
+func _set_btn_affordable(btn: TextureButton, affordable: bool):
+	if btn == null:
+		return
+	btn.modulate = COLOR_ON if affordable else COLOR_OFF
 
 
 func update_pieces(player: Player):
@@ -136,6 +224,19 @@ func update_pieces(player: Player):
 		piece_labels["settlement"].text = str(player.settlements_remaining)
 	if piece_labels.has("city"):
 		piece_labels["city"].text = str(player.cities_remaining)
+	update_action_buttons(player)
+
+
+func update_vp_and_knights(player: Player = null):
+	# Sempre exibe os dados do jogador humano, independente de quem está jogando
+	var p = _human_player if _human_player != null else player
+	if p == null:
+		return
+	if _vp_label:
+		# Humano vê seus pontos totais reais, incluindo cartas VP secretas
+		_vp_label.text = str(p.get_total_points())
+	if _knights_label:
+		_knights_label.text = str(p.knights_played)
 
 
 func _update_timer_display():
@@ -188,6 +289,7 @@ func _build_resource_bar():
 		style.border_width_bottom = 2
 		style.border_color = Color(0, 0, 0, 1)
 		panel.add_theme_stylebox_override("panel", style)
+		panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 		var vbox = VBoxContainer.new()
 		vbox.add_theme_constant_override("separation", 2)
@@ -199,6 +301,7 @@ func _build_resource_bar():
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(icon)
 
 		var label = Label.new()
@@ -207,10 +310,29 @@ func _build_resource_bar():
 		label.add_theme_font_size_override("font_size", 14)
 		label.add_theme_color_override("font_color", Color.BLACK)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		vbox.add_child(label)
 
 		resource_labels[res] = label
 		panel.add_child(vbox)
+
+		resource_panels[res] = panel
+		panel.hide()  # começa oculto — aparece quando quantidade > 0
+
+		# Ao clicar num recurso do HUD enquanto o trade panel estiver aberto,
+		# envia esse recurso para a área "oferecer" do trade panel
+		var res_name = res
+		panel.gui_input.connect(
+			func(ev):
+				if (
+					ev is InputEventMouseButton
+					and ev.pressed
+					and ev.button_index == MOUSE_BUTTON_LEFT
+				):
+					if _trade_panel != null and _trade_panel.visible:
+						_trade_panel.on_hud_resource_clicked(res_name)
+		)
+
 		resource_bar.add_child(panel)
 
 
@@ -262,7 +384,22 @@ func _build_action_buttons():
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		var sig_name = b["signal"]
-		btn.pressed.connect(func(): emit_signal(sig_name))
+		btn.pressed.connect(
+			func():
+				# Dados ainda não rolados — bloqueia tudo exceto rolar dados
+				if sig_name == "roll_dice_pressed":
+					emit_signal(sig_name)
+					return
+				# Encerrar turno não precisa de dados rolados (o game_manager já valida)
+				if sig_name == "end_turn_pressed":
+					emit_signal(sig_name)
+					return
+				# Todas as outras ações exigem ser o turno do humano E ter rolado os dados
+				if not _is_human_turn_and_rolled():
+					print("Ação bloqueada: role os dados primeiro ou aguarde seu turno.")
+					return
+				emit_signal(sig_name)
+		)
 
 		if b["store"] == "end_turn":
 			_end_turn_btn = btn
@@ -272,6 +409,8 @@ func _build_action_buttons():
 			_road_btn = btn
 		elif b["store"] == "city":
 			_city_btn = btn
+		elif sig_name == "cards_pressed":
+			_cards_btn = btn
 
 		if b["piece"] != "":
 			var vbox = VBoxContainer.new()
@@ -324,3 +463,149 @@ func _setup_dice_display():
 		_dice1_rect.texture_normal = dice_face_textures[0]
 		_dice2_rect.texture_normal = dice_face_textures[4]
 	set_dice_enabled(false)
+
+
+# Constrói o painel de VP e Cavaleiros à direita do botão de trade,
+# inserido como irmão do ActionButtons dentro de BottomLeft.
+func _build_stats_panel():
+	var bottom_left = $BottomLeft
+	if bottom_left == null:
+		return
+
+	# Container vertical que agrupa os dois itens (VP e Cavaleiros)
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	# Wrapper com margem negativa para subir os ícones
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", -60)
+	margin.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	# ── Pontos de Vitória ──────────────────────────────────────────
+	var vp_inner = VBoxContainer.new()
+	vp_inner.add_theme_constant_override("separation", 2)
+
+	var vp_icon = TextureRect.new()
+	if trophy_icon:
+		vp_icon.texture = trophy_icon
+	vp_icon.custom_minimum_size = Vector2(50, 50)
+	vp_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vp_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	vp_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	vp_inner.add_child(vp_icon)
+
+	var vp_lbl = Label.new()
+	vp_lbl.text = "0"
+	vp_lbl.add_theme_font_override("font", font)
+	vp_lbl.add_theme_font_size_override("font_size", 13)
+	vp_lbl.add_theme_color_override("font_color", Color.WHITE)
+	vp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vp_inner.add_child(vp_lbl)
+	_vp_label = vp_lbl
+
+	vbox.add_child(vp_inner)
+
+	# ── Cavaleiros Jogados ─────────────────────────────────────────
+	var kn_inner = VBoxContainer.new()
+	kn_inner.add_theme_constant_override("separation", 2)
+
+	var kn_icon = TextureRect.new()
+	if knight_icon:
+		kn_icon.texture = knight_icon
+	kn_icon.custom_minimum_size = Vector2(50, 50)
+	kn_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kn_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	kn_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	kn_inner.add_child(kn_icon)
+
+	var kn_lbl = Label.new()
+	kn_lbl.text = "0"
+	kn_lbl.add_theme_font_override("font", font)
+	kn_lbl.add_theme_font_size_override("font_size", 13)
+	kn_lbl.add_theme_color_override("font_color", Color.WHITE)
+	kn_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kn_inner.add_child(kn_lbl)
+	_knights_label = kn_lbl
+
+	vbox.add_child(kn_inner)
+
+	margin.add_child(vbox)
+	bottom_left.add_child(margin)
+
+
+# ── Trade Panel ───────────────────────────────────────────────────────────────
+func _build_trade_panel():
+	var trade_script = load("res://source/trade_panel.gd")
+	if trade_script == null:
+		push_error("trade_panel.gd não encontrado!")
+		return
+
+	_trade_panel = Control.new()
+	_trade_panel.set_script(trade_script)
+
+	# IMPORTANTE: o painel deve ser filho direto do nó raiz da cena (Control
+	# que ocupa a tela toda), NÃO de um container filho como BottomBar.
+	# Containers (VBox, HBox, etc.) ignoram position e reposicionam os filhos
+	# automaticamente — por isso o painel ficava preso embaixo.
+	#
+	# Aqui subimos na árvore até encontrar o Control raiz da cena (FullRect),
+	# ou usamos o próprio PlayerHUD se ele já for o raiz da viewport.
+	var root_control: Control = self
+
+	# Sobe na hierarquia enquanto o pai também for Control (não Node puro)
+	# para atingir o nó que cobre a tela inteira
+	while root_control.get_parent() is Control:
+		root_control = root_control.get_parent() as Control
+
+	root_control.add_child(_trade_panel)
+
+	# Posição absoluta em relação ao Control raiz:
+	# canto inferior-esquerdo da tela, acima da HUD (~350 px de altura do painel)
+	# Ajuste os valores abaixo conforme a resolução do seu projeto
+	_trade_panel.position = Vector2(10, 200)  # Y positivo: distância do topo
+	_trade_panel.z_index = 20
+	_trade_panel.hide()
+
+	# Passa as texturas de recurso para o painel montar os cards
+	_trade_panel.resource_textures = resource_icons
+
+	trade_pressed.connect(_on_trade_pressed)
+
+
+func _on_trade_pressed():
+	if _trade_panel == null:
+		return
+	if _trade_panel.visible:
+		_trade_panel.close_trade()
+	else:
+		_trade_panel.open_trade()
+
+
+# ── Preview de oferta no HUD ──────────────────────────────────────────────────
+# Chamado pelo trade_panel para refletir visualmente as cartas que o jogador
+# está selecionando como oferta, sem alterar os recursos reais do Player.
+# delta = -1  →  jogador está oferecendo mais uma carta desse recurso
+# delta = +1  →  jogador cancelou/removeu uma carta desse recurso
+func hud_preview_give(res_name: String, delta: int):
+	if not resource_labels.has(res_name):
+		return
+	var lbl: Label = resource_labels[res_name]
+	var panel: Control = resource_panels.get(res_name, null)
+	var current = lbl.text.to_int()
+	var next = current + delta
+	lbl.text = str(next)
+	if panel:
+		panel.visible = next > 0
+
+
+# Restaura os labels do HUD para os valores reais do jogador humano.
+# Chamado quando o trade é cancelado.
+func hud_reset_preview():
+	if _human_player == null:
+		return
+	for res in resource_labels.keys():
+		var qty: int = _human_player.resources.get(res, 0)
+		resource_labels[res].text = str(qty)
+		if resource_panels.has(res):
+			resource_panels[res].visible = qty > 0

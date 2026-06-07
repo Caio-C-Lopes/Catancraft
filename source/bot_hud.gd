@@ -212,7 +212,7 @@ func refresh():
 		_dev_cards_lbl.text = str(_player.dev_cards_in_hand)
 
 	if _points_lbl:
-		_points_lbl.text = str(_player.ponits)
+		_points_lbl.text = str(_player.points)
 
 	if _knights_lbl:
 		_knights_lbl.text = str(_player.knights_played)

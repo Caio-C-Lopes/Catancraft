@@ -4,6 +4,7 @@ var player_color_name: String = "red"
 var player_icon_name: String = "steve"
 var bot_count: int = 3
 var bot_icon_names: Array[String] = ["creeper", "zombie", "pig"]
+var bot_color_names: Array[String] = ["blue", "green", "purple"]
 
 var player_color: Color:
 	get:
