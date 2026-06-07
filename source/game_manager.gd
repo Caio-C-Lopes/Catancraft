@@ -62,6 +62,10 @@ var _waiting_monopoly: bool = false
 var _waiting_yop: bool = false
 var _yop_cards_left: int = 0
 
+# ── Controle da estrada na fase de preparação ────────────────────────────────
+var _prep_settlement_pos: Vector2 = Vector2.ZERO
+var _waiting_prep_road: bool = false
+
 
 func resource_type_to_string(type: int) -> String:
 	match type:
@@ -635,6 +639,51 @@ func _bot_play_knight_if_available(player_id: int) -> void:
 			return
 
 
+## Faz o Bot escolher a estrada que aponta para o melhor vértice vizinho
+func _bot_place_preparation_road(player_id: int, settlement_key: Vector2) -> void:
+	var best_edge_key: Variant = null
+	var best_edge_score: float = -1.0
+	var valid_edges: Array = []
+
+	# Encontra as arestas vazias conectadas a esta nova aldeia
+	for ek in BoardState.edges:
+		var edge = BoardState.edges[ek]
+		if edge["owner"] != null:
+			continue
+		if edge["a_vertice"] == settlement_key or edge["b_vertice"] == settlement_key:
+			valid_edges.append(ek)
+
+	if valid_edges.is_empty():
+		return
+
+	# Avalia cada estrada com base no potencial do vértice para onde ela aponta
+	for ek in valid_edges:
+		var edge = BoardState.edges[ek]
+		# Descobre qual é o vértice da outra ponta da estrada
+		var target_vertex = edge["b_vertice"] if edge["a_vertice"] == settlement_key else edge["a_vertice"]
+		
+		# Calcula o score desse vértice futuro usando a lógica existente
+		var score = _score_vertex(target_vertex)
+		
+		if score > best_edge_score:
+			best_edge_score = score
+			best_edge_key = ek
+
+	# Fallback caso dê empate ou erro
+	if best_edge_key == null:
+		best_edge_key = valid_edges[randi() % valid_edges.size()]
+
+	# Registra e spawna a estrada da IA
+	BoardState.edges[best_edge_key]["owner"] = player_id
+	players[player_id].roads_remaining -= 1
+	
+	var board := find_child("Board")
+	if board and board.has_method("spawn_road_visual"):
+		board.spawn_road_visual(best_edge_key, players[player_id].player_color)
+		
+	print("Bot %s colocou estrada de preparação em %s apontando para vértice de score %.1f" % [players[player_id].player_name, str(best_edge_key), best_edge_score])
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # RESTO DO GAME MANAGER (idêntico ao original — sem alterações)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -770,8 +819,16 @@ func _on_preparation_vertice_selected(pos: Vector2):
 	player_hud.stop_timer()
 
 	if _try_place_settlement(pos, current_player_index, true):
-		preparation_step += 1
-		_preparation_next_player()
+		_prep_settlement_pos = Vector2(round(pos.x), round(pos.y))
+		_waiting_prep_road = true
+		
+		_road_mode_active = true
+		var board = find_child("Board")
+		if board and board.has_method("show_road_highlights"):
+			board.show_road_highlights(current_player_index, self)
+		
+		print("Aldeia colocada! Escolha uma estrada adjacente a ela para finalizar o turno.")
+		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
 	else:
 		_show_highlights_for_current(true)
 		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
@@ -800,13 +857,11 @@ func _bot_place_settlement():
 		print("Bot %s sem vértice válido." % players[current_player_index].player_name)
 	else:
 		var best_key = best_candidates[randi() % best_candidates.size()]
-		print(
-			(
-				"%s escolheu vértice com score %.1f"
-				% [players[current_player_index].player_name, best_score]
-			)
-		)
-		_try_place_settlement(best_key, current_player_index, true)
+		print("%s escolheu vértice com score %.1f" % [players[current_player_index].player_name, best_score])
+		
+		if _try_place_settlement(best_key, current_player_index, true):
+			# CHAMA A CONSTRUÇÃO DA ESTRADA INTELIGENTE DO BOT
+			_bot_place_preparation_road(current_player_index, best_key)
 
 	preparation_step += 1
 	_preparation_next_player()
@@ -837,6 +892,12 @@ func _score_vertex(key: Vector2) -> float:
 	var coverage_bonus: float = 3.0 if resource_set.size() == 3 else 0.0
 
 	return total_prob + diversity_bonus + coverage_bonus
+
+func _is_edge_connected_to_vertex(edge_key: Vector2, vertex_key: Vector2) -> bool:
+	if not BoardState.edges.has(edge_key):
+		return false
+	var edge = BoardState.edges[edge_key]
+	return edge["a_vertice"] == vertex_key or edge["b_vertice"] == vertex_key
 
 
 func _finish_preparation():
@@ -942,8 +1003,25 @@ func _on_roll_timeout():
 func _on_preparation_timeout():
 	if game_phase != GamePhase.PREPARATION or current_player_index != 0:
 		return
-	print("Tempo de preparação esgotado! Colocando casa aleatoriamente.")
+	print("Tempo de preparação esgotado!")
 	_hide_highlights()
+
+	if _waiting_prep_road:
+		# Força uma estrada adjacente qualquer se o tempo acabar na fase de estradas
+		for ek in BoardState.edges:
+			if _is_edge_connected_to_vertex(ek, _prep_settlement_pos) and BoardState.edges[ek]["owner"] == null:
+				BoardState.edges[ek]["owner"] = 0
+				players[0].roads_remaining -= 1
+				var board = find_child("Board")
+				if board and board.has_method("spawn_road_visual"):
+					board.spawn_road_visual(ek, players[0].player_color)
+				break
+		_waiting_prep_road = false
+		_prep_settlement_pos = Vector2.ZERO
+		_road_mode_active = false
+		preparation_step += 1
+		_preparation_next_player()
+		return
 
 	var valid_keys: Array = []
 	for key in BoardState.vertices:
@@ -951,13 +1029,14 @@ func _on_preparation_timeout():
 			valid_keys.append(key)
 
 	if valid_keys.is_empty():
-		print("Nenhum vértice válido encontrado para colocação automática.")
 		preparation_step += 1
 		_preparation_next_player()
 		return
 
 	var chosen_key = valid_keys[randi() % valid_keys.size()]
-	_try_place_settlement(chosen_key, current_player_index, true)
+	if _try_place_settlement(chosen_key, current_player_index, true):
+		_bot_place_preparation_road(0, chosen_key)
+		
 	preparation_step += 1
 	_preparation_next_player()
 
@@ -1436,44 +1515,66 @@ func _on_build_road_pressed():
 
 
 func _on_selected_edge(pos: Vector2):
+	var key = Vector2(round(pos.x), round(pos.y))
+	
+	# ─── LÓGICA DE INTERCEPÇÃO PARA A PREPARAÇÃO ───
+	if game_phase == GamePhase.PREPARATION:
+		if not _waiting_prep_road or current_player_index != 0:
+			return
+		
+		if _is_edge_connected_to_vertex(key, _prep_settlement_pos):
+			BoardState.edges[key]["owner"] = current_player_index
+			players[current_player_index].roads_remaining -= 1
+			
+			var board := find_child("Board")
+			if board and board.has_method("spawn_road_visual"):
+				board.spawn_road_visual(key, players[current_player_index].player_color)
+			
+			_waiting_prep_road = false
+			_prep_settlement_pos = Vector2.ZERO
+			_road_mode_active = false
+			_hide_highlights()
+			_refresh_resource_ui()
+			
+			# Avança o turno apenas após colocar a casa E a estrada
+			preparation_step += 1
+			_preparation_next_player()
+		else:
+			print("Você precisa escolher uma estrada conectada à aldeia que acabou de criar!")
+		return
+	# ───────────────────────────────────────────────
+
 	if game_phase != GamePhase.PLAYING or current_player_index != 0:
 		return
 	if not has_rolled_dice and _pending_road_building_roads == 0:
 		print("Role os dados antes de construir estradas!")
 		return
-	# Só processa o clique se o modo de estrada estiver ativo
 	if not _road_mode_active and _pending_road_building_roads == 0:
 		return
+		
 	if road_construction_check(pos, current_player_index):
-		var key = Vector2(round(pos.x), round(pos.y))
 		BoardState.edges[key]["owner"] = current_player_index
 		players[current_player_index].roads_remaining -= 1
 		_check_longest_road(current_player_index)
 
-		# Spawn do sprite visual da estrada
 		var board := find_child("Board")
 		if board and board.has_method("spawn_road_visual"):
 			board.spawn_road_visual(key, players[current_player_index].player_color)
 
-		# Se for construção de estrada gratuita (carta)
 		if _pending_road_building_roads > 0:
 			_pending_road_building_roads -= 1
 			if _pending_road_building_roads > 0:
-				# Ainda tem 1 estrada gratuita — mantém modo ativo e atualiza highlights
 				if board and board.has_method("show_road_highlights"):
 					board.show_road_highlights(current_player_index, self)
 			else:
-				# Acabaram as estradas gratuitas — sai do modo
 				_road_mode_active = false
 				if board and board.has_method("hide_road_highlights"):
 					board.hide_road_highlights()
 		else:
-			# Consome recursos normais
 			players[current_player_index].remove_resource("wood", 1)
 			players[current_player_index].remove_resource("brick", 1)
 			bank_panel.return_resource("wood", 1)
 			bank_panel.return_resource("brick", 1)
-			# Sai do modo de construção após colocar a estrada
 			_road_mode_active = false
 			if board and board.has_method("hide_road_highlights"):
 				board.hide_road_highlights()
