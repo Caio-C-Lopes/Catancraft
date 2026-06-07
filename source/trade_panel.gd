@@ -27,6 +27,8 @@ var _recv_resources: Array[String] = []
 var _give_hbox_slots: HBoxContainer = null
 var _recv_hbox_slots: HBoxContainer = null
 
+var _temp_widgets: Array[Control] = []
+
 # Botões de modo
 var _btn_players: TextureButton
 var _btn_bank: TextureButton
@@ -59,6 +61,7 @@ func _ready():
 
 # ── API pública ───────────────────────────────────────────────────────────────
 func open_trade():
+	_clear_temp_widgets()
 	_resolve_hud()
 	_clear_all_slots()
 	_hide_error()
@@ -571,6 +574,7 @@ func _try_player_trade():
 
 
 func show_trade_result(accepted_by: Array):
+	_clear_temp_widgets()
 	_clear_all_slots()
 	_hide_error()
 
@@ -583,6 +587,8 @@ func show_trade_result(accepted_by: Array):
 	if accepted_by.is_empty():
 		result_label.text = "Nenhum jogador aceitou a troca."
 		result_label.add_theme_color_override("font_color", Color(0.8, 0.1, 0.1))
+		if _hud and _hud.has_method("hud_reset_preview"):
+			_hud.hud_reset_preview()
 	else:
 		var names = accepted_by.map(func(p): return p.player_name)
 		result_label.text = "%s aceitou a troca!" % ", ".join(names)
@@ -590,17 +596,14 @@ func show_trade_result(accepted_by: Array):
 
 	_inject_temp_widget(result_label)
 	await get_tree().create_timer(2.0).timeout
-	result_label.queue_free()
+	_clear_temp_widgets()
 	close_trade()
 
 
 func show_trade_offers(acceptors: Array, give_res: Array, recv_res: Array) -> void:
+	_clear_temp_widgets()
 	_clear_all_slots()
 	_hide_error()
-
-	var vbox = _get_main_vbox()
-	if vbox == null:
-		return
 
 	var label = Label.new()
 	label.text = "Escolha com quem trocar:"
@@ -624,6 +627,7 @@ func show_trade_offers(acceptors: Array, give_res: Array, recv_res: Array) -> vo
 		var bot_ref = bot
 		btn.pressed.connect(
 			func():
+				_clear_temp_widgets()
 				emit_signal("trade_partner_chosen", bot_ref)
 				close_trade()
 		)
@@ -635,7 +639,13 @@ func show_trade_offers(acceptors: Array, give_res: Array, recv_res: Array) -> vo
 	btn_cancel.add_theme_font_override("font", _font)
 	btn_cancel.add_theme_font_size_override("font_size", 13)
 	btn_cancel.custom_minimum_size = Vector2(100, 48)
-	btn_cancel.pressed.connect(func(): close_trade())
+	btn_cancel.pressed.connect(
+		func():
+			_clear_temp_widgets()
+			if _hud and _hud.has_method("hud_reset_preview"):
+				_hud.hud_reset_preview()
+			close_trade()
+	)
 	btn_row.add_child(btn_cancel)
 
 
@@ -695,3 +705,11 @@ func _inject_temp_widget(widget: Control) -> void:
 	# Insere antes da última linha (linha dos botões check/cancel)
 	vbox.add_child(widget)
 	vbox.move_child(widget, vbox.get_child_count() - 2)
+	_temp_widgets.append(widget)
+
+
+func _clear_temp_widgets() -> void:
+	for w in _temp_widgets:
+		if is_instance_valid(w):
+			w.queue_free()
+	_temp_widgets.clear()
