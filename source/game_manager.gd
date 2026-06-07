@@ -1296,6 +1296,13 @@ func road_construction_check(pos: Vector2, player_id: int) -> bool:
 		print("Esta via já tem dono.")
 		return false
 
+	# ─── TRAVA VISUAL DA FASE DE PREPARAÇÃO ───
+	if game_phase == GamePhase.PREPARATION and _waiting_prep_road:
+		# Se estivermos na preparação, só retorna TRUE se a estrada
+		# tocar exatamente na aldeia que acabou de ser construída.
+		return _is_edge_connected_to_vertex(edge_key, _prep_settlement_pos)
+	# ──────────────────────────────────────────
+
 	var a_v = BoardState.edges[edge_key]["a_vertice"]
 	var b_v = BoardState.edges[edge_key]["b_vertice"]
 
