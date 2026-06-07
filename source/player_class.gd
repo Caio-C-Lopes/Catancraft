@@ -55,6 +55,7 @@ func can_afford(cost: Dictionary) -> bool:
 
 # ── Cartas de desenvolvimento ──────────────────────────────────────────────────
 
+
 func add_dev_card(card_type: int) -> void:
 	dev_cards.append(card_type)
 	dev_cards_in_hand = dev_cards.size()
@@ -72,7 +73,7 @@ func remove_dev_card(index: int) -> void:
 func count_victory_point_cards() -> int:
 	var count := 0
 	for c in dev_cards:
-		if c in [4, 5, 6, 7, 8]:   # índices de CHAPEL..MARKET em CardType
+		if c in [4, 5, 6, 7, 8]:  # índices de CHAPEL..MARKET em CardType
 			count += 1
 	return count
 

@@ -32,27 +32,27 @@ var _bot_huds: Array = []
 # CHAPEL=4, UNIVERSITY=5, PALACE=6, LIBRARY=7, MARKET=8
 const DEV_CARD_COUNTS := {
 	0: 14,  # Cavaleiro
-	1: 2,   # Construção de estradas
-	2: 2,   # Ano da abundância
-	3: 2,   # Monopólio
-	4: 1,   # Capela
-	5: 1,   # Universidade
-	6: 1,   # Palácio
-	7: 1,   # Biblioteca
-	8: 1,   # Mercado
+	1: 2,  # Construção de estradas
+	2: 2,  # Ano da abundância
+	3: 2,  # Monopólio
+	4: 1,  # Capela
+	5: 1,  # Universidade
+	6: 1,  # Palácio
+	7: 1,  # Biblioteca
+	8: 1,  # Mercado
 }
 
-var _dev_deck: Array[int] = []   # cartas embaralhadas
+var _dev_deck: Array[int] = []  # cartas embaralhadas
 
 # Referência ao painel de cartas do humano (DevCardPanel)
 @onready var _dev_card_panel = $Control/PlayerHUD/DevCardPanel  # ajuste o caminho se necessário
 
 # ── Largest Army / Longest Road ───────────────────────────────────────────────
-var largest_army_owner: int = -1      # índice do jogador com maior exército
-var longest_road_owner: int = -1      # índice do jogador com maior estrada
+var largest_army_owner: int = -1  # índice do jogador com maior exército
+var longest_road_owner: int = -1  # índice do jogador com maior estrada
 
 # ── Estado de carta em uso ────────────────────────────────────────────────────
-var _pending_road_building_roads: int = 0   # quantas estradas gratuitas restam
+var _pending_road_building_roads: int = 0  # quantas estradas gratuitas restam
 
 # ── Monopoly/YoP aguardando input ─────────────────────────────────────────────
 var _waiting_monopoly: bool = false
@@ -62,12 +62,18 @@ var _yop_cards_left: int = 0
 
 func resource_type_to_string(type: int) -> String:
 	match type:
-		0: return "wood"
-		1: return "sheep"
-		2: return "wheat"
-		3: return "brick"
-		4: return "ore"
-		_: return ""
+		0:
+			return "wood"
+		1:
+			return "sheep"
+		2:
+			return "wheat"
+		3:
+			return "brick"
+		4:
+			return "ore"
+		_:
+			return ""
 
 
 func _ready():
@@ -95,13 +101,14 @@ func _ready():
 	# Aguarda até o _trade_panel existir antes de conectar bank_trade_requested
 	_connect_trade_panel_deferred.call_deferred()
 
+
 func _setup_dice_log_resource_textures() -> void:
 	var textures: Dictionary = {
-		"wood":  load("res://card_assets/resources/WOOD.png"),
+		"wood": load("res://card_assets/resources/WOOD.png"),
 		"brick": load("res://card_assets/resources/BRICK.png"),
 		"wheat": load("res://card_assets/resources/WHEAT.png"),
 		"sheep": load("res://card_assets/resources/SHEEP.png"),
-		"ore":   load("res://card_assets/resources/STONE.png"),
+		"ore": load("res://card_assets/resources/STONE.png"),
 	}
 	dice_log.setup_resource_textures(textures)
 
@@ -121,10 +128,13 @@ func _connect_trade_panel_deferred() -> void:
 
 # ── Troca com o banco ─────────────────────────────────────────────────────────
 
+
 func _connect_trade_panel() -> void:
 	var tp = player_hud._trade_panel
 	if tp == null:
-		push_error("game_manager: trade_panel não existe após aguardar — verifique PlayerHUD._build_trade_panel().")
+		push_error(
+			"game_manager: trade_panel não existe após aguardar — verifique PlayerHUD._build_trade_panel()."
+		)
 		return
 	if not tp.is_connected("bank_trade_requested", _on_bank_trade_requested):
 		tp.bank_trade_requested.connect(_on_bank_trade_requested)
@@ -161,10 +171,7 @@ func execute_bank_trade(player_id: int, give_res: String, recv_res: String) -> b
 	# Entrega recurso ao jogador
 	player.add_resource(recv_res, 1)
 
-	print(
-		"%s trocou 4x %s por 1x %s com o banco."
-		% [player.player_name, give_res, recv_res]
-	)
+	print("%s trocou 4x %s por 1x %s com o banco." % [player.player_name, give_res, recv_res])
 
 	# Registra no log
 	var give_list: Array = []
@@ -220,15 +227,17 @@ func buy_dev_card(player_id: int) -> bool:
 	# Desconta recursos
 	for r in cost:
 		player.remove_resource(r, cost[r])
-		bank_panel.return_resource(r, 1)   # devolve ao banco
+		bank_panel.return_resource(r, 1)  # devolve ao banco
 
 	# Retira carta do topo
 	var card_type: int = _dev_deck.pop_back()
 	player.add_dev_card(card_type)
 
 	print(
-		"%s comprou carta de desenvolvimento: %s (restam %d no baralho)"
-		% [player.player_name, _card_type_name(card_type), _dev_deck.size()]
+		(
+			"%s comprou carta de desenvolvimento: %s (restam %d no baralho)"
+			% [player.player_name, _card_type_name(card_type), _dev_deck.size()]
+		)
 	)
 
 	# Atualiza HUD apenas para o humano
@@ -241,6 +250,7 @@ func buy_dev_card(player_id: int) -> bool:
 
 
 # ── Jogar carta de desenvolvimento ────────────────────────────────────────────
+
 
 ## Chamado pelo sinal do DevCardPanel quando o humano clica numa carta.
 func _on_human_card_played(card_index: int, card_type: int) -> void:
@@ -291,10 +301,16 @@ func play_dev_card(player_id: int, card_index: int, card_type: int) -> bool:
 
 # ── Efeitos das cartas ─────────────────────────────────────────────────────────
 
+
 ## CAVALEIRO — move o ladrão (igual ao rolar 7, sem descartar cartas)
 func _apply_knight(player_id: int) -> void:
 	players[player_id].knights_played += 1
-	print("%s jogou Cavaleiro (total jogado: %d)" % [players[player_id].player_name, players[player_id].knights_played])
+	print(
+		(
+			"%s jogou Cavaleiro (total jogado: %d)"
+			% [players[player_id].player_name, players[player_id].knights_played]
+		)
+	)
 
 	waiting_robber_move = true
 	if player_id == 0:
@@ -327,8 +343,10 @@ func _check_largest_army(player_id: int) -> void:
 			player.points += 2
 			largest_army_owner = player_id
 			print(
-				"%s roubou o Maior Exército de Cavalaria de %s! (+2 PV / -2 PV)"
-				% [player.player_name, current_owner.player_name]
+				(
+					"%s roubou o Maior Exército de Cavalaria de %s! (+2 PV / -2 PV)"
+					% [player.player_name, current_owner.player_name]
+				)
 			)
 			player_hud.update_vp_and_knights()
 			_check_victory(player_id)
@@ -336,7 +354,9 @@ func _check_largest_army(player_id: int) -> void:
 
 ## CONSTRUÇÃO DE ESTRADAS — 2 estradas grátis
 func _apply_road_building(player_id: int) -> void:
-	print("%s jogou Construção de Estradas — 2 estradas gratuitas!" % players[player_id].player_name)
+	print(
+		"%s jogou Construção de Estradas — 2 estradas gratuitas!" % players[player_id].player_name
+	)
 	if player_id == 0:
 		_pending_road_building_roads = 2
 		# Mostra highlights de estrada para o humano
@@ -359,7 +379,12 @@ func _bot_place_free_road(player_id: int) -> void:
 		if road_construction_check(edge_key, player_id):
 			BoardState.edges[edge_key]["owner"] = player_id
 			players[player_id].roads_remaining -= 1
-			print("Bot %s colocou estrada gratuita em %s" % [players[player_id].player_name, str(edge_key)])
+			print(
+				(
+					"Bot %s colocou estrada gratuita em %s"
+					% [players[player_id].player_name, str(edge_key)]
+				)
+			)
 			_check_longest_road(player_id)
 			break
 
@@ -404,8 +429,10 @@ func _execute_monopoly(player_id: int, resource: String) -> void:
 			players[player_id].add_resource(resource, amount)
 			total += amount
 	print(
-		"%s usou Monopólio em '%s' e roubou %d cartas no total."
-		% [players[player_id].player_name, resource, total]
+		(
+			"%s usou Monopólio em '%s' e roubou %d cartas no total."
+			% [players[player_id].player_name, resource, total]
+		)
 	)
 	_refresh_resource_ui()
 
@@ -452,6 +479,7 @@ func _open_resource_picker(context: String) -> void:
 
 # ── Maior Estrada Comercial ────────────────────────────────────────────────────
 
+
 func _check_longest_road(player_id: int) -> void:
 	var road_len := _calc_longest_road(player_id)
 	if road_len < 5:
@@ -460,7 +488,12 @@ func _check_longest_road(player_id: int) -> void:
 	if longest_road_owner == -1:
 		longest_road_owner = player_id
 		players[player_id].points += 2
-		print("%s obteve a Maior Estrada Comercial (%d)! (+2 PV)" % [players[player_id].player_name, road_len])
+		print(
+			(
+				"%s obteve a Maior Estrada Comercial (%d)! (+2 PV)"
+				% [players[player_id].player_name, road_len]
+			)
+		)
 		player_hud.update_vp_and_knights()
 		_check_victory(player_id)
 		return
@@ -471,7 +504,12 @@ func _check_longest_road(player_id: int) -> void:
 			players[longest_road_owner].points -= 2
 			players[player_id].points += 2
 			longest_road_owner = player_id
-			print("%s roubou a Maior Estrada Comercial! (%d)" % [players[player_id].player_name, road_len])
+			print(
+				(
+					"%s roubou a Maior Estrada Comercial! (%d)"
+					% [players[player_id].player_name, road_len]
+				)
+			)
 			player_hud.update_vp_and_knights()
 			_check_victory(player_id)
 
@@ -534,6 +572,7 @@ func _dfs_road(player_id: int, edge_key: Vector2, visited: Dictionary) -> int:
 
 # ── Lógica de bots para cartas ────────────────────────────────────────────────
 
+
 func _bot_choose_resource(player_id: int) -> String:
 	# Escolhe o recurso mais escasso na mão do bot
 	var res_order := ["ore", "wheat", "sheep", "wood", "brick"]
@@ -589,6 +628,7 @@ func _bot_play_knight_if_available(player_id: int) -> void:
 # RESTO DO GAME MANAGER (idêntico ao original — sem alterações)
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 func _setup_players():
 	var p_color = GameConfig.player_color
 	var p_icon = load("res://icons_assets/%s.png" % GameConfig.player_icon_name) as Texture2D
@@ -603,20 +643,29 @@ func _setup_players():
 	players = [Player.new("Jogador 1", p_color, p_icon)]
 
 	for i in range(GameConfig.bot_count):
-		var icon_name: String = GameConfig.bot_icon_names[i] if i < GameConfig.bot_icon_names.size() else "creeper"
+		var icon_name: String = (
+			GameConfig.bot_icon_names[i] if i < GameConfig.bot_icon_names.size() else "creeper"
+		)
 		var bot_icon = load("res://icons_assets/%s.png" % icon_name) as Texture2D
-		var cn: String = GameConfig.bot_color_names[i] if i < GameConfig.bot_color_names.size() else "blue"
+		var cn: String = (
+			GameConfig.bot_color_names[i] if i < GameConfig.bot_color_names.size() else "blue"
+		)
 		players.append(Player.new("Bot " + str(i + 1), bot_color_map[cn], bot_icon))
 
 	dice_log.setup_players(players)
 	dice_log.setup_dice_textures(dice_textures)
-	dice_log.setup_resource_textures({
-		"wood":  player_hud.wood_icon,
-		"brick": player_hud.brick_icon,
-		"wheat": player_hud.wheat_icon,
-		"sheep": player_hud.sheep_icon,
-		"ore":   player_hud.ore_icon,
-	})
+	(
+		dice_log
+		. setup_resource_textures(
+			{
+				"wood": player_hud.wood_icon,
+				"brick": player_hud.brick_icon,
+				"wheat": player_hud.wheat_icon,
+				"sheep": player_hud.sheep_icon,
+				"ore": player_hud.ore_icon,
+			}
+		)
+	)
 	player_hud.bind_human_player(players[0])
 	_create_bot_huds()
 	player_hud.apply_player_color(GameConfig.player_color_name)
@@ -962,7 +1011,7 @@ func _discard_excess_cards(player_id: int) -> void:
 	if total <= 7:
 		return
 
-	var discard := total / 2   # arredonda para baixo
+	var discard := total / 2  # arredonda para baixo
 	print("%s deve descartar %d cartas (total: %d)" % [player.player_name, discard, total])
 
 	if player_id != 0:
@@ -1338,7 +1387,9 @@ func produce_resources(dice_value: int) -> Dictionary:
 				player.add_resource(resource, amount)
 				_refresh_resource_ui()
 				if not resources_gained.has(player_id):
-					resources_gained[player_id] = {"wood": 0, "brick": 0, "wheat": 0, "sheep": 0, "ore": 0}
+					resources_gained[player_id] = {
+						"wood": 0, "brick": 0, "wheat": 0, "sheep": 0, "ore": 0
+					}
 				resources_gained[player_id][resource] += amount
 			else:
 				print("Banco sem", resource)
@@ -1367,13 +1418,22 @@ func _refresh_resource_ui():
 # ── Helper de nome de carta (usado em logs) ────────────────────────────────────
 func _card_type_name(card_type: int) -> String:
 	match card_type:
-		0: return "Cavaleiro"
-		1: return "Construção de Estradas"
-		2: return "Ano da Abundância"
-		3: return "Monopólio"
-		4: return "Capela"
-		5: return "Universidade"
-		6: return "Palácio"
-		7: return "Biblioteca"
-		8: return "Mercado"
+		0:
+			return "Cavaleiro"
+		1:
+			return "Construção de Estradas"
+		2:
+			return "Ano da Abundância"
+		3:
+			return "Monopólio"
+		4:
+			return "Capela"
+		5:
+			return "Universidade"
+		6:
+			return "Palácio"
+		7:
+			return "Biblioteca"
+		8:
+			return "Mercado"
 	return "Desconhecida"

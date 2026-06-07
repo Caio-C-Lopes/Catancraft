@@ -460,7 +460,11 @@ func show_robber_options():
 				var hex_world_pos = child.position
 				area.input_event.connect(
 					func(_vp, ev, _si):
-						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+						if (
+							ev is InputEventMouseButton
+							and ev.pressed
+							and ev.button_index == MOUSE_BUTTON_LEFT
+						):
 							var gm = get_parent()
 							if gm.waiting_robber_move and gm.current_player_index == 0:
 								_commit_robber_move(hex_world_pos)

@@ -183,7 +183,6 @@ func add_preparation_resources_entry(player: Player, resources_gained: Dictionar
 	scroll.scroll_vertical = scroll.get_v_scroll_bar().max_value
 
 
-
 ## Entrada de compra de carta de desenvolvimento
 ## [ícone jogador] "comprou" [ícone carta dev]
 func add_dev_card_entry(player: Player) -> void:

@@ -8,7 +8,7 @@ signal bank_trade_requested(give_res: String, recv_res: String)
 # ── Constantes ────────────────────────────────────────────────────────────────
 const RESOURCES = ["wood", "brick", "wheat", "sheep", "ore"]
 # Sem limite fixo — jogador pode selecionar quantas cartas quiser (regras Catan)
-const MAX_SLOTS = 9   # máximo visual de slots por linha (suficiente para qualquer troca)
+const MAX_SLOTS = 9  # máximo visual de slots por linha (suficiente para qualquer troca)
 
 # ── Referências internas ──────────────────────────────────────────────────────
 var _font: Font
@@ -47,6 +47,7 @@ var _error_label: Label = null
 # Assets de recursos
 var resource_textures: Dictionary = {}
 
+
 # ── Inicialização ──────────────────────────────────────────────────────────────
 func _ready():
 	_font = load("res://assets/fonts/1_Minecraft-Regular.otf")
@@ -84,9 +85,10 @@ func on_hud_resource_clicked(res_name: String):
 	_give_resources.append(res_name)
 	var slot = _make_card_slot(res_name, true)
 	var idx = _give_slots.size()
-	slot.gui_input.connect(func(ev):
-		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-			_remove_give_slot(idx)
+	slot.gui_input.connect(
+		func(ev):
+			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+				_remove_give_slot(idx)
 	)
 	_give_slots.append(slot)
 	_give_hbox_slots.add_child(slot)
@@ -106,9 +108,9 @@ func _build_ui():
 
 	var bg_style = StyleBoxFlat.new()
 	bg_style.bg_color = Color(1, 1, 1, 1)
-	bg_style.border_width_left   = 3
-	bg_style.border_width_right  = 3
-	bg_style.border_width_top    = 3
+	bg_style.border_width_left = 3
+	bg_style.border_width_right = 3
+	bg_style.border_width_top = 3
 	bg_style.border_width_bottom = 3
 	bg_style.border_color = Color(0, 0, 0, 1)
 	panel.add_theme_stylebox_override("panel", bg_style)
@@ -118,7 +120,7 @@ func _build_ui():
 	var main_vbox = VBoxContainer.new()
 	main_vbox.add_theme_constant_override("separation", 8)
 	main_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_vbox.size_flags_vertical   = Control.SIZE_EXPAND_FILL
+	main_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(main_vbox)
 
 	# ── Linha do topo: seletor de modo ───────────────────────────────────────
@@ -269,6 +271,7 @@ func _build_ui():
 
 # ── Fábrica de widgets ────────────────────────────────────────────────────────
 
+
 func _make_mode_button(icon_path: String) -> TextureButton:
 	var btn = TextureButton.new()
 	btn.texture_normal = load(icon_path)
@@ -282,9 +285,9 @@ func _wrap_in_panel(btn: TextureButton) -> PanelContainer:
 	var pc = PanelContainer.new()
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 0)
-	style.border_width_left   = 0
-	style.border_width_right  = 0
-	style.border_width_top    = 0
+	style.border_width_left = 0
+	style.border_width_right = 0
+	style.border_width_top = 0
 	style.border_width_bottom = 0
 	pc.add_theme_stylebox_override("panel", style)
 	pc.add_child(btn)
@@ -311,9 +314,10 @@ func _make_resource_picker(res_name: String) -> Control:
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(card)
 
-	panel.gui_input.connect(func(ev):
-		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-			_on_recv_picker_clicked(res_name)
+	panel.gui_input.connect(
+		func(ev):
+			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+				_on_recv_picker_clicked(res_name)
 	)
 	return panel
 
@@ -323,9 +327,9 @@ func _make_card_slot(res_name: String, clickable: bool = false) -> Control:
 	var panel = PanelContainer.new()
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(1, 1, 1, 0)
-	style.border_width_left   = 0
-	style.border_width_right  = 0
-	style.border_width_top    = 0
+	style.border_width_left = 0
+	style.border_width_right = 0
+	style.border_width_top = 0
 	style.border_width_bottom = 0
 	panel.add_theme_stylebox_override("panel", style)
 	panel.custom_minimum_size = Vector2(60, 80)
@@ -354,6 +358,7 @@ func _load_resource_tex(res_name: String) -> Texture2D:
 
 # ── Lógica de seleção ─────────────────────────────────────────────────────────
 
+
 # Clique num picker da linha de cima → adiciona nos slots de pedido
 func _on_recv_picker_clicked(res_name: String):
 	if _recv_resources.size() >= MAX_SLOTS:
@@ -361,9 +366,10 @@ func _on_recv_picker_clicked(res_name: String):
 	_recv_resources.append(res_name)
 	var slot = _make_card_slot(res_name, true)
 	var idx = _recv_slots.size()
-	slot.gui_input.connect(func(ev):
-		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-			_remove_recv_slot(idx)
+	slot.gui_input.connect(
+		func(ev):
+			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+				_remove_recv_slot(idx)
 	)
 	_recv_slots.append(slot)
 	_recv_hbox_slots.add_child(slot)
@@ -406,9 +412,14 @@ func _reconnect_give_slots():
 		for conn in slot.get_signal_connection_list("gui_input"):
 			slot.disconnect("gui_input", conn["callable"])
 		var idx = i
-		slot.gui_input.connect(func(ev):
-			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-				_remove_give_slot(idx)
+		slot.gui_input.connect(
+			func(ev):
+				if (
+					ev is InputEventMouseButton
+					and ev.pressed
+					and ev.button_index == MOUSE_BUTTON_LEFT
+				):
+					_remove_give_slot(idx)
 		)
 
 
@@ -418,9 +429,14 @@ func _reconnect_recv_slots():
 		for conn in slot.get_signal_connection_list("gui_input"):
 			slot.disconnect("gui_input", conn["callable"])
 		var idx = i
-		slot.gui_input.connect(func(ev):
-			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-				_remove_recv_slot(idx)
+		slot.gui_input.connect(
+			func(ev):
+				if (
+					ev is InputEventMouseButton
+					and ev.pressed
+					and ev.button_index == MOUSE_BUTTON_LEFT
+				):
+					_remove_recv_slot(idx)
 		)
 
 
@@ -437,6 +453,7 @@ func _clear_all_slots():
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 func _get_game_config():
 	var root = get_tree().get_root()
@@ -457,35 +474,41 @@ func _resolve_hud():
 func _refresh_mode_buttons():
 	var sel_style = StyleBoxFlat.new()
 	sel_style.bg_color = Color(0.18, 0.47, 0.87, 0.18)
-	sel_style.border_width_left   = 3
-	sel_style.border_width_right  = 3
-	sel_style.border_width_top    = 3
+	sel_style.border_width_left = 3
+	sel_style.border_width_right = 3
+	sel_style.border_width_top = 3
 	sel_style.border_width_bottom = 3
 	sel_style.border_color = Color(0.18, 0.47, 0.87, 1.0)
-	sel_style.corner_radius_top_left     = 6
-	sel_style.corner_radius_top_right    = 6
-	sel_style.corner_radius_bottom_left  = 6
+	sel_style.corner_radius_top_left = 6
+	sel_style.corner_radius_top_right = 6
+	sel_style.corner_radius_bottom_left = 6
 	sel_style.corner_radius_bottom_right = 6
 
 	var unsel_style = StyleBoxFlat.new()
 	unsel_style.bg_color = Color(1, 1, 1, 0)
-	unsel_style.border_width_left   = 0
-	unsel_style.border_width_right  = 0
-	unsel_style.border_width_top    = 0
+	unsel_style.border_width_left = 0
+	unsel_style.border_width_right = 0
+	unsel_style.border_width_top = 0
 	unsel_style.border_width_bottom = 0
 
 	if _trade_with_bank:
-		if _panel_bank:    _panel_bank.add_theme_stylebox_override("panel", sel_style)
-		if _panel_players: _panel_players.add_theme_stylebox_override("panel", unsel_style)
+		if _panel_bank:
+			_panel_bank.add_theme_stylebox_override("panel", sel_style)
+		if _panel_players:
+			_panel_players.add_theme_stylebox_override("panel", unsel_style)
 		if _give_mode_icon:
 			var tex = load("res://icons_assets/bank.png")
-			if tex: _give_mode_icon.texture = tex
+			if tex:
+				_give_mode_icon.texture = tex
 	else:
-		if _panel_players: _panel_players.add_theme_stylebox_override("panel", sel_style)
-		if _panel_bank:    _panel_bank.add_theme_stylebox_override("panel", unsel_style)
+		if _panel_players:
+			_panel_players.add_theme_stylebox_override("panel", sel_style)
+		if _panel_bank:
+			_panel_bank.add_theme_stylebox_override("panel", unsel_style)
 		if _give_mode_icon:
 			var tex = load("res://icons_assets/players.png")
-			if tex: _give_mode_icon.texture = tex
+			if tex:
+				_give_mode_icon.texture = tex
 
 
 # ── Callbacks ─────────────────────────────────────────────────────────────────

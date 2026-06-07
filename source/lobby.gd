@@ -237,10 +237,15 @@ func _random_bot_assignments() -> Array[Dictionary]:
 
 	var result: Array[Dictionary] = []
 	for i in range(selected_bot_count):
-		result.append({
-			"color": available_colors[i % available_colors.size()],
-			"icon":  available_icons[i % available_icons.size()],
-		})
+		(
+			result
+			. append(
+				{
+					"color": available_colors[i % available_colors.size()],
+					"icon": available_icons[i % available_icons.size()],
+				}
+			)
+		)
 	return result
 
 

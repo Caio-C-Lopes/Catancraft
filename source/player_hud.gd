@@ -24,7 +24,7 @@ func _on_dice_pressed():
 var font: Font
 var resource_icons: Dictionary = {}
 var resource_labels: Dictionary = {}
-var resource_panels: Dictionary = {}   # "wood" -> PanelContainer (para show/hide)
+var resource_panels: Dictionary = {}  # "wood" -> PanelContainer (para show/hide)
 var piece_labels: Dictionary = {}
 
 @export var wood_icon: Texture2D
@@ -56,8 +56,10 @@ var _knights_label: Label = null
 # Referência fixa ao jogador humano — definida uma única vez pelo game_manager
 var _human_player: Player = null
 
+
 func bind_human_player(player: Player):
 	_human_player = player
+
 
 var _end_turn_btn: TextureButton = null
 var _trade_panel: Control = null
@@ -182,22 +184,30 @@ func update_resources(player: Player):
 
 # Custos oficiais do Catan
 const COSTS = {
-	"road":   {"wood": 1, "brick": 1},
-	"house":  {"wood": 1, "brick": 1, "wheat": 1, "sheep": 1},
-	"city":   {"ore": 3, "wheat": 2},
-	"cards":  {"ore": 1, "wheat": 1, "sheep": 1},
+	"road": {"wood": 1, "brick": 1},
+	"house": {"wood": 1, "brick": 1, "wheat": 1, "sheep": 1},
+	"city": {"ore": 3, "wheat": 2},
+	"cards": {"ore": 1, "wheat": 1, "sheep": 1},
 }
 
-const COLOR_ON  = Color(1.0, 1.0, 1.0, 1.0)
+const COLOR_ON = Color(1.0, 1.0, 1.0, 1.0)
 const COLOR_OFF = Color(1.0, 1.0, 1.0, 0.5)
+
 
 func update_action_buttons(_ignored: Player = null):
 	# Sempre avalia com base nos recursos do jogador humano, nunca dos bots
 	if _human_player == null:
 		return
-	_set_btn_affordable(_road_btn,  _human_player.can_afford(COSTS["road"])  and _human_player.roads_remaining > 0)
-	_set_btn_affordable(_house_btn, _human_player.can_afford(COSTS["house"]) and _human_player.settlements_remaining > 0)
-	_set_btn_affordable(_city_btn,  _human_player.can_afford(COSTS["city"])  and _human_player.cities_remaining > 0)
+	_set_btn_affordable(
+		_road_btn, _human_player.can_afford(COSTS["road"]) and _human_player.roads_remaining > 0
+	)
+	_set_btn_affordable(
+		_house_btn,
+		_human_player.can_afford(COSTS["house"]) and _human_player.settlements_remaining > 0
+	)
+	_set_btn_affordable(
+		_city_btn, _human_player.can_afford(COSTS["city"]) and _human_player.cities_remaining > 0
+	)
 	_set_btn_affordable(_cards_btn, _human_player.can_afford(COSTS["cards"]))
 
 
@@ -307,15 +317,20 @@ func _build_resource_bar():
 		panel.add_child(vbox)
 
 		resource_panels[res] = panel
-		panel.hide()   # começa oculto — aparece quando quantidade > 0
+		panel.hide()  # começa oculto — aparece quando quantidade > 0
 
 		# Ao clicar num recurso do HUD enquanto o trade panel estiver aberto,
 		# envia esse recurso para a área "oferecer" do trade panel
 		var res_name = res
-		panel.gui_input.connect(func(ev):
-			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-				if _trade_panel != null and _trade_panel.visible:
-					_trade_panel.on_hud_resource_clicked(res_name)
+		panel.gui_input.connect(
+			func(ev):
+				if (
+					ev is InputEventMouseButton
+					and ev.pressed
+					and ev.button_index == MOUSE_BUTTON_LEFT
+				):
+					if _trade_panel != null and _trade_panel.visible:
+						_trade_panel.on_hud_resource_clicked(res_name)
 		)
 
 		resource_bar.add_child(panel)
@@ -369,20 +384,21 @@ func _build_action_buttons():
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		var sig_name = b["signal"]
-		btn.pressed.connect(func():
-			# Dados ainda não rolados — bloqueia tudo exceto rolar dados
-			if sig_name == "roll_dice_pressed":
+		btn.pressed.connect(
+			func():
+				# Dados ainda não rolados — bloqueia tudo exceto rolar dados
+				if sig_name == "roll_dice_pressed":
+					emit_signal(sig_name)
+					return
+				# Encerrar turno não precisa de dados rolados (o game_manager já valida)
+				if sig_name == "end_turn_pressed":
+					emit_signal(sig_name)
+					return
+				# Todas as outras ações exigem ser o turno do humano E ter rolado os dados
+				if not _is_human_turn_and_rolled():
+					print("Ação bloqueada: role os dados primeiro ou aguarde seu turno.")
+					return
 				emit_signal(sig_name)
-				return
-			# Encerrar turno não precisa de dados rolados (o game_manager já valida)
-			if sig_name == "end_turn_pressed":
-				emit_signal(sig_name)
-				return
-			# Todas as outras ações exigem ser o turno do humano E ter rolado os dados
-			if not _is_human_turn_and_rolled():
-				print("Ação bloqueada: role os dados primeiro ou aguarde seu turno.")
-				return
-			emit_signal(sig_name)
 		)
 
 		if b["store"] == "end_turn":
@@ -547,7 +563,7 @@ func _build_trade_panel():
 	# Posição absoluta em relação ao Control raiz:
 	# canto inferior-esquerdo da tela, acima da HUD (~350 px de altura do painel)
 	# Ajuste os valores abaixo conforme a resolução do seu projeto
-	_trade_panel.position = Vector2(10, 200)   # Y positivo: distância do topo
+	_trade_panel.position = Vector2(10, 200)  # Y positivo: distância do topo
 	_trade_panel.z_index = 20
 	_trade_panel.hide()
 
