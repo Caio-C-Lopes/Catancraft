@@ -1722,8 +1722,23 @@ func _check_victory(player_id: int) -> void:
 	var player := players[player_id]
 	if player.get_total_points() >= 10:
 		print("=== %s VENCEU com %d pontos! ===" % [player.player_name, player.get_total_points()])
-		# Paralisa o jogo
-		get_tree().paused = true
+		_show_victory_screen()
+
+
+func _show_victory_screen() -> void:
+	# Pausa o jogo antes de exibir a tela
+	get_tree().paused = true
+
+	var victory_script = load("res://source/victory_screen.gd")
+	if victory_script == null:
+		push_error("victory_screen.gd não encontrado em res://source/")
+		return
+
+	var screen := CanvasLayer.new()
+	screen.set_script(victory_script)
+	screen.process_mode = Node.PROCESS_MODE_ALWAYS  # roda mesmo com o jogo pausado
+	get_tree().root.add_child(screen)
+	screen.show_victory(players, largest_army_owner, longest_road_owner)
 
 
 func _refresh_resource_ui():
