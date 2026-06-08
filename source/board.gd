@@ -619,7 +619,8 @@ func _get_road_texture_path(color: Color, orientation: String) -> String:
 func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var gm = get_parent()
-		if gm.waiting_robber_move and gm.current_player_index == 0:
+		# Variável fantasma corrigida aqui:
+		if gm.waiting_robber_placement and gm.current_player_index == 0:
 			var clicked_pos = Vector2(round(pos.x), round(pos.y))
 			if clicked_pos == BoardState.robber_hex_pos:
 				print("Ação inválida: O ladrão já está neste hexágono! Escolha outro.")
@@ -667,7 +668,8 @@ func show_robber_options():
 							and ev.button_index == MOUSE_BUTTON_LEFT
 						):
 							var gm = get_parent()
-							if gm.waiting_robber_move and gm.current_player_index == 0:
+							# Variável fantasma corrigida aqui também:
+							if gm.waiting_robber_placement and gm.current_player_index == 0:
 								_commit_robber_move(hex_world_pos)
 				)
 

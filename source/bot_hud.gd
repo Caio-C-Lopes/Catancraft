@@ -11,6 +11,7 @@ var _knights_lbl: Label = null
 var _roads_lbl: Label = null
 var _settlements_lbl: Label = null
 var _cities_lbl: Label = null
+var _longest_road_lbl: Label = null
 
 @export var trophy_icon: Texture2D
 @export var iron_golem_icon: Texture2D
@@ -35,6 +36,9 @@ var _bot_icon_rect: TextureRect = null
 var _house_icon_rect: TextureRect = null
 var _city_icon_rect: TextureRect = null
 var _road_icon_rect: TextureRect = null
+var _longest_road_icon_rect: TextureRect = null
+var _name_label: Label = null
+var _color_name: String = "blue"
 
 
 func _ready():
@@ -103,6 +107,17 @@ func _build_ui():
 	_bot_icon_rect = icon_rect
 	top_row.add_child(icon_rect)
 
+	# Nome do bot na cor do jogador
+	var name_lbl = Label.new()
+	name_lbl.text = "Bot"
+	name_lbl.add_theme_font_override("font", font)
+	name_lbl.add_theme_font_size_override("font_size", 12)
+	name_lbl.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_name_label = name_lbl
+	top_row.add_child(name_lbl)
+
 	# Cartas de recurso na mão (carta azul com ?)
 	top_row.add_child(
 		_make_icon_counter(resource_card_icon, "0", func(lbl): _total_cards_lbl = lbl)
@@ -149,6 +164,25 @@ func _build_ui():
 	bot_row.add_child(_city_icon_rect)
 	bot_row.add_child(_make_piece_label("4", func(lbl): _cities_lbl = lbl))
 
+	# Maior Estrada (roads_<color>.png) — ícone + quantidade à direita
+	# A textura correta é aplicada no setup() após conhecer a cor do bot
+	_longest_road_icon_rect = TextureRect.new()
+	_longest_road_icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_longest_road_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_longest_road_icon_rect.custom_minimum_size = Vector2(28, 28)
+	_longest_road_icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	var lr_lbl = Label.new()
+	lr_lbl.text = "0"
+	lr_lbl.add_theme_font_override("font", font)
+	lr_lbl.add_theme_font_size_override("font_size", 12)
+	lr_lbl.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+	lr_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_longest_road_lbl = lr_lbl
+
+	bot_row.add_child(_longest_road_icon_rect)
+	bot_row.add_child(lr_lbl)
+
 
 func _make_icon_counter(icon: Texture2D, initial: String, store: Callable) -> HBoxContainer:
 	var hbox = HBoxContainer.new()
@@ -188,12 +222,23 @@ func _make_piece_label(initial: String, store: Callable) -> Label:
 
 func setup(player: Player, color_name: String = ""):
 	_player = player
+	_color_name = color_name if color_name != "" else _color_name_from(player.player_color)
 
 	if _bot_icon_rect and player.icon_texture:
 		_bot_icon_rect.texture = player.icon_texture
 
-	var cname = color_name if color_name != "" else _color_name_from(player.player_color)
-	_apply_piece_icons(cname)
+	# Nome do bot na cor correta
+	if _name_label:
+		_name_label.text = player.player_name
+		_name_label.add_theme_color_override("font_color", player.player_color)
+
+	_apply_piece_icons(_color_name)
+
+	# Ícone de longest road na cor correta
+	if _longest_road_icon_rect:
+		var roads_tex = load("res://icons_assets/roads_%s.png" % _color_name) as Texture2D
+		if roads_tex:
+			_longest_road_icon_rect.texture = roads_tex
 
 	refresh()
 
@@ -225,6 +270,17 @@ func refresh():
 
 	if _cities_lbl:
 		_cities_lbl.text = str(_player.cities_remaining)
+
+	if _longest_road_lbl:
+		var gm = get_tree().get_root().find_child("Game", true, false)
+		var road_len := 0
+		if gm and gm.has_method("_calc_longest_road"):
+			var player_idx := -1
+			if gm.has_method("get") and gm.get("players") != null:
+				player_idx = gm.players.find(_player)
+			if player_idx >= 0:
+				road_len = gm._calc_longest_road(player_idx)
+		_longest_road_lbl.text = str(road_len)
 
 
 func _apply_piece_icons(color_name: String):

@@ -17,7 +17,6 @@ var has_rolled_dice: bool = false
 var auto_roll_time: float = 5.0
 var turn_time: float = 60.0
 var preparation_turn_time: float = 60.0
-var waiting_robber_move: bool = false
 var is_setup_phase = true
 @onready var player_hud = $Control/PlayerHUD
 @onready var dice_log = $Control/DiceLog
@@ -69,6 +68,16 @@ var _yop_cards_left: int = 0
 # ── Controle da estrada na fase de preparação ────────────────────────────────
 var _prep_settlement_pos: Vector2 = Vector2.ZERO
 var _waiting_prep_road: bool = false
+
+# ── Controle do Ladrão ────────────────────────────────────────────────────────
+var waiting_discard: bool = false
+var waiting_robber_placement: bool = false
+var waiting_robber_steal: bool = false
+
+var robber_discard_time: float = 20.0
+var robber_move_time: float = 10.0
+
+@onready var robber_panel = $Control/PlayerHUD/RobberPanel  # Ajuste o caminho pro seu nó
 
 
 
@@ -443,12 +452,7 @@ func _apply_knight(player_id: int) -> void:
 		)
 	)
 
-	waiting_robber_move = true
-	if player_id == 0:
-		robber_movement_human()
-	else:
-		_bot_controller.robber_movement(player_id)
-
+	_prompt_robber_movement()
 	_check_largest_army(player_id)
 
 
@@ -691,13 +695,6 @@ func _setup_players():
 	var p_color = GameConfig.player_color
 	var p_icon = load("res://icons_assets/%s.png" % GameConfig.player_icon_name) as Texture2D
 
-	var bot_color_map = {
-		"red": Color(0.85, 0.25, 0.25),
-		"blue": Color(0.22, 0.54, 0.87),
-		"green": Color(0.27, 0.65, 0.27),
-		"purple": Color(0.55, 0.27, 0.80),
-	}
-
 	players = [Player.new("Jogador 1", p_color, p_icon)]
 
 	for i in range(GameConfig.bot_count):
@@ -708,7 +705,8 @@ func _setup_players():
 		var cn: String = (
 			GameConfig.bot_color_names[i] if i < GameConfig.bot_color_names.size() else "blue"
 		)
-		players.append(Player.new("Bot " + str(i + 1), bot_color_map[cn], bot_icon))
+		var bot_color: Color = GameConfig.COLOR_MAP.get(cn, Color(0.22, 0.54, 0.87))
+		players.append(Player.new("Bot " + str(i + 1), bot_color, bot_icon))
 
 	dice_log.setup_players(players)
 	dice_log.setup_dice_textures(dice_textures)
@@ -731,17 +729,16 @@ func _setup_players():
 
 func _create_bot_huds():
 	var control = $Control
-	var all_color_names = ["blue", "green", "red", "purple"]
-	var available: Array = []
-	for cn in all_color_names:
-		if cn != GameConfig.player_color_name:
-			available.append(cn)
 
 	for i in range(1, players.size()):
 		var hud = preload("res://bot_hud.tscn").instantiate()
 		hud.bot_index = i
 		control.add_child(hud)
-		var cn: String = available[(i - 1) % available.size()]
+		var cn: String = (
+			GameConfig.bot_color_names[i - 1]
+			if (i - 1) < GameConfig.bot_color_names.size()
+			else "blue"
+		)
 		hud.setup(players[i], cn)
 		_bot_huds.append(hud)
 
@@ -905,8 +902,8 @@ func end_turn():
 func _on_button_pressed():
 	if current_player_index != 0:
 		return
-	if waiting_robber_move:
-		print("Mova o ladrão antes de terminar o turno!")
+	if waiting_discard or waiting_robber_placement or waiting_robber_steal:
+		print("Resolva o ladrão antes de terminar o turno!")
 		return
 	if _waiting_monopoly or _waiting_yop:
 		print("Resolva a carta de desenvolvimento antes de terminar o turno!")
@@ -1010,17 +1007,202 @@ func roll_dice():
 
 func on_dice_rolled(value: int):
 	if value == 7:
-		waiting_robber_move = true
-		# Descarte de cartas excedentes (mais de 7 na mão)
-		for i in range(players.size()):
-			_discard_excess_cards(i)
-		if current_player_index == 0:
-			robber_movement_human()
-		else:
-			_bot_controller.robber_movement(current_player_index)
+		print("LADRÃO ATIVADO!")
+		player_hud.stop_timer()
+		_start_robber_sequence()
 	else:
 		var resources_gained = produce_resources(value)
 		dice_log.add_resources_entry(players, resources_gained)
+
+
+func _start_robber_sequence():
+	var someone_discarding = false
+
+	# 1. Faz os bots descartarem automaticamente (sua função original)
+	for i in range(1, players.size()):
+		_discard_excess_cards(i)
+
+	# 2. Avalia o humano
+	var human_total = _get_player_total_cards(0)
+	if human_total > 7:
+		waiting_discard = true
+		robber_panel.open_discard_mode(human_total / 2)  # Metade para baixo
+
+		# Conecta o painel, se não estiver conectado
+		if not robber_panel.discard_confirmed.is_connected(_on_human_discard_confirmed):
+			robber_panel.discard_confirmed.connect(_on_human_discard_confirmed, CONNECT_ONE_SHOT)
+
+		player_hud.start_timer(robber_discard_time, _on_robber_discard_timeout)
+		print("[LADRÃO] Janela de descarte do humano: 20s")
+	else:
+		_prompt_robber_movement()
+
+
+func _on_human_discard_confirmed(discarded: Array):
+	waiting_discard = false
+	player_hud.stop_timer()  # Cancela o timer de 20s
+
+	for res in discarded:
+		players[0].remove_resource(res, 1)
+		bank_panel.return_resource(res, 1)
+
+	_refresh_resource_ui()
+	_prompt_robber_movement()
+
+
+func _on_robber_discard_timeout():
+	if not waiting_discard:
+		return
+
+	print("[TIMEOUT] Tempo esgotado! Descarte automático.")
+	var player = players[0]
+	var target_amount = _get_player_total_cards(0) / 2
+
+	var hand_pool: Array[String] = []
+	for res in player.resources:
+		for i in range(player.resources[res]):
+			hand_pool.append(res)
+
+	hand_pool.shuffle()
+
+	for i in range(min(target_amount, hand_pool.size())):
+		var res = hand_pool[i]
+		player.remove_resource(res, 1)
+		bank_panel.return_resource(res, 1)
+
+	robber_panel.hide()
+	waiting_discard = false
+	_refresh_resource_ui()
+	_prompt_robber_movement()
+
+
+func _prompt_robber_movement():
+	if current_player_index == 0:
+		waiting_robber_placement = true
+		player_hud.start_timer(robber_move_time, _on_robber_move_timeout)
+		robber_movement_human()  # Sua função que mostra as opções
+	else:
+		robber_movement_bot()  # Sua função original
+
+
+func _on_human_robber_placed(pos: Vector2):
+	waiting_robber_placement = false
+	player_hud.stop_timer()
+
+	# O board.gd já moveu o ladrão visualmente e atualizou o BoardState.
+	# Busca vítimas válidas no hex escolhido.
+	var victim_ids = _get_robber_victims(pos)
+
+	if victim_ids.is_empty():
+		print("Nenhuma vítima para roubar.")
+		_resume_turn()
+	elif victim_ids.size() == 1:
+		print("Apenas uma vítima: roubando automaticamente.")
+		_execute_steal(0, victim_ids[0])
+	else:
+		# Múltiplas vítimas: monta lista de Players e abre painel de escolha
+		print("Múltiplas vítimas, abrindo painel de escolha.")
+		waiting_robber_steal = true
+		var victim_players: Array = []
+		for vid in victim_ids:
+			victim_players.append(players[vid])
+		robber_panel.open_steal_mode(victim_players)
+		if not robber_panel.is_connected("steal_target_chosen", _on_human_steal_target_chosen):
+			robber_panel.steal_target_chosen.connect(_on_human_steal_target_chosen)
+
+
+func _on_human_steal_target_chosen(target_player):
+	waiting_robber_steal = false
+	player_hud.stop_timer()
+	var target_id = players.find(target_player)
+	if target_id == -1:
+		push_error("Vítima não encontrada na lista de jogadores!")
+		_resume_turn()
+		return
+	_execute_steal(0, target_id)
+
+
+func _on_robber_move_timeout():
+	if not waiting_robber_placement and not waiting_robber_steal:
+		return
+	print("[TIMEOUT] Tempo de mover/roubar esgotado!")
+
+	var target_hex_pos = BoardState.robber_hex_pos
+
+	if waiting_robber_placement:
+		var board = find_child("Board")
+		if board and board.has_method("hide_robber_options"):
+			board.hide_robber_options()
+
+		# Pega qualquer hex diferente
+		for child in board.get_children():
+			if child is Node2D and child.has_meta("resource_type"):
+				if child.position != target_hex_pos:
+					target_hex_pos = child.position
+					var robber_node = find_child("Robber", true, false)
+					if robber_node:
+						robber_node.moving_to(target_hex_pos, false)
+					BoardState.update_robber_position(target_hex_pos)
+					break
+
+	waiting_robber_placement = false
+	waiting_robber_steal = false
+	robber_panel.hide()
+
+	# Rouba aleatório
+	var victims = _get_robber_victims(target_hex_pos)
+	if not victims.is_empty():
+		var random_victim = victims[randi() % victims.size()]
+		_execute_steal(0, random_victim)
+	else:
+		_resume_turn()
+
+
+# ─── FUNÇÕES AUXILIARES ───────────────────────────────────────────────────────
+func _execute_steal(thief_id: int, victim_id: int):
+	var victim = players[victim_id]
+	var thief = players[thief_id]
+
+	var stealable = []
+	for res in victim.resources:
+		for i in range(victim.resources[res]):
+			stealable.append(res)
+
+	if stealable.size() > 0:
+		stealable.shuffle()
+		var stolen_res = stealable[0]
+		victim.remove_resource(stolen_res, 1)
+		thief.add_resource(stolen_res, 1)
+		print("Jogador %d roubou %s do Jogador %d" % [thief_id, stolen_res, victim_id])
+		_refresh_resource_ui()
+
+	_resume_turn()
+
+
+func _resume_turn():
+	# Só devolve o timer de 60s se for o turno do humano!
+	if current_player_index == 0:
+		player_hud.start_timer(turn_time, _on_turn_timeout)
+
+
+func _get_player_total_cards(player_id: int) -> int:
+	var total = 0
+	for r in players[player_id].resources:
+		total += players[player_id].resources[r]
+	return total
+
+
+func _get_robber_victims(hex_pos: Vector2) -> Array:
+	# Busca jogadores no hex já excluindo quem está roubando
+	var raw_victims = BoardState.get_players_on_hex(hex_pos, current_player_index)
+	var valid_victims: Array = []
+
+	# Só pode roubar de quem tem pelo menos 1 carta
+	for victim_id in raw_victims:
+		if _get_player_total_cards(victim_id) > 0:
+			valid_victims.append(victim_id)
+
+	return valid_victims
 
 
 ## Descarta metade das cartas se o jogador tiver mais de 7 (regra do ladrão)
@@ -1061,10 +1243,8 @@ func robber_movement_human():
 		board.show_robber_options()
 
 
-func _on_human_robber_placed(_pos: Vector2):
-	waiting_robber_move = false
-	print("Humano colocou o ladrão. Jogo liberado!")
-
+func robber_movement_bot():
+	_bot_controller.robber_movement(current_player_index)
 
 
 func _try_place_settlement(pos: Vector2, player_id: int, is_preparation: bool) -> bool:
@@ -1175,14 +1355,20 @@ func road_construction_check(pos: Vector2, player_id: int) -> bool:
 		if next_key == edge_key:
 			continue
 		var next_edge = BoardState.edges[next_key]
+
 		if next_edge["owner"] == player_id:
-			if (
-				next_edge["a_vertice"] == a_v
-				or next_edge["a_vertice"] == b_v
-				or next_edge["b_vertice"] == a_v
-				or next_edge["b_vertice"] == b_v
-			):
-				return true
+			var shared_vertice = null
+
+			if next_edge["a_vertice"] == a_v or next_edge["b_vertice"] == a_v:
+				shared_vertice = a_v
+			elif next_edge["a_vertice"] == b_v or next_edge["b_vertice"] == b_v:
+				shared_vertice = b_v
+
+			if shared_vertice != null:
+				var vertice_owner = BoardState.vertices[shared_vertice]["owner"]
+
+				if vertice_owner == null or vertice_owner == player_id:
+					return true
 
 	print("A estrada tem de estar conectada a uma construção sua!")
 	return false
@@ -1297,12 +1483,11 @@ func _on_build_city_pressed():
 	if board == null:
 		return
 
-	# Toggle: se ja esta no modo, cancela
 	if _city_mode_active:
-		_city_mode_active = false
-		_hide_highlights()
-		print("Modo de construção de cidade cancelado.")
+		_reset_build_modes()
 		return
+
+	_reset_build_modes()
 
 	# Verifica custo: 3 minerio + 2 trigo
 	var cost = {"ore": 3, "wheat": 2}
@@ -1340,12 +1525,11 @@ func _on_build_house_pressed():
 	if board == null:
 		return
 
-	# Toggle: se já está no modo, cancela
 	if _settlement_mode_active:
-		_settlement_mode_active = false
-		_hide_highlights()
-		print("Modo de construção de aldeia cancelado.")
+		_reset_build_modes()
 		return
+
+	_reset_build_modes()
 
 	# Verifica custo: madeira + argila + lã + trigo
 	var cost = {"wood": 1, "brick": 1, "sheep": 1, "wheat": 1}
@@ -1374,12 +1558,11 @@ func _on_build_road_pressed():
 	if board == null:
 		return
 
-	# Toggle: se já está no modo de estrada, cancela
 	if _road_mode_active:
-		_road_mode_active = false
-		board.hide_road_highlights()
-		print("Modo de construção de estrada cancelado.")
+		_reset_build_modes()
 		return
+
+	_reset_build_modes()
 
 	# Verifica se o jogador pode pagar (ou tem estradas gratuitas pela carta)
 	if _pending_road_building_roads == 0:
@@ -1580,3 +1763,11 @@ func _card_type_name(card_type: int) -> String:
 		8:
 			return "Mercado"
 	return "Desconhecida"
+
+
+func _reset_build_modes() -> void:
+	_road_mode_active = false
+	_settlement_mode_active = false
+	_city_mode_active = false
+
+	_hide_highlights()

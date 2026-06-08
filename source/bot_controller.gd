@@ -16,12 +16,14 @@ func play_turn(player_id: int) -> void:
 
 	play_knight_if_available(player_id)
 	await gm.get_tree().process_frame
-	while gm.waiting_robber_move:
+
+	while gm.waiting_discard or gm.waiting_robber_placement or gm.waiting_robber_steal:
 		await gm.get_tree().process_frame
 
 	await gm.get_tree().create_timer(1.0).timeout
 	gm.roll_dice()
-	while gm.waiting_robber_move:
+
+	while gm.waiting_discard or gm.waiting_robber_placement or gm.waiting_robber_steal:
 		await gm.get_tree().process_frame
 
 	await gm.get_tree().create_timer(1.0).timeout
@@ -149,6 +151,7 @@ func place_preparation_road(player_id: int, settlement_key: Vector2) -> void:
 
 
 func robber_movement(player_id: int) -> void:
+	gm.waiting_robber_placement = true
 	var board := gm.find_child("Board")
 	var current_robber_pos := BoardState.robber_hex_pos
 	var best_hex_pos := Vector2.ZERO
@@ -194,7 +197,14 @@ func robber_movement(player_id: int) -> void:
 		BoardState.update_robber_position(best_hex_pos)
 		print("Bot moveu o ladrão para: ", best_hex_pos, " (score: %.1f)" % best_score)
 
-	gm.waiting_robber_move = false
+	gm.waiting_robber_placement = false
+
+	var victims = gm._get_robber_victims(best_hex_pos)
+	if not victims.is_empty():
+		var random_victim = victims[randi() % victims.size()]
+		gm._execute_steal(player_id, random_victim)
+	else:
+		gm._resume_turn()
 
 
 
