@@ -1,4 +1,4 @@
-extends GutTest
+﻿extends GutTest
 
 var game_scene: Node
 var _original_scene: Node
@@ -15,8 +15,8 @@ func before_all():
 func before_each():
 	_original_scene = get_tree().current_scene
 	game_scene = load("res://game.tscn").instantiate()
+	get_tree().root.add_child(game_scene)
 	get_tree().current_scene = game_scene
-	add_child_autofree(game_scene)
 	for _i in range(15):
 		await get_tree().process_frame
 
@@ -121,6 +121,8 @@ func test_bot_controller_has_game_manager_reference():
 
 
 func after_each():
+	if is_instance_valid(game_scene):
+		game_scene.queue_free()
 	if _original_scene:
 		get_tree().current_scene = _original_scene
 		_original_scene = null
