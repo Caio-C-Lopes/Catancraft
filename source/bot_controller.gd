@@ -29,6 +29,9 @@ func play_turn(player_id: int) -> void:
 	try_bank_trade(player_id)
 	await gm.get_tree().create_timer(0.4).timeout
 
+	try_build_settlement(player_id)
+	await gm.get_tree().create_timer(0.4).timeout
+
 	try_buy_dev_card(player_id)
 	await gm.get_tree().create_timer(0.5).timeout
 
@@ -258,6 +261,40 @@ func place_free_road(player_id: int) -> void:
 			break
 
 
+
+
+func try_build_settlement(player_id: int) -> bool:
+	var player = gm.players[player_id]
+	var cost := {"wood": 1, "brick": 1, "wheat": 1, "sheep": 1}
+	var built := false
+
+	while player.can_afford(cost) and player.settlements_remaining > 0:
+		var best_key: Variant = null
+		var best_score: float = -1.0
+
+		for vk in BoardState.vertices:
+			if not gm.village_construction_check(vk, player_id, false):
+				continue
+			var score := score_vertex(vk)
+			if score > best_score:
+				best_score = score
+				best_key = vk
+
+		if best_key == null:
+			break
+
+		if gm._try_place_settlement(best_key, player_id, false):
+			print(
+				(
+					"Bot %s construiu aldeia em %s (score %.1f, pontos: %d)"
+					% [player.player_name, str(best_key), best_score, player.points]
+				)
+			)
+			built = true
+		else:
+			break
+
+	return built
 
 
 func try_bank_trade(player_id: int) -> bool:
