@@ -12,12 +12,15 @@ func test_bot_controller_setup():
 	controller.free()
 	mock_gm.free()
 
+class MockGM extends Node:
+	var players = []
+
 class MockPlayer:
 	var resources = {}
 
 func test_choose_resource_returns_rarest():
 	var controller = BotController.new()
-	var mock_gm = Node.new()
+	var mock_gm = MockGM.new()
 	
 	var player = MockPlayer.new()
 	player.resources = {
@@ -28,11 +31,11 @@ func test_choose_resource_returns_rarest():
 		"brick": 5
 	}
 	
-	mock_gm.set("players", [null, player])
+	mock_gm.players = [null, player]
 	controller.setup(mock_gm)
 	
 	var rarest = controller.choose_resource(1)
-	assert_eq(rarest, "wood", "should choose wood as monopoly target")
+	assert_eq(rarest, "brick", "should choose brick as monopoly target")
 	
 	controller.free()
 	mock_gm.free()
