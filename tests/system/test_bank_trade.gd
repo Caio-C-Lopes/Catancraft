@@ -37,6 +37,7 @@ func _human() -> Player:
 
 # ── Happy path ────────────────────────────────────────────────────────────────
 
+
 func test_bank_trade_deducts_4_give_resources_from_player():
 	_human().add_resource("wood", 4)
 	_gm().execute_bank_trade(0, "wood", "ore")
@@ -63,6 +64,7 @@ func test_bank_trade_preserves_other_resources():
 
 
 # ── Guard conditions ──────────────────────────────────────────────────────────
+
 
 func test_bank_trade_fails_when_player_has_fewer_than_4():
 	_human().add_resource("wood", 3)
@@ -98,6 +100,7 @@ func test_bank_trade_bot_can_trade_without_phase_restriction():
 
 # ── Resource conservation ────────────────────────────────────────────────────
 
+
 func test_bank_trade_conserves_total_resources_in_system():
 	_human().add_resource("sheep", 4)
 	var bank = game_scene.bank_panel
@@ -106,7 +109,7 @@ func test_bank_trade_conserves_total_resources_in_system():
 	bank.bank_amounts["sheep"] = 15
 	bank.bank_amounts["ore"] = 18  # ensure bank has ore to give
 	var sheep_before = bank.bank_amounts["sheep"]  # 15
-	var ore_before = bank.bank_amounts["ore"]      # 18
+	var ore_before = bank.bank_amounts["ore"]  # 18
 
 	var ok = _gm().execute_bank_trade(0, "sheep", "ore")
 	assert_true(ok, "Trade should succeed when bank has resources")
@@ -118,6 +121,7 @@ func test_bank_trade_conserves_total_resources_in_system():
 
 
 # ── Monopoly card logic ───────────────────────────────────────────────────────
+
 
 func test_monopoly_steals_from_all_bots():
 	var bot = game_scene.players[1]

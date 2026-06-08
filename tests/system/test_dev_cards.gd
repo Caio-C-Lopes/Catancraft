@@ -48,6 +48,7 @@ func _give_cards(player: Player, card_types: Array) -> void:
 
 # ── Buying a dev card ─────────────────────────────────────────────────────────
 
+
 func test_buy_dev_card_deducts_correct_resources():
 	_human().add_resource("ore", 1)
 	_human().add_resource("wheat", 1)
@@ -98,6 +99,7 @@ func test_cannot_buy_two_cards_in_same_turn():
 
 # ── Playing a dev card: general guards ────────────────────────────────────────
 
+
 func test_cannot_play_card_bought_same_turn():
 	_human().add_resource("ore", 1)
 	_human().add_resource("wheat", 1)
@@ -127,6 +129,7 @@ func test_cannot_play_vp_card():
 
 # ── Knight card ───────────────────────────────────────────────────────────────
 
+
 func test_knight_increments_knights_played():
 	_give_cards(_human(), [0])  # KNIGHT
 	_gm().play_dev_card(0, 0, 0)
@@ -140,6 +143,7 @@ func test_knight_removes_card_from_hand():
 
 
 # ── Largest Army ──────────────────────────────────────────────────────────────
+
 
 func test_largest_army_awarded_at_3_knights():
 	_human().knights_played = 2

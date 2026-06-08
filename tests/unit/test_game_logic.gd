@@ -12,36 +12,48 @@ extends GutTest
 
 # ── resource_type_to_string (static mapping) ──────────────────────────────────
 
+
 class ResourceMapper:
 	func map(type: int) -> String:
 		match type:
-			0: return "wood"
-			1: return "sheep"
-			2: return "wheat"
-			3: return "brick"
-			4: return "ore"
-			_: return ""
+			0:
+				return "wood"
+			1:
+				return "sheep"
+			2:
+				return "wheat"
+			3:
+				return "brick"
+			4:
+				return "ore"
+			_:
+				return ""
 
 
 func test_resource_type_0_is_wood():
 	var m = ResourceMapper.new()
 	assert_eq(m.map(0), "wood")
 
+
 func test_resource_type_1_is_sheep():
 	var m = ResourceMapper.new()
 	assert_eq(m.map(1), "sheep")
+
 
 func test_resource_type_2_is_wheat():
 	var m = ResourceMapper.new()
 	assert_eq(m.map(2), "wheat")
 
+
 func test_resource_type_3_is_brick():
 	var m = ResourceMapper.new()
 	assert_eq(m.map(3), "brick")
 
+
 func test_resource_type_4_is_ore():
 	var m = ResourceMapper.new()
 	assert_eq(m.map(4), "ore")
+
 
 func test_resource_type_unknown_is_empty():
 	var m = ResourceMapper.new()
@@ -50,6 +62,7 @@ func test_resource_type_unknown_is_empty():
 
 # ── _count_resources ──────────────────────────────────────────────────────────
 # Replicated locally to test the pure function.
+
 
 func _count_resources(arr: Array) -> Dictionary:
 	var counts := {}
@@ -61,12 +74,15 @@ func _count_resources(arr: Array) -> Dictionary:
 func test_count_resources_empty():
 	assert_eq(_count_resources([]), {})
 
+
 func test_count_resources_single_item():
 	assert_eq(_count_resources(["wood"]), {"wood": 1})
+
 
 func test_count_resources_multiple_same():
 	var result = _count_resources(["ore", "ore", "ore"])
 	assert_eq(result["ore"], 3)
+
 
 func test_count_resources_mixed():
 	var result = _count_resources(["wood", "ore", "wood"])
@@ -76,6 +92,7 @@ func test_count_resources_mixed():
 
 # ── Player trade execution ────────────────────────────────────────────────────
 # Tests the resource transfer logic between two players.
+
 
 func _execute_trade(player_a: Player, player_b: Player, a_gives: Array, b_gives: Array) -> void:
 	var a_counts = _count_resources(a_gives)
@@ -102,7 +119,6 @@ func test_execute_trade_transfers_resources_correctly():
 	assert_eq(p2.resources["ore"], 1)
 
 
-
 func test_execute_trade_with_empty_b_gives():
 	var p1 = Player.new("A", Color.WHITE)
 	var p2 = Player.new("B", Color.RED)
@@ -114,8 +130,8 @@ func test_execute_trade_with_empty_b_gives():
 	assert_eq(p2.resources["sheep"], 1)
 
 
-
 # ── _execute_monopoly logic ───────────────────────────────────────────────────
+
 
 func _execute_monopoly(players: Array, stealer_id: int, resource: String) -> void:
 	for i in range(players.size()):
@@ -142,8 +158,6 @@ func test_monopoly_steals_from_all_others():
 	assert_eq(p2.resources["wheat"], 0)
 
 
-
-
 func test_monopoly_no_effect_when_others_have_none():
 	var p0 = Player.new("Human", Color.WHITE)
 	var p1 = Player.new("Bot1", Color.BLUE)
@@ -153,13 +167,10 @@ func test_monopoly_no_effect_when_others_have_none():
 	assert_eq(p0.resources["ore"], 0)
 
 
-
-
 # ── Dev Deck composition ──────────────────────────────────────────────────────
 
-const DEV_CARD_COUNTS := {
-	0: 14, 1: 2, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1
-}
+const DEV_CARD_COUNTS := {0: 14, 1: 2, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1}
+
 
 func _build_dev_deck() -> Array:
 	var deck: Array[int] = []
@@ -194,6 +205,7 @@ func test_dev_deck_has_correct_action_cards():
 
 
 # ── Preparation order ────────────────────────────────────────────────────────
+
 
 func _build_preparation_order(n: int, first: int) -> Array:
 	var order: Array = []

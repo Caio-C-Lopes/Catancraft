@@ -8,7 +8,8 @@ extends GutTest
 var BotController = preload("res://source/bot_controller.gd")
 
 
-class MockGM extends Node:
+class MockGM:
+	extends Node
 	var players = []
 
 
@@ -54,11 +55,13 @@ func before_each():
 
 # ── setup() ───────────────────────────────────────────────────────────────────
 
+
 func test_setup_stores_game_manager():
 	assert_eq(controller.gm, mock_gm)
 
 
 # ── choose_resource() ─────────────────────────────────────────────────────────
+
 
 func test_choose_resource_returns_resource_with_zero():
 	bot.resources = {"ore": 2, "wheat": 3, "sheep": 1, "wood": 0, "brick": 5}
@@ -81,6 +84,7 @@ func test_choose_resource_returns_lowest_when_all_nonzero():
 
 # ── best_monopoly_resource() ──────────────────────────────────────────────────
 
+
 func test_best_monopoly_returns_resource_others_have_most():
 	var player0 = MockPlayer.new()
 	player0.resources = {"wood": 0, "brick": 0, "wheat": 0, "sheep": 0, "ore": 0}
@@ -101,6 +105,7 @@ func test_best_monopoly_ignores_self():
 
 
 # ── accepts_trade() ───────────────────────────────────────────────────────────
+
 
 func test_accepts_trade_false_when_bot_lacks_required_resource():
 	bot.resources = {"wood": 0, "brick": 5, "wheat": 5, "sheep": 5, "ore": 5}
@@ -123,6 +128,7 @@ func test_accepts_trade_false_when_giving_away_last_unit():
 
 # ── _count_resources() helper ─────────────────────────────────────────────────
 
+
 func test_count_resources_empty_array():
 	var result = controller._count_resources([])
 	assert_eq(result, {})
@@ -140,6 +146,7 @@ func test_count_resources_duplicates():
 
 
 # ── _can_reach_goal_with_trade() ──────────────────────────────────────────────
+
 
 func test_can_reach_goal_with_trade_true_when_possible():
 	real_bot.add_resource("wheat", 4)
@@ -159,6 +166,7 @@ func test_can_reach_goal_with_trade_false_when_trade_doesnt_help():
 
 # ── _most_needed_for_goal() ───────────────────────────────────────────────────
 
+
 func test_most_needed_returns_resource_with_largest_deficit():
 	real_bot.add_resource("ore", 2)
 	# wheat is 0, ore is 2; goal needs ore:3 (deficit 1), wheat:2 (deficit 2)
@@ -176,6 +184,7 @@ func test_most_needed_returns_empty_when_already_affordable():
 
 
 # ── _least_needed_surplus() ───────────────────────────────────────────────────
+
 
 func test_least_needed_surplus_prefers_non_goal_resources():
 	real_bot.add_resource("ore", 5)

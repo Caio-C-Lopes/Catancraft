@@ -10,7 +10,8 @@ extends GutTest
 var BotController = preload("res://source/bot_controller.gd")
 
 
-class MockGM extends Node:
+class MockGM:
+	extends Node
 	var players = []
 
 
@@ -54,6 +55,7 @@ func after_each():
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 func _make_hex(dice_number: int, resource_type: int) -> Node2D:
 	var hex = Node2D.new()
 	hex.set_meta("dice_number", dice_number)
@@ -63,6 +65,7 @@ func _make_hex(dice_number: int, resource_type: int) -> Node2D:
 
 
 # ── score_vertex ──────────────────────────────────────────────────────────────
+
 
 func test_score_vertex_empty_links_scores_below_useful_vertex():
 	# A vertex with no hex links gets the formula's floor value.
@@ -88,7 +91,7 @@ func test_score_vertex_higher_for_better_numbers():
 	BoardState.register_vertices(Vector2(20, 20))
 	BoardState.vertices[Vector2(20, 20)]["links"] = [hex_2]
 
-	var score_hot  = controller.score_vertex(Vector2(10, 10))
+	var score_hot = controller.score_vertex(Vector2(10, 10))
 	var score_cold = controller.score_vertex(Vector2(20, 20))
 
 	assert_true(score_hot > score_cold, "6/8 vertex should score higher than 2 vertex")
@@ -107,7 +110,7 @@ func test_score_vertex_diversity_bonus_for_different_resources():
 	BoardState.vertices[Vector2(40, 40)]["links"] = [hex_same1, hex_same2]
 
 	var score_diverse = controller.score_vertex(Vector2(30, 30))
-	var score_mono    = controller.score_vertex(Vector2(40, 40))
+	var score_mono = controller.score_vertex(Vector2(40, 40))
 
 	assert_true(score_diverse > score_mono, "Diverse resources should score higher")
 
@@ -149,6 +152,7 @@ func test_score_vertex_coverage_bonus_for_3_different_resources():
 
 # ── road_lookahead_score ──────────────────────────────────────────────────────
 
+
 func test_road_lookahead_returns_zero_for_invalid_edge():
 	var score = controller.road_lookahead_score(Vector2(999, 999), 1, 3)
 	assert_eq(score, 0.0)
@@ -176,6 +180,6 @@ func test_road_lookahead_scores_higher_toward_good_vertex():
 	var edge_bad = Vector2(50, 200)
 
 	var score_good = controller.road_lookahead_score(edge_good, 1, 1)
-	var score_bad  = controller.road_lookahead_score(edge_bad,  1, 1)
+	var score_bad = controller.road_lookahead_score(edge_bad, 1, 1)
 
 	assert_true(score_good > score_bad, "Edge toward hot vertex should score higher")

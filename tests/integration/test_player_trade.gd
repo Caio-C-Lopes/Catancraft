@@ -51,9 +51,8 @@ func before_each():
 	gm.players = [human, bot]
 
 
-
-
 # ── Validation: human must have resources ─────────────────────────────────────
+
 
 func test_trade_blocked_when_human_lacks_resource():
 	human.add_resource("wood", 0)
@@ -71,6 +70,7 @@ func test_trade_blocked_when_human_has_less_than_required():
 
 
 # ── Transfer: resources change hands correctly ────────────────────────────────
+
 
 func test_trade_transfers_wood_for_ore():
 	human.add_resource("wood", 2)
@@ -122,6 +122,7 @@ func test_trade_does_not_affect_other_resources():
 
 
 # ── Resource conservation ────────────────────────────────────────────────────
+
 
 func test_total_resources_are_conserved_after_trade():
 	human.add_resource("wood", 3)

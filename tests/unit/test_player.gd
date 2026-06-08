@@ -11,10 +11,8 @@ func before_each():
 	player = Player.new("Test", Color.WHITE)
 
 
-
-
-
 # ── Resources ─────────────────────────────────────────────────────────────────
+
 
 func test_initial_resources_are_zero():
 	for res in ["wood", "brick", "wheat", "sheep", "ore"]:
@@ -57,6 +55,7 @@ func test_remove_invalid_resource_is_ignored():
 
 # ── can_afford ────────────────────────────────────────────────────────────────
 
+
 func test_can_afford_true_when_has_exact_resources():
 	player.add_resource("wood", 1)
 	player.add_resource("brick", 1)
@@ -85,6 +84,7 @@ func test_can_afford_empty_cost_is_always_true():
 
 
 # ── Dev Cards ─────────────────────────────────────────────────────────────────
+
 
 func test_add_dev_card_increases_hand():
 	player.add_dev_card(0)  # KNIGHT
@@ -118,6 +118,7 @@ func test_remove_dev_card_negative_index_does_nothing():
 
 # ── Victory Points ────────────────────────────────────────────────────────────
 
+
 func test_count_victory_point_cards_zero_when_no_vp_cards():
 	player.add_dev_card(0)  # KNIGHT — not a VP card
 	assert_eq(player.count_victory_point_cards(), 0)
@@ -144,6 +145,7 @@ func test_get_total_points_without_vp_cards():
 
 # ── Turn Flags ────────────────────────────────────────────────────────────────
 
+
 func test_reset_turn_flags_clears_played_card():
 	player.played_dev_card_this_turn = true
 	player.reset_turn_flags()
@@ -157,6 +159,7 @@ func test_reset_turn_flags_clears_bought_card():
 
 
 # ── Initial State ─────────────────────────────────────────────────────────────
+
 
 func test_initial_roads_remaining():
 	assert_eq(player.roads_remaining, 15)

@@ -34,6 +34,7 @@ func _gm() -> Node:
 
 # ── Players are created correctly ─────────────────────────────────────────────
 
+
 func test_game_creates_correct_number_of_players():
 	assert_eq(_gm().players.size(), 2, "Should have human + 1 bot")
 
@@ -48,11 +49,13 @@ func test_bot_player_exists():
 
 # ── Initial resource state ────────────────────────────────────────────────────
 
+
 func test_all_players_start_with_zero_resources():
 	for player in _gm().players:
 		for res in ["wood", "brick", "wheat", "sheep", "ore"]:
 			assert_eq(
-				player.resources.get(res, 0), 0,
+				player.resources.get(res, 0),
+				0,
 				"%s should start with 0 %s" % [player.player_name, res]
 			)
 
@@ -63,6 +66,7 @@ func test_all_players_start_with_zero_points():
 
 
 # ── Initial piece counts ──────────────────────────────────────────────────────
+
 
 func test_all_players_start_with_15_roads():
 	for player in _gm().players:
@@ -81,6 +85,7 @@ func test_all_players_start_with_4_cities():
 
 # ── Game phase ────────────────────────────────────────────────────────────────
 
+
 func test_game_starts_in_preparation_phase():
 	assert_eq(_gm().game_phase, _gm().GamePhase.PREPARATION)
 
@@ -95,6 +100,7 @@ func test_first_player_index_is_valid():
 
 
 # ── Preparation order ─────────────────────────────────────────────────────────
+
 
 func test_preparation_order_has_correct_length():
 	# n players → 2n steps (forward + reverse)
@@ -112,6 +118,7 @@ func test_preparation_order_contains_all_player_indices():
 
 # ── Dev deck ─────────────────────────────────────────────────────────────────
 
+
 func test_dev_deck_is_not_empty_at_start():
 	assert_false(_gm().deck_empty())
 
@@ -124,8 +131,11 @@ func test_dev_deck_has_no_more_than_25_cards():
 
 # ── BoardState is populated ───────────────────────────────────────────────────
 
+
 func test_board_state_has_vertices():
-	assert_false(BoardState.vertices.is_empty(), "BoardState should have vertices after scene loads")
+	assert_false(
+		BoardState.vertices.is_empty(), "BoardState should have vertices after scene loads"
+	)
 
 
 func test_board_state_has_edges():
@@ -133,6 +143,7 @@ func test_board_state_has_edges():
 
 
 # ── BotController is initialized ─────────────────────────────────────────────
+
 
 func test_bot_controller_is_child_of_game_manager():
 	# _bot_controller is a direct var on game_manager — find_child can race

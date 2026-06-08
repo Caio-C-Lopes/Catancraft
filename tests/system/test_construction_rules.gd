@@ -46,6 +46,7 @@ func _first_free_edge() -> Variant:
 
 # ── village_construction_check ────────────────────────────────────────────────
 
+
 func test_village_check_true_for_free_vertex_in_preparation():
 	var vertex = _first_free_vertex()
 	if vertex == null:
@@ -64,8 +65,7 @@ func test_village_check_false_for_occupied_vertex():
 	# Manually occupy the vertex
 	BoardState.vertices[vertex]["owner"] = 0
 	assert_false(
-		_gm().village_construction_check(vertex, 1, true),
-		"Cannot build on an occupied vertex"
+		_gm().village_construction_check(vertex, 1, true), "Cannot build on an occupied vertex"
 	)
 	BoardState.vertices[vertex]["owner"] = null  # cleanup
 
@@ -100,10 +100,10 @@ func test_village_check_false_without_road_outside_preparation():
 
 # ── road_construction_check ───────────────────────────────────────────────────
 
+
 func test_road_check_false_for_nonexistent_edge():
 	assert_false(
-		_gm().road_construction_check(Vector2(99999, 99999), 0),
-		"Nonexistent edge should fail"
+		_gm().road_construction_check(Vector2(99999, 99999), 0), "Nonexistent edge should fail"
 	)
 
 
@@ -117,8 +117,7 @@ func test_road_check_false_for_occupied_edge():
 	BoardState.edges[edge_key]["owner"] = 1  # owned by someone else
 
 	assert_false(
-		_gm().road_construction_check(edge_key, 0),
-		"Cannot build on an already-owned edge"
+		_gm().road_construction_check(edge_key, 0), "Cannot build on an already-owned edge"
 	)
 	BoardState.edges[edge_key]["owner"] = null
 	BoardState.vertices[edge["a_vertice"]]["owner"] = null
@@ -143,6 +142,7 @@ func test_road_check_true_when_player_owns_adjacent_vertex():
 
 # ── city_construction_check ───────────────────────────────────────────────────
 
+
 func test_city_check_false_when_vertex_not_owned_by_player():
 	var vertex = _first_free_vertex()
 	if vertex == null:
@@ -150,8 +150,7 @@ func test_city_check_false_when_vertex_not_owned_by_player():
 	# Free vertex — not a village, not owned
 	# city_construction_check doesn't guard against missing key, so ensure it exists
 	assert_false(
-		_gm().city_construction_check(vertex, 0),
-		"Cannot upgrade vertex that is not your village"
+		_gm().city_construction_check(vertex, 0), "Cannot upgrade vertex that is not your village"
 	)
 
 
@@ -163,8 +162,7 @@ func test_city_check_false_when_player_cannot_afford():
 	BoardState.vertices[vertex]["type"] = BoardState.BuildingType.VILLAGE
 	# Player 0 has no resources → cannot afford city (ore:3, wheat:2)
 	assert_false(
-		_gm().city_construction_check(vertex, 0),
-		"Cannot build city without enough resources"
+		_gm().city_construction_check(vertex, 0), "Cannot build city without enough resources"
 	)
 	BoardState.vertices[vertex]["owner"] = null
 	BoardState.vertices[vertex]["type"] = BoardState.BuildingType.NONE
@@ -189,6 +187,7 @@ func test_city_check_true_when_player_has_village_and_resources():
 
 
 # ── Victory condition ─────────────────────────────────────────────────────────
+
 
 func test_victory_not_triggered_below_10_points():
 	game_scene.game_phase = game_scene.GamePhase.PLAYING

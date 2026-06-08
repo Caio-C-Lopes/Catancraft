@@ -14,6 +14,7 @@ func before_each():
 
 # ── Vertex Registration ───────────────────────────────────────────────────────
 
+
 func test_register_vertex_creates_entry():
 	board_state.register_vertices(Vector2(100, 200))
 	assert_true(board_state.vertices.has(Vector2(100, 200)))
@@ -40,6 +41,7 @@ func test_register_vertex_twice_does_not_overwrite():
 
 
 # ── Edge Registration ─────────────────────────────────────────────────────────
+
 
 func test_register_edge_creates_entry():
 	board_state.register_edges(Vector2(0, 0), Vector2(100, 0))
@@ -68,6 +70,7 @@ func test_register_edge_twice_does_not_overwrite():
 
 # ── Robber Position ───────────────────────────────────────────────────────────
 
+
 func test_set_initial_robber_pos():
 	board_state.set_initial_robber_pos(Vector2(150, 200))
 	assert_eq(board_state.robber_hex_pos, Vector2(150, 200))
@@ -85,6 +88,7 @@ func test_update_robber_rounds_position():
 
 
 # ── Reset State ───────────────────────────────────────────────────────────────
+
 
 func test_reset_clears_vertices():
 	board_state.register_vertices(Vector2(10, 10))
@@ -105,6 +109,7 @@ func test_reset_clears_robber_pos():
 
 
 # ── get_players_on_hex ────────────────────────────────────────────────────────
+
 
 func test_get_players_on_hex_returns_empty_when_no_buildings():
 	board_state.register_vertices(Vector2(10, 10))
