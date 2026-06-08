@@ -1892,7 +1892,7 @@ func _bot_get_surplus_resource(bot_id: int) -> String:
 			best_res = res
 
 	return best_res
-	
+
 
 func _bot_get_needed_resource(bot_id: int) -> String:
 	var bot := players[bot_id]
@@ -1909,6 +1909,7 @@ func _bot_get_needed_resource(bot_id: int) -> String:
 
 	return needed
 
+
 func _bot_try_trade(bot_id: int) -> void:
 	var give_res := _bot_get_surplus_resource(bot_id)
 	var recv_res := _bot_get_needed_resource(bot_id)
@@ -1921,20 +1922,11 @@ func _bot_try_trade(bot_id: int) -> void:
 
 	var bot := players[bot_id]
 
-	print("%s quer trocar %s por %s" % [
-		bot.player_name,
-		give_res,
-		recv_res
-	])
+	print("%s quer trocar %s por %s" % [bot.player_name, give_res, recv_res])
 
 	# Primeiro tenta trocar com humano
 	if _human_accepts_bot_trade(give_res, recv_res):
-		_execute_player_trade(
-			bot_id,
-			0,
-			[give_res],
-			[recv_res]
-		)
+		_execute_player_trade(bot_id, 0, [give_res], [recv_res])
 
 		print("Humano aceitou a troca.")
 		return
