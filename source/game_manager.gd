@@ -5,7 +5,8 @@ signal dice_rolled(player: Player, dice1: int, dice2: int)
 enum GamePhase { PREPARATION, PLAYING }
 
 var game_phase: GamePhase = GamePhase.PREPARATION
-
+var _bot_trade_popup: Control = null
+var _bot_trade_bot_id: int = -1
 var preparation_order: Array[int] = []
 var preparation_step: int = 0
 var preparation_done: bool = false
@@ -22,7 +23,6 @@ var is_setup_phase = true
 @onready var dice_log = $Control/DiceLog
 @onready var bank_panel = $Control/BankPanel
 @export var dice_textures: Array[Texture2D]
-
 var _bot_huds: Array = []
 var _bot_controller: Node = null
 
@@ -130,7 +130,6 @@ func _ready():
 
 	# Aguarda até o _trade_panel existir antes de conectar bank_trade_requested
 	_connect_trade_panel_deferred.call_deferred()
-
 
 func _setup_dice_log_resource_textures() -> void:
 	var textures: Dictionary = {
@@ -819,8 +818,7 @@ func _on_preparation_vertice_selected(pos: Vector2):
 		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
 	else:
 		_show_highlights_for_current(true)
-		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
-
+		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)	
 
 func _is_edge_connected_to_vertex(edge_key: Vector2, vertex_key: Vector2) -> bool:
 	if not BoardState.edges.has(edge_key):
@@ -1593,6 +1591,9 @@ func _on_selected_edge(pos: Vector2):
 			_hide_highlights()
 			_refresh_resource_ui()
 
+			# 🔧 CORREÇÃO: Para o timer imediatamente!
+			player_hud.stop_timer()
+
 			# Avança o turno apenas após colocar a casa E a estrada
 			preparation_step += 1
 			_preparation_next_player()
@@ -1638,7 +1639,6 @@ func _on_selected_edge(pos: Vector2):
 
 		_refresh_resource_ui()
 		print("Estrada construída em ", pos)
-
 
 func _show_highlights_for_current(is_preparation: bool):
 	var board = find_child("Board")
@@ -1861,30 +1861,327 @@ func _bot_find_trade_partner(bot_id: int, give_res: String, recv_res: String) ->
 
 
 func _bot_try_trade(bot_id: int) -> void:
+	# Só tenta trocar se não estiver em meio a outra ação
+	if waiting_discard or waiting_robber_placement or waiting_robber_steal:
+		return
+	
 	var give_res := _bot_get_surplus_resource(bot_id)
 	var recv_res := _bot_get_needed_resource(bot_id)
-
+	
 	if give_res == "" or recv_res == "":
 		return
-
+	
 	if give_res == recv_res:
 		return
-
+	
 	var bot := players[bot_id]
-
 	print("%s quer trocar %s por %s" % [bot.player_name, give_res, recv_res])
-
+	
+	# Verifica se o humano aceitaria
 	if _human_accepts_bot_trade(give_res, recv_res):
-		_execute_player_trade(bot_id, 0, [give_res], [recv_res])
-		print("Humano aceitou a troca de %s." % bot.player_name)
+		_show_bot_trade_offer(bot_id, give_res, recv_res)
 		return
-
+	
+	# Depois tenta outros bots
+	var trade_partner := _bot_find_trade_partner(bot_id, give_res, recv_res)
+	if trade_partner != -1:
+		_execute_player_trade(bot_id, trade_partner, [give_res], [recv_res])
+		print("%s trocou com %s." % [bot.player_name, players[trade_partner].player_name])
+		return
+	
+	# Depois tenta banco
 	if bot.resources[give_res] >= 4:
 		if execute_bank_trade(bot_id, give_res, recv_res):
 			print("%s trocou com o banco." % bot.player_name)
 		return
 
-	var trade_partner := _bot_find_trade_partner(bot_id, give_res, recv_res)
-	if trade_partner != -1:
-		_execute_player_trade(bot_id, trade_partner, [give_res], [recv_res])
-		print("%s trocou com %s." % [bot.player_name, players[trade_partner].player_name])
+
+# ── POPUP DE TROCA DO BOT ────────────────────────────────────────────────────
+
+func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
+	var bot := players[bot_id]
+	
+	# Se já existe um popup, fecha ele primeiro
+	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+		_bot_trade_popup.queue_free()
+	
+	# Criar popup
+	_bot_trade_popup = Control.new()
+	_bot_trade_popup.name = "BotTradePopup"
+	_bot_trade_popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bot_trade_popup.z_index = 100  # Alto para ficar sobre tudo
+	_bot_trade_popup.mouse_filter = Control.MOUSE_FILTER_STOP  # Bloqueia cliques atrás
+	$Control.add_child(_bot_trade_popup)
+	
+	# Fundo semi-transparente
+	var bg = ColorRect.new()
+	bg.name = "Background"
+	bg.color = Color(0, 0, 0, 0.6)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bot_trade_popup.add_child(bg)
+	
+	# Painel central
+	var panel = PanelContainer.new()
+	panel.name = "Panel"
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(450, 300)
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.12, 0.2, 0.98)  # Roxo escuro elegante
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_color = Color(0.8, 0.7, 0.4, 1)  # Dourado
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	panel.add_theme_stylebox_override("panel", style)
+	_bot_trade_popup.add_child(panel)
+	
+	# Layout vertical
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 15)
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(vbox)
+	
+	# Espaçador superior
+	vbox.add_child(Control.new())
+	
+	# Título
+	var title = Label.new()
+	title.name = "Title"
+	title.text = "💰 PROPOSTA DE TROCA 💰"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color(1, 0.9, 0.3, 1))
+	title.add_theme_font_override("font", load("res://assets/fonts/1_Minecraft-Regular.otf"))
+	vbox.add_child(title)
+	
+	# Label da oferta com ícones
+	var offer_container = HBoxContainer.new()
+	offer_container.name = "OfferContainer"
+	offer_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	offer_container.add_theme_constant_override("separation", 20)
+	vbox.add_child(offer_container)
+	
+	# O que o bot dá
+	var bot_gives = VBoxContainer.new()
+	bot_gives.alignment = BoxContainer.ALIGNMENT_CENTER
+	var bot_gives_label = Label.new()
+	bot_gives_label.text = _translate_resource(recv_res)
+	bot_gives_label.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6, 1))
+	bot_gives_label.add_theme_font_size_override("font_size", 16)
+	bot_gives.add_child(bot_gives_label)
+	
+	var bot_gives_icon = TextureRect.new()
+	bot_gives_icon.texture = _get_resource_texture(recv_res)
+	bot_gives_icon.custom_minimum_size = Vector2(48, 48)
+	bot_gives_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bot_gives_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bot_gives.add_child(bot_gives_icon)
+	
+	offer_container.add_child(bot_gives)
+	
+	# Seta "→"
+	var arrow = Label.new()
+	arrow.text = "➡️"
+	arrow.add_theme_font_size_override("font_size", 30)
+	arrow.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	offer_container.add_child(arrow)
+	
+	# O que o bot quer
+	var bot_wants = VBoxContainer.new()
+	bot_wants.alignment = BoxContainer.ALIGNMENT_CENTER
+	var bot_wants_label = Label.new()
+	bot_wants_label.text = _translate_resource(give_res)
+	bot_wants_label.add_theme_color_override("font_color", Color(0.9, 0.6, 0.6, 1))
+	bot_wants_label.add_theme_font_size_override("font_size", 16)
+	bot_wants.add_child(bot_wants_label)
+	
+	var bot_wants_icon = TextureRect.new()
+	bot_wants_icon.texture = _get_resource_texture(give_res)
+	bot_wants_icon.custom_minimum_size = Vector2(48, 48)
+	bot_wants_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bot_wants_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bot_wants.add_child(bot_wants_icon)
+	
+	offer_container.add_child(bot_wants)
+	
+	# Linha divisória
+	var separator = HSeparator.new()
+	separator.add_theme_constant_override("separation", 10)
+	vbox.add_child(separator)
+	
+	# Nome do bot
+	var bot_name_label = Label.new()
+	bot_name_label.name = "BotName"
+	bot_name_label.text = bot.player_name
+	bot_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bot_name_label.add_theme_font_size_override("font_size", 16)
+	bot_name_label.add_theme_color_override("font_color", bot.player_color)
+	vbox.add_child(bot_name_label)
+	
+	# Timer com contagem regressiva
+	var timer_container = HBoxContainer.new()
+	timer_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(timer_container)
+	
+	var timer_icon = Label.new()
+	timer_icon.text = "⏱️"
+	timer_icon.add_theme_font_size_override("font_size", 20)
+	timer_container.add_child(timer_icon)
+	
+	var timer_label = Label.new()
+	timer_label.name = "TimerLabel"
+	timer_label.text = "20s"
+	timer_label.add_theme_font_size_override("font_size", 18)
+	timer_label.add_theme_color_override("font_color", Color(1, 0.6, 0.3, 1))
+	timer_container.add_child(timer_label)
+	
+	# Botões
+	var hbox = HBoxContainer.new()
+	hbox.name = "Buttons"
+	hbox.add_theme_constant_override("separation", 30)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(hbox)
+	
+	var accept_btn = Button.new()
+	accept_btn.name = "AcceptButton"
+	accept_btn.text = "✅ ACEITAR"
+	accept_btn.custom_minimum_size = Vector2(140, 50)
+	accept_btn.add_theme_font_size_override("font_size", 16)
+	accept_btn.add_theme_color_override("font_color", Color(0, 0, 0, 1))
+	
+	# Estilo do botão Aceitar
+	var accept_style = StyleBoxFlat.new()
+	accept_style.bg_color = Color(0.3, 0.8, 0.3, 1)
+	accept_style.border_width_left = 2
+	accept_style.border_width_right = 2
+	accept_style.border_width_top = 2
+	accept_style.border_width_bottom = 2
+	accept_style.border_color = Color(0, 0.5, 0, 1)
+	accept_style.corner_radius_top_left = 6
+	accept_style.corner_radius_top_right = 6
+	accept_style.corner_radius_bottom_left = 6
+	accept_style.corner_radius_bottom_right = 6
+	accept_btn.add_theme_stylebox_override("normal", accept_style)
+	
+	var accept_hover = accept_style.duplicate()
+	accept_hover.bg_color = Color(0.4, 0.9, 0.4, 1)
+	accept_btn.add_theme_stylebox_override("hover", accept_hover)
+	
+	accept_btn.pressed.connect(_on_bot_trade_accept.bind(bot_id, give_res, recv_res))
+	hbox.add_child(accept_btn)
+	
+	var refuse_btn = Button.new()
+	refuse_btn.name = "RefuseButton"
+	refuse_btn.text = "❌ RECUSAR"
+	refuse_btn.custom_minimum_size = Vector2(140, 50)
+	refuse_btn.add_theme_font_size_override("font_size", 16)
+	refuse_btn.add_theme_color_override("font_color", Color(0, 0, 0, 1))
+	
+	# Estilo do botão Recusar
+	var refuse_style = StyleBoxFlat.new()
+	refuse_style.bg_color = Color(0.8, 0.3, 0.3, 1)
+	refuse_style.border_width_left = 2
+	refuse_style.border_width_right = 2
+	refuse_style.border_width_top = 2
+	refuse_style.border_width_bottom = 2
+	refuse_style.border_color = Color(0.5, 0, 0, 1)
+	refuse_style.corner_radius_top_left = 6
+	refuse_style.corner_radius_top_right = 6
+	refuse_style.corner_radius_bottom_left = 6
+	refuse_style.corner_radius_bottom_right = 6
+	refuse_btn.add_theme_stylebox_override("normal", refuse_style)
+	
+	var refuse_hover = refuse_style.duplicate()
+	refuse_hover.bg_color = Color(0.9, 0.4, 0.4, 1)
+	refuse_btn.add_theme_stylebox_override("hover", refuse_hover)
+	
+	refuse_btn.pressed.connect(_on_bot_trade_refuse.bind(bot_id))
+	hbox.add_child(refuse_btn)
+	
+	# Espaçador inferior
+	vbox.add_child(Control.new())
+	
+	# Guardar referências para o timer
+	_bot_trade_bot_id = bot_id
+	
+	# Iniciar timer de 20s com atualização visual
+	var time_left = 20.0
+	var timer_update = func():
+		while time_left > 0 and _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+			await get_tree().create_timer(0.1).timeout
+			time_left -= 0.1
+			if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+				var timer_node = _bot_trade_popup.find_child("TimerLabel", true, false)
+				if timer_node:
+					timer_node.text = "%d.%ds" % [int(time_left), int(time_left * 10) % 10]
+		if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+			_on_bot_trade_timeout()
+	
+	timer_update.call()
+
+func _on_bot_trade_timeout():
+	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+		_bot_trade_popup.queue_free()
+		_bot_trade_popup = null
+	
+	print("[TIMEOUT] Tempo esgotado! Troca recusada automaticamente.")
+	_bot_trade_bot_id = -1
+
+func _on_bot_trade_accept(bot_id: int, give_res: String, recv_res: String):
+	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+		_bot_trade_popup.queue_free()
+		_bot_trade_popup = null
+	
+	# Verificar se o bot ainda tem os recursos
+	var bot = players[bot_id]
+	var human = players[0]
+	
+	# Bot precisa ter o que vai dar (recv_res = recurso que o bot DÁ)
+	if bot.resources.get(recv_res, 0) < 1:
+		print("%s não tem mais %s para dar!" % [bot.player_name, _translate_resource(recv_res)])
+		return
+	
+	# Humano precisa ter o que o bot quer (give_res = recurso que o bot QUER)
+	if human.resources.get(give_res, 0) < 1:
+		print("Você não tem mais %s para dar!" % _translate_resource(give_res))
+		return
+	
+	_execute_player_trade(bot_id, 0, [recv_res], [give_res])  # Bot dá recv_res, humano dá give_res
+	print("%s aceitou a troca de %s." % [human.player_name, bot.player_name])
+	_refresh_resource_ui()
+	_bot_trade_bot_id = -1
+
+func _on_bot_trade_refuse(bot_id: int):
+	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
+		_bot_trade_popup.queue_free()
+		_bot_trade_popup = null
+	
+	print("Humano recusou a troca de %s." % players[bot_id].player_name)
+	_bot_trade_bot_id = -1
+
+func _translate_resource(res: String) -> String:
+	match res:
+		"wood": return "🌲 Madeira"
+		"brick": return "🧱 Tijolo"
+		"wheat": return "🌾 Trigo"
+		"sheep": return "🐑 Lã"
+		"ore": return "⛏️ Minério"
+	return res
+
+func _get_resource_texture(res: String) -> Texture2D:
+	match res:
+		"wood": return player_hud.wood_icon
+		"brick": return player_hud.brick_icon
+		"wheat": return player_hud.wheat_icon
+		"sheep": return player_hud.sheep_icon
+		"ore": return player_hud.ore_icon
+	return null
