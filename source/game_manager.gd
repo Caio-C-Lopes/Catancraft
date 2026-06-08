@@ -1466,23 +1466,23 @@ func road_construction_check(pos: Vector2, player_id: int) -> bool:
 		return true
 
 	for next_key in BoardState.edges:
-	if next_key == edge_key:
-		continue
-	var next_edge = BoardState.edges[next_key]
-	
-	if next_edge["owner"] == player_id:
-		var shared_vertice = null
+		if next_key == edge_key:
+			continue
+		var next_edge = BoardState.edges[next_key]
 		
-		if next_edge["a_vertice"] == a_v or next_edge["b_vertice"] == a_v:
-			shared_vertice = a_v
-		elif next_edge["a_vertice"] == b_v or next_edge["b_vertice"] == b_v:
-			shared_vertice = b_v
-		
-		if shared_vertice != null:
-			var vertice_owner = BoardState.vertices[shared_vertice]["owner"]
+		if next_edge["owner"] == player_id:
+			var shared_vertice = null
 			
-			if vertice_owner == null or vertice_owner == player_id:
-				return true
+			if next_edge["a_vertice"] == a_v or next_edge["b_vertice"] == a_v:
+				shared_vertice = a_v
+			elif next_edge["a_vertice"] == b_v or next_edge["b_vertice"] == b_v:
+				shared_vertice = b_v
+			
+			if shared_vertice != null:
+				var vertice_owner = BoardState.vertices[shared_vertice]["owner"]
+				
+				if vertice_owner == null or vertice_owner == player_id:
+					return true
 
 	print("A estrada tem de estar conectada a uma construção sua!")
 	return false
