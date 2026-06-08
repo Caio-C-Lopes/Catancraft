@@ -857,13 +857,6 @@ func _setup_players():
 	var p_color = GameConfig.player_color
 	var p_icon = load("res://icons_assets/%s.png" % GameConfig.player_icon_name) as Texture2D
 
-	var bot_color_map = {
-		"red": Color(0.85, 0.25, 0.25),
-		"blue": Color(0.22, 0.54, 0.87),
-		"green": Color(0.27, 0.65, 0.27),
-		"purple": Color(0.55, 0.27, 0.80),
-	}
-
 	players = [Player.new("Jogador 1", p_color, p_icon)]
 
 	for i in range(GameConfig.bot_count):
@@ -874,7 +867,8 @@ func _setup_players():
 		var cn: String = (
 			GameConfig.bot_color_names[i] if i < GameConfig.bot_color_names.size() else "blue"
 		)
-		players.append(Player.new("Bot " + str(i + 1), bot_color_map[cn], bot_icon))
+		var bot_color: Color = GameConfig.COLOR_MAP.get(cn, Color(0.22, 0.54, 0.87))
+		players.append(Player.new("Bot " + str(i + 1), bot_color, bot_icon))
 
 	dice_log.setup_players(players)
 	dice_log.setup_dice_textures(dice_textures)
@@ -897,17 +891,16 @@ func _setup_players():
 
 func _create_bot_huds():
 	var control = $Control
-	var all_color_names = ["blue", "green", "red", "purple"]
-	var available: Array = []
-	for cn in all_color_names:
-		if cn != GameConfig.player_color_name:
-			available.append(cn)
 
 	for i in range(1, players.size()):
 		var hud = preload("res://bot_hud.tscn").instantiate()
 		hud.bot_index = i
 		control.add_child(hud)
-		var cn: String = available[(i - 1) % available.size()]
+		var cn: String = (
+			GameConfig.bot_color_names[i - 1]
+			if (i - 1) < GameConfig.bot_color_names.size()
+			else "blue"
+		)
 		hud.setup(players[i], cn)
 		_bot_huds.append(hud)
 
@@ -1661,14 +1654,20 @@ func road_construction_check(pos: Vector2, player_id: int) -> bool:
 		if next_key == edge_key:
 			continue
 		var next_edge = BoardState.edges[next_key]
+
 		if next_edge["owner"] == player_id:
-			if (
-				next_edge["a_vertice"] == a_v
-				or next_edge["a_vertice"] == b_v
-				or next_edge["b_vertice"] == a_v
-				or next_edge["b_vertice"] == b_v
-			):
-				return true
+			var shared_vertice = null
+
+			if next_edge["a_vertice"] == a_v or next_edge["b_vertice"] == a_v:
+				shared_vertice = a_v
+			elif next_edge["a_vertice"] == b_v or next_edge["b_vertice"] == b_v:
+				shared_vertice = b_v
+
+			if shared_vertice != null:
+				var vertice_owner = BoardState.vertices[shared_vertice]["owner"]
+
+				if vertice_owner == null or vertice_owner == player_id:
+					return true
 
 	print("A estrada tem de estar conectada a uma construção sua!")
 	return false
