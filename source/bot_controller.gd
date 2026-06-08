@@ -29,6 +29,9 @@ func play_turn(player_id: int) -> void:
 	try_bank_trade(player_id)
 	await gm.get_tree().create_timer(0.4).timeout
 
+	try_build_city(player_id)
+	await gm.get_tree().create_timer(0.4).timeout
+
 	try_build_settlement(player_id)
 	await gm.get_tree().create_timer(0.4).timeout
 
@@ -261,6 +264,50 @@ func place_free_road(player_id: int) -> void:
 			break
 
 
+
+
+func try_build_city(player_id: int) -> bool:
+	var player = gm.players[player_id]
+	var cost := {"ore": 3, "wheat": 2}
+	var built := false
+
+	while player.can_afford(cost) and player.cities_remaining > 0:
+		var best_key: Variant = null
+		var best_score: float = -1.0
+
+		for vk in BoardState.vertices:
+			var vert = BoardState.vertices[vk]
+			if vert["owner"] != player_id or vert["type"] != BoardState.BuildingType.VILLAGE:
+				continue
+			var score := score_vertex(vk)
+			if score > best_score:
+				best_score = score
+				best_key = vk
+
+		if best_key == null:
+			break
+
+		if gm.city_construction_check(best_key, player_id):
+			BoardState.vertices[best_key]["type"] = BoardState.BuildingType.CITY
+			player.cities_remaining -= 1
+			player.settlements_remaining += 1
+			player.points += 1
+			var board_node := gm.find_child("Board")
+			if board_node and board_node.has_method("upgrade_settlement_to_city"):
+				board_node.upgrade_settlement_to_city(best_key, player.player_color)
+			print(
+				(
+					"Bot %s construiu cidade em %s (score %.1f, pontos: %d)"
+					% [player.player_name, str(best_key), best_score, player.points]
+				)
+			)
+			gm._refresh_resource_ui()
+			gm._check_victory(player_id)
+			built = true
+		else:
+			break
+
+	return built
 
 
 func try_build_settlement(player_id: int) -> bool:
