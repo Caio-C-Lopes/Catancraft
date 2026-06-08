@@ -1597,12 +1597,11 @@ func _on_build_city_pressed():
 	if board == null:
 		return
 
-	# Toggle: se ja esta no modo, cancela
 	if _city_mode_active:
-		_city_mode_active = false
-		_hide_highlights()
-		print("Modo de construção de cidade cancelado.")
+		_reset_build_modes()
 		return
+
+	_reset_build_modes()
 
 	# Verifica custo: 3 minerio + 2 trigo
 	var cost = {"ore": 3, "wheat": 2}
@@ -1640,12 +1639,11 @@ func _on_build_house_pressed():
 	if board == null:
 		return
 
-	# Toggle: se já está no modo, cancela
 	if _settlement_mode_active:
-		_settlement_mode_active = false
-		_hide_highlights()
-		print("Modo de construção de aldeia cancelado.")
+		_reset_build_modes()
 		return
+
+	_reset_build_modes()
 
 	# Verifica custo: madeira + argila + lã + trigo
 	var cost = {"wood": 1, "brick": 1, "sheep": 1, "wheat": 1}
@@ -1674,12 +1672,11 @@ func _on_build_road_pressed():
 	if board == null:
 		return
 
-	# Toggle: se já está no modo de estrada, cancela
 	if _road_mode_active:
-		_road_mode_active = false
-		board.hide_road_highlights()
-		print("Modo de construção de estrada cancelado.")
+		_reset_build_modes()
 		return
+
+	_reset_build_modes()
 
 	# Verifica se o jogador pode pagar (ou tem estradas gratuitas pela carta)
 	if _pending_road_building_roads == 0:
@@ -1880,3 +1877,11 @@ func _card_type_name(card_type: int) -> String:
 		8:
 			return "Mercado"
 	return "Desconhecida"
+
+
+func _reset_build_modes() -> void:
+	_road_mode_active = false
+	_settlement_mode_active = false
+	_city_mode_active = false
+
+	_hide_highlights()
