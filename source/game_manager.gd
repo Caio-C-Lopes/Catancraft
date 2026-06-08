@@ -290,8 +290,15 @@ func start_turn():
 
 func play_bot_turn():
 	await get_tree().create_timer(2.0).timeout
+
 	roll_dice()
+
 	await get_tree().create_timer(1.0).timeout
+
+	bot_try_bank_trade(current_player_index)
+
+	await get_tree().create_timer(1.0).timeout
+
 	end_turn()
 
 
@@ -687,7 +694,7 @@ func trade_with_bank(player_id: int, give_resource: String, receive_resource: St
 		return
 
 	# remove do player
-	player.add_resource(give_resource, -4)
+	player.remove_resource(give_resource, 4)
 
 	# adiciona ao player
 	player.add_resource(receive_resource, 1)
@@ -695,6 +702,51 @@ func trade_with_bank(player_id: int, give_resource: String, receive_resource: St
 	# atualiza banco
 	bank_panel.add_resource(give_resource, 4)
 	bank_panel.take_resource(receive_resource, 1)
-	
+
 	_refresh_resource_ui()
-	print("Troca realizada:", give_resource, "->", receive_resource)
+
+	print(
+		"%s trocou 4 %s por 1 %s com o banco"
+		% [player.player_name, give_resource, receive_resource]
+	)
+
+func get_bot_needed_resource(player: Player) -> String:
+	var settlement_cost = {
+		"wood": 1,
+		"brick": 1,
+		"wheat": 1,
+		"sheep": 1
+	}
+
+	for r in settlement_cost:
+		if player.resources[r] < settlement_cost[r]:
+			return r
+
+	return ""
+
+
+func get_bot_surplus_resource(player: Player) -> String:
+	for r in player.resources:
+		if player.resources[r] >= 4:
+			return r
+
+	return ""
+
+func bot_try_bank_trade(player_id: int):
+	var player = players[player_id]
+
+	var needed = get_bot_needed_resource(player)
+	var surplus = get_bot_surplus_resource(player)
+
+	if needed == "":
+		return
+
+	if surplus == "":
+		return
+
+	if needed == surplus:
+		return
+
+	print(player.player_name, " tentou trocar ", surplus, " por ", needed)
+
+	trade_with_bank(player_id, surplus, needed)
