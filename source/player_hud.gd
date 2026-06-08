@@ -20,6 +20,7 @@ func _on_dice_pressed():
 
 # Referência ao DevCardPanel (filho direto deste nó ou ajuste o caminho)
 @onready var _dev_card_panel = $DevCardPanel
+@onready var _robber_panel = $RobberPanel
 
 var font: Font
 var resource_icons: Dictionary = {}
@@ -342,8 +343,23 @@ func _build_resource_bar():
 					and ev.pressed
 					and ev.button_index == MOUSE_BUTTON_LEFT
 				):
+					var gm = _get_game_manager()
+					if gm == null:
+						return
+
+					# 1. Verifica se estamos na fase de DESCARTE do Ladrão
+					if gm.waiting_discard and _robber_panel and _robber_panel.visible:
+						# Envia a carta para o painel do ladrão (passando o nome e a textura)
+						_robber_panel.add_discard_card(res_name)
+
+						# IMPORTANTE: Subtrai do HUD visualmente, igual no Trade!
+						hud_preview_give(res_name, -1)
+						return
+
+					# 2. Verifica se estamos na fase de TROCA
 					if _trade_panel != null and _trade_panel.visible:
 						_trade_panel.on_hud_resource_clicked(res_name)
+						return
 		)
 
 		resource_bar.add_child(panel)
