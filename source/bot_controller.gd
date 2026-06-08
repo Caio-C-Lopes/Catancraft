@@ -35,6 +35,9 @@ func play_turn(player_id: int) -> void:
 	try_build_settlement(player_id)
 	await gm.get_tree().create_timer(0.4).timeout
 
+	try_build_road(player_id)
+	await gm.get_tree().create_timer(0.4).timeout
+
 	try_buy_dev_card(player_id)
 	await gm.get_tree().create_timer(0.5).timeout
 
@@ -342,6 +345,84 @@ func try_build_settlement(player_id: int) -> bool:
 			break
 
 	return built
+
+
+func try_build_road(player_id: int) -> bool:
+	const MAX_ROAD_LOOKAHEAD := 3
+	var player = gm.players[player_id]
+	var cost := {"wood": 1, "brick": 1}
+	var built := false
+
+	while player.can_afford(cost) and player.roads_remaining > 0:
+		var best_edge_key: Variant = null
+		var best_score: float = -1.0
+
+		for ek in BoardState.edges:
+			var edge = BoardState.edges[ek]
+			if edge["owner"] != null:
+				continue
+			if not gm.road_construction_check(ek, player_id):
+				continue
+			var score := road_lookahead_score(ek, player_id, MAX_ROAD_LOOKAHEAD)
+			if score > best_score:
+				best_score = score
+				best_edge_key = ek
+
+		if best_edge_key == null:
+			break
+
+		BoardState.edges[best_edge_key]["owner"] = player_id
+		player.roads_remaining -= 1
+		player.remove_resource("wood", 1)
+		player.remove_resource("brick", 1)
+		gm.bank_panel.return_resource("wood", 1)
+		gm.bank_panel.return_resource("brick", 1)
+		var board := gm.find_child("Board")
+		if board and board.has_method("spawn_road_visual"):
+			board.spawn_road_visual(best_edge_key, player.player_color)
+		print(
+			(
+				"Bot %s construiu estrada em %s (score lookahead %.1f)"
+				% [player.player_name, str(best_edge_key), best_score]
+			)
+		)
+		gm._check_longest_road(player_id)
+		gm._refresh_resource_ui()
+		built = true
+
+	return built
+
+
+func road_lookahead_score(start_edge_key: Vector2, player_id: int, depth: int) -> float:
+	if depth <= 0 or not BoardState.edges.has(start_edge_key):
+		return 0.0
+
+	var edge = BoardState.edges[start_edge_key]
+	var verts := [edge["a_vertice"], edge["b_vertice"]]
+	var best: float = 0.0
+
+	for vk in verts:
+		if BoardState.vertices.has(vk) and BoardState.vertices[vk]["owner"] == null:
+			var s := score_vertex(vk)
+			if s > best:
+				best = s
+
+		if depth > 1:
+			for ek2 in BoardState.edges:
+				if ek2 == start_edge_key:
+					continue
+				var e2 = BoardState.edges[ek2]
+				if e2["owner"] != null and e2["owner"] != player_id:
+					continue
+				if e2["a_vertice"] != vk and e2["b_vertice"] != vk:
+					continue
+				var child_score := road_lookahead_score(ek2, player_id, depth - 1) * 0.85
+				if child_score > best:
+					best = child_score
+
+	return best
+
+
 
 
 func try_bank_trade(player_id: int) -> bool:
