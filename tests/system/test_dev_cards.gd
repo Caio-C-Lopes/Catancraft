@@ -1,6 +1,7 @@
 extends GutTest
 
 var game_scene: Node
+var _original_scene: Node
 
 
 func before_all():
@@ -12,7 +13,9 @@ func before_all():
 
 
 func before_each():
+	_original_scene = get_tree().current_scene
 	game_scene = load("res://game.tscn").instantiate()
+	get_tree().current_scene = game_scene
 	add_child_autofree(game_scene)
 	for _i in range(15):
 		await get_tree().process_frame
@@ -146,3 +149,10 @@ func test_largest_army_transfers_when_surpassed():
 	assert_eq(game_scene.largest_army_owner, 1, "Bot should steal largest army")
 	assert_eq(_human().points, 0, "Human should lose the 2 VP")
 	assert_eq(bot.points, 2, "Bot should gain the 2 VP")
+
+
+func after_each():
+	if _original_scene:
+		get_tree().current_scene = _original_scene
+		_original_scene = null
+

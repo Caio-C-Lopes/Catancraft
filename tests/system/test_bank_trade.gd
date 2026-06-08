@@ -1,6 +1,7 @@
 extends GutTest
 
 var game_scene: Node
+var _original_scene: Node
 
 
 func before_all():
@@ -12,7 +13,9 @@ func before_all():
 
 
 func before_each():
+	_original_scene = get_tree().current_scene
 	game_scene = load("res://game.tscn").instantiate()
+	get_tree().current_scene = game_scene
 	add_child_autofree(game_scene)
 	for _i in range(15):
 		await get_tree().process_frame
@@ -115,3 +118,10 @@ func test_monopoly_no_effect_when_others_have_none():
 	var before = _human().resources["ore"]
 	game_scene._execute_monopoly(0, "ore")
 	assert_eq(_human().resources["ore"], before)
+
+
+func after_each():
+	if _original_scene:
+		get_tree().current_scene = _original_scene
+		_original_scene = null
+
