@@ -101,17 +101,19 @@ func test_bank_trade_bot_can_trade_without_phase_restriction():
 func test_bank_trade_conserves_total_resources_in_system():
 	_human().add_resource("sheep", 4)
 	var bank = game_scene.bank_panel
-	# Ensure the bank has ore to give (preparation may have depleted it)
-	bank.bank_amounts["ore"] = 18
-	var sheep_before = bank.bank_amounts["sheep"]
-	var ore_before = bank.bank_amounts["ore"]  # now guaranteed 18
+	# Pre-deplete bank so return_resource has room (it caps at BANK_INITIAL).
+	# Set to 15 → after returning 4 → should be 19.
+	bank.bank_amounts["sheep"] = 15
+	bank.bank_amounts["ore"] = 18  # ensure bank has ore to give
+	var sheep_before = bank.bank_amounts["sheep"]  # 15
+	var ore_before = bank.bank_amounts["ore"]      # 18
 
 	var ok = _gm().execute_bank_trade(0, "sheep", "ore")
-	assert_true(ok, "Trade should succeed when bank has ore")
+	assert_true(ok, "Trade should succeed when bank has resources")
 
-	# Player gave 4 sheep → bank gets them back
+	# Player gave 4 sheep → bank gets them back: 15 + 4 = 19
 	assert_eq(bank.bank_amounts["sheep"], sheep_before + 4)
-	# Bank gave 1 ore to player
+	# Bank gave 1 ore to player: 18 - 1 = 17
 	assert_eq(bank.bank_amounts["ore"], ore_before - 1)
 
 
