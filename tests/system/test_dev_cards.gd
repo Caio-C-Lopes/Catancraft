@@ -19,8 +19,8 @@ func before_all():
 func before_each():
 	game_scene = load("res://game.tscn").instantiate()
 	add_child_autofree(game_scene)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for _i in range(15):
+		await get_tree().process_frame
 	game_scene.game_phase = game_scene.GamePhase.PLAYING
 	game_scene.current_player_index = 0
 	game_scene.has_rolled_dice = true

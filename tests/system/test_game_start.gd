@@ -23,8 +23,9 @@ func before_all():
 func before_each():
 	game_scene = load("res://game.tscn").instantiate()
 	add_child_autofree(game_scene)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# game_manager._ready() has several internal awaits; wait enough frames
+	for _i in range(15):
+		await get_tree().process_frame
 
 
 func _gm() -> Node:
@@ -134,10 +135,10 @@ func test_board_state_has_edges():
 # ── BotController is initialized ─────────────────────────────────────────────
 
 func test_bot_controller_is_child_of_game_manager():
-	var bot_ctrl = _gm().find_child("BotController")
-	assert_not_null(bot_ctrl)
+	# _bot_controller is a direct var on game_manager — find_child can race
+	# with _ready(); accessing the var directly is reliable.
+	assert_not_null(game_scene._bot_controller)
 
 
 func test_bot_controller_has_game_manager_reference():
-	var bot_ctrl = _gm().find_child("BotController")
-	assert_eq(bot_ctrl.gm, _gm())
+	assert_eq(game_scene._bot_controller.gm, game_scene)

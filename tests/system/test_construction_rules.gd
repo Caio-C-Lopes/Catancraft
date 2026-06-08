@@ -22,8 +22,8 @@ func before_all():
 func before_each():
 	game_scene = load("res://game.tscn").instantiate()
 	add_child_autofree(game_scene)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for _i in range(15):
+		await get_tree().process_frame
 
 
 func _gm() -> Node:
