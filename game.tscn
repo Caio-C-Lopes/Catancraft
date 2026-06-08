@@ -28,6 +28,7 @@
 [ext_resource type="Script" uid="uid://c2hifnv6njfq5" path="res://source/dev_card_panel.gd" id="23_i2p71"]
 [ext_resource type="Script" uid="uid://1ryb1he5gib4" path="res://source/bank_panel.gd" id="23_vaj68"]
 [ext_resource type="Texture2D" uid="uid://dewtlpo56ne1r" path="res://icons_assets/iron_golem.png" id="24_bnpwn"]
+[ext_resource type="Script" uid="uid://qrobvxsxqd3s" path="res://source/robber_panel.gd" id="26_36jdj"]
 [ext_resource type="PackedScene" uid="uid://oxiqxcmiek37" path="res://pause_menu.tscn" id="29_bnpwn"]
 
 [node name="Game" type="Node2D" unique_id=916513140]
@@ -160,6 +161,12 @@ offset_bottom = 40.0
 
 [node name="CardGrid" type="VBoxContainer" parent="Control/PlayerHUD/DevCardPanel/ScrollContainer" unique_id=1892788986]
 layout_mode = 2
+
+[node name="RobberPanel" type="Control" parent="Control/PlayerHUD" unique_id=1523568139]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("26_36jdj")
 
 [node name="BankPanel" type="PanelContainer" parent="Control" unique_id=1805510841]
 layout_mode = 0
