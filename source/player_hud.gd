@@ -44,6 +44,7 @@ var piece_labels: Dictionary = {}
 
 @export var trophy_icon: Texture2D
 @export var knight_icon: Texture2D
+@export var roads_longest_icon: Texture2D
 
 var _house_btn: TextureButton = null
 var _road_btn: TextureButton = null
@@ -52,6 +53,7 @@ var _cards_btn: TextureButton = null
 
 var _vp_label: Label = null
 var _knights_label: Label = null
+var _longest_road_label: Label = null
 
 # Referência fixa ao jogador humano — definida uma única vez pelo game_manager
 var _human_player: Player = null
@@ -241,6 +243,12 @@ func update_vp_and_knights(player: Player = null):
 		_vp_label.text = str(p.get_total_points())
 	if _knights_label:
 		_knights_label.text = str(p.knights_played)
+	if _longest_road_label:
+		var gm = _get_game_manager()
+		var road_len := 0
+		if gm and gm.has_method("_calc_longest_road"):
+			road_len = gm._calc_longest_road(0)
+		_longest_road_label.text = str(road_len)
 
 
 func _update_timer_display():
@@ -493,7 +501,7 @@ func _build_stats_panel():
 	var vp_icon = TextureRect.new()
 	if trophy_icon:
 		vp_icon.texture = trophy_icon
-	vp_icon.custom_minimum_size = Vector2(50, 50)
+	vp_icon.custom_minimum_size = Vector2(40, 40)
 	vp_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vp_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	vp_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -517,7 +525,7 @@ func _build_stats_panel():
 	var kn_icon = TextureRect.new()
 	if knight_icon:
 		kn_icon.texture = knight_icon
-	kn_icon.custom_minimum_size = Vector2(50, 50)
+	kn_icon.custom_minimum_size = Vector2(40, 40)
 	kn_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	kn_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	kn_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -532,7 +540,40 @@ func _build_stats_panel():
 	kn_inner.add_child(kn_lbl)
 	_knights_label = kn_lbl
 
-	vbox.add_child(kn_inner)
+	# ── Maior Estrada (ao lado do cavaleiro) ───────────────────────
+	var rd_inner = VBoxContainer.new()
+	rd_inner.add_theme_constant_override("separation", 2)
+
+	var rd_icon = TextureRect.new()
+	# Carrega diretamente do caminho para não depender do Inspector
+	var _roads_tex = load("res://icons_assets/roads.png") as Texture2D
+	if _roads_tex:
+		rd_icon.texture = _roads_tex
+	elif roads_longest_icon:
+		rd_icon.texture = roads_longest_icon
+	rd_icon.custom_minimum_size = Vector2(40, 40)
+	rd_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rd_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rd_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rd_inner.add_child(rd_icon)
+
+	var rd_lbl = Label.new()
+	rd_lbl.text = "0"
+	rd_lbl.add_theme_font_override("font", font)
+	rd_lbl.add_theme_font_size_override("font_size", 13)
+	rd_lbl.add_theme_color_override("font_color", Color.WHITE)
+	rd_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rd_inner.add_child(rd_lbl)
+	_longest_road_label = rd_lbl
+
+	# Agrupa cavaleiro + estrada lado a lado num HBox
+	var kn_rd_hbox = HBoxContainer.new()
+	kn_rd_hbox.add_theme_constant_override("separation", 4)
+	kn_rd_hbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	kn_rd_hbox.add_child(kn_inner)
+	kn_rd_hbox.add_child(rd_inner)
+
+	vbox.add_child(kn_rd_hbox)
 
 	margin.add_child(vbox)
 	bottom_left.add_child(margin)
