@@ -13,7 +13,7 @@ extends GutTest
 # ── resource_type_to_string (static mapping) ──────────────────────────────────
 
 class ResourceMapper:
-	func to_string(type: int) -> String:
+	func map(type: int) -> String:
 		match type:
 			0: return "wood"
 			1: return "sheep"
@@ -25,27 +25,27 @@ class ResourceMapper:
 
 func test_resource_type_0_is_wood():
 	var m = ResourceMapper.new()
-	assert_eq(m.to_string(0), "wood")
+	assert_eq(m.map(0), "wood")
 
 func test_resource_type_1_is_sheep():
 	var m = ResourceMapper.new()
-	assert_eq(m.to_string(1), "sheep")
+	assert_eq(m.map(1), "sheep")
 
 func test_resource_type_2_is_wheat():
 	var m = ResourceMapper.new()
-	assert_eq(m.to_string(2), "wheat")
+	assert_eq(m.map(2), "wheat")
 
 func test_resource_type_3_is_brick():
 	var m = ResourceMapper.new()
-	assert_eq(m.to_string(3), "brick")
+	assert_eq(m.map(3), "brick")
 
 func test_resource_type_4_is_ore():
 	var m = ResourceMapper.new()
-	assert_eq(m.to_string(4), "ore")
+	assert_eq(m.map(4), "ore")
 
 func test_resource_type_unknown_is_empty():
 	var m = ResourceMapper.new()
-	assert_eq(m.to_string(99), "")
+	assert_eq(m.map(99), "")
 
 
 # ── _count_resources ──────────────────────────────────────────────────────────
