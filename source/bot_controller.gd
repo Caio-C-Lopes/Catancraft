@@ -26,6 +26,10 @@ func play_turn(player_id: int) -> void:
 
 	await gm.get_tree().create_timer(1.0).timeout
 
+	# Tenta trocar com o humano primeiro
+	gm._bot_try_trade(player_id)
+	await gm.get_tree().create_timer(0.5).timeout
+
 	try_bank_trade(player_id)
 	await gm.get_tree().create_timer(0.4).timeout
 
