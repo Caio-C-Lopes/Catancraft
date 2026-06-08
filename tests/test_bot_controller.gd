@@ -35,7 +35,7 @@ func test_choose_resource_returns_rarest():
 	controller.setup(mock_gm)
 	
 	var rarest = controller.choose_resource(1)
-	assert_eq(rarest, "brick", "should choose brick as monopoly target")
+	assert_eq(rarest, "wood", "should choose wood as monopoly target")
 	
 	controller.free()
 	mock_gm.free()
