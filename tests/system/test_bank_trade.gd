@@ -1,10 +1,5 @@
 extends GutTest
 
-# ── System Tests: Bank Trade ──────────────────────────────────────────────────
-# Loads the full game scene and tests the 4:1 bank trade flow end-to-end:
-# resource deduction from player, credit to bank, resource receipt from bank,
-# and all guard conditions (insufficient resources, wrong phase, bank empty).
-
 var game_scene: Node
 
 
@@ -21,7 +16,6 @@ func before_each():
 	add_child_autofree(game_scene)
 	for _i in range(15):
 		await get_tree().process_frame
-	# Put game into PLAYING phase with dice rolled so trades are allowed
 	game_scene.game_phase = game_scene.GamePhase.PLAYING
 	game_scene.current_player_index = 0
 	game_scene.has_rolled_dice = true
@@ -33,9 +27,6 @@ func _gm() -> Node:
 
 func _human() -> Player:
 	return game_scene.players[0]
-
-
-# ── Happy path ────────────────────────────────────────────────────────────────
 
 
 func test_bank_trade_deducts_4_give_resources_from_player():
@@ -63,9 +54,6 @@ func test_bank_trade_preserves_other_resources():
 	assert_eq(_human().resources["ore"], 3, "Ore should be untouched")
 
 
-# ── Guard conditions ──────────────────────────────────────────────────────────
-
-
 func test_bank_trade_fails_when_player_has_fewer_than_4():
 	_human().add_resource("wood", 3)
 	var result = _gm().execute_bank_trade(0, "wood", "ore")
@@ -89,7 +77,6 @@ func test_bank_trade_fails_when_not_human_turn():
 
 
 func test_bank_trade_bot_can_trade_without_phase_restriction():
-	# Bots are not restricted by has_rolled_dice / current_player_index
 	var bot = game_scene.players[1]
 	bot.add_resource("brick", 4)
 	var result = _gm().execute_bank_trade(1, "brick", "wheat")
@@ -98,29 +85,19 @@ func test_bank_trade_bot_can_trade_without_phase_restriction():
 	assert_eq(bot.resources["wheat"], 1)
 
 
-# ── Resource conservation ────────────────────────────────────────────────────
-
-
 func test_bank_trade_conserves_total_resources_in_system():
 	_human().add_resource("sheep", 4)
 	var bank = game_scene.bank_panel
-	# Pre-deplete bank so return_resource has room (it caps at BANK_INITIAL).
-	# Set to 15 → after returning 4 → should be 19.
 	bank.bank_amounts["sheep"] = 15
-	bank.bank_amounts["ore"] = 18  # ensure bank has ore to give
-	var sheep_before = bank.bank_amounts["sheep"]  # 15
-	var ore_before = bank.bank_amounts["ore"]  # 18
+	bank.bank_amounts["ore"] = 18
+	var sheep_before = bank.bank_amounts["sheep"]
+	var ore_before = bank.bank_amounts["ore"]
 
 	var ok = _gm().execute_bank_trade(0, "sheep", "ore")
 	assert_true(ok, "Trade should succeed when bank has resources")
 
-	# Player gave 4 sheep → bank gets them back: 15 + 4 = 19
 	assert_eq(bank.bank_amounts["sheep"], sheep_before + 4)
-	# Bank gave 1 ore to player: 18 - 1 = 17
 	assert_eq(bank.bank_amounts["ore"], ore_before - 1)
-
-
-# ── Monopoly card logic ───────────────────────────────────────────────────────
 
 
 func test_monopoly_steals_from_all_bots():

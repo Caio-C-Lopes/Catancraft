@@ -1,17 +1,10 @@
 extends GutTest
 
-# ── Unit Tests: Player class ───────────────────────────────────────────────────
-# Tests all Player methods in isolation: resources, dev cards, affordability,
-# victory points, and turn flag resets.
-
 var player: Player
 
 
 func before_each():
 	player = Player.new("Test", Color.WHITE)
-
-
-# ── Resources ─────────────────────────────────────────────────────────────────
 
 
 func test_initial_resources_are_zero():
@@ -48,12 +41,8 @@ func test_add_invalid_resource_is_ignored():
 
 
 func test_remove_invalid_resource_is_ignored():
-	# Should not crash
 	player.remove_resource("diamonds", 5)
 	pass
-
-
-# ── can_afford ────────────────────────────────────────────────────────────────
 
 
 func test_can_afford_true_when_has_exact_resources():
@@ -71,7 +60,6 @@ func test_can_afford_false_when_missing_one_resource():
 	player.add_resource("wood", 1)
 	player.add_resource("brick", 1)
 	player.add_resource("sheep", 1)
-	# Missing wheat
 	assert_false(player.can_afford({"wood": 1, "brick": 1, "wheat": 1, "sheep": 1}))
 
 
@@ -83,11 +71,8 @@ func test_can_afford_empty_cost_is_always_true():
 	assert_true(player.can_afford({}))
 
 
-# ── Dev Cards ─────────────────────────────────────────────────────────────────
-
-
 func test_add_dev_card_increases_hand():
-	player.add_dev_card(0)  # KNIGHT
+	player.add_dev_card(0)
 	assert_eq(player.dev_cards_in_hand, 1)
 	assert_eq(player.dev_cards.size(), 1)
 
@@ -116,34 +101,28 @@ func test_remove_dev_card_negative_index_does_nothing():
 	assert_eq(player.dev_cards.size(), 1)
 
 
-# ── Victory Points ────────────────────────────────────────────────────────────
-
-
 func test_count_victory_point_cards_zero_when_no_vp_cards():
-	player.add_dev_card(0)  # KNIGHT — not a VP card
+	player.add_dev_card(0)
 	assert_eq(player.count_victory_point_cards(), 0)
 
 
 func test_count_victory_point_cards_counts_correctly():
-	player.add_dev_card(4)  # CHAPEL
-	player.add_dev_card(5)  # UNIVERSITY
-	player.add_dev_card(0)  # KNIGHT — not VP
+	player.add_dev_card(4)
+	player.add_dev_card(5)
+	player.add_dev_card(0)
 	assert_eq(player.count_victory_point_cards(), 2)
 
 
 func test_get_total_points_includes_vp_cards():
 	player.points = 5
-	player.add_dev_card(4)  # +1 secret VP
-	player.add_dev_card(7)  # +1 secret VP (LIBRARY)
+	player.add_dev_card(4)
+	player.add_dev_card(7)
 	assert_eq(player.get_total_points(), 7)
 
 
 func test_get_total_points_without_vp_cards():
 	player.points = 3
 	assert_eq(player.get_total_points(), 3)
-
-
-# ── Turn Flags ────────────────────────────────────────────────────────────────
 
 
 func test_reset_turn_flags_clears_played_card():
@@ -153,12 +132,9 @@ func test_reset_turn_flags_clears_played_card():
 
 
 func test_reset_turn_flags_clears_bought_card():
-	player.add_dev_card(0)  # sets dev_card_bought_this_turn = true
+	player.add_dev_card(0)
 	player.reset_turn_flags()
 	assert_false(player.dev_card_bought_this_turn)
-
-
-# ── Initial State ─────────────────────────────────────────────────────────────
 
 
 func test_initial_roads_remaining():

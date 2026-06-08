@@ -1,18 +1,11 @@
 extends GutTest
 
-# ── Unit Tests: BoardState ─────────────────────────────────────────────────────
-# Tests vertex registration, edge registration, robber position tracking,
-# and state reset — all without needing any scene tree.
-
 var board_state: Node
 
 
 func before_each():
 	board_state = load("res://source/board_state.gd").new()
 	add_child_autofree(board_state)
-
-
-# ── Vertex Registration ───────────────────────────────────────────────────────
 
 
 func test_register_vertex_creates_entry():
@@ -40,9 +33,6 @@ func test_register_vertex_twice_does_not_overwrite():
 	assert_eq(board_state.vertices[Vector2(5, 5)]["owner"], 0)
 
 
-# ── Edge Registration ─────────────────────────────────────────────────────────
-
-
 func test_register_edge_creates_entry():
 	board_state.register_edges(Vector2(0, 0), Vector2(100, 0))
 	var center = Vector2(50, 0)
@@ -68,9 +58,6 @@ func test_register_edge_twice_does_not_overwrite():
 	assert_eq(board_state.edges[Vector2(50, 0)]["owner"], 1)
 
 
-# ── Robber Position ───────────────────────────────────────────────────────────
-
-
 func test_set_initial_robber_pos():
 	board_state.set_initial_robber_pos(Vector2(150, 200))
 	assert_eq(board_state.robber_hex_pos, Vector2(150, 200))
@@ -85,9 +72,6 @@ func test_update_robber_position():
 func test_update_robber_rounds_position():
 	board_state.update_robber_position(Vector2(99.6, 200.1))
 	assert_eq(board_state.robber_hex_pos, Vector2(100, 200))
-
-
-# ── Reset State ───────────────────────────────────────────────────────────────
 
 
 func test_reset_clears_vertices():
@@ -108,9 +92,6 @@ func test_reset_clears_robber_pos():
 	assert_eq(board_state.robber_hex_pos, Vector2.ZERO)
 
 
-# ── get_players_on_hex ────────────────────────────────────────────────────────
-
-
 func test_get_players_on_hex_returns_empty_when_no_buildings():
 	board_state.register_vertices(Vector2(10, 10))
 	var result = board_state.get_players_on_hex(Vector2(50, 50))
@@ -118,7 +99,6 @@ func test_get_players_on_hex_returns_empty_when_no_buildings():
 
 
 func test_get_players_on_hex_excludes_specified_player():
-	# Setup: vertex owned by player 0 with a mock hex link at (50, 50)
 	board_state.register_vertices(Vector2(10, 10))
 	var mock_hex = Node2D.new()
 	mock_hex.position = Vector2(50, 50)

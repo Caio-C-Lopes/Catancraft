@@ -1,18 +1,9 @@
 extends GutTest
 
-# ── System Tests: Game Startup ────────────────────────────────────────────────
-# Loads the full game scene and verifies the initial game state from the
-# perspective of an external observer: correct number of players, resources
-# starting at zero, preparation phase active, correct piece counts.
-#
-# These tests are slow (full scene load) but test the real integration
-# between GameConfig → GameManager → Players → BoardState.
-
 var game_scene: Node
 
 
 func before_all():
-	# Configure a minimal, deterministic game: 1 human + 1 bot
 	GameConfig.bot_count = 1
 	GameConfig.player_color_name = "red"
 	GameConfig.player_icon_name = "steve"
@@ -23,16 +14,12 @@ func before_all():
 func before_each():
 	game_scene = load("res://game.tscn").instantiate()
 	add_child_autofree(game_scene)
-	# game_manager._ready() has several internal awaits; wait enough frames
 	for _i in range(15):
 		await get_tree().process_frame
 
 
 func _gm() -> Node:
 	return game_scene
-
-
-# ── Players are created correctly ─────────────────────────────────────────────
 
 
 func test_game_creates_correct_number_of_players():
@@ -45,9 +32,6 @@ func test_human_player_is_first():
 
 func test_bot_player_exists():
 	assert_eq(_gm().players[1].player_name, "Bot 1")
-
-
-# ── Initial resource state ────────────────────────────────────────────────────
 
 
 func test_all_players_start_with_zero_resources():
@@ -65,9 +49,6 @@ func test_all_players_start_with_zero_points():
 		assert_eq(player.points, 0)
 
 
-# ── Initial piece counts ──────────────────────────────────────────────────────
-
-
 func test_all_players_start_with_15_roads():
 	for player in _gm().players:
 		assert_eq(player.roads_remaining, 15)
@@ -83,9 +64,6 @@ func test_all_players_start_with_4_cities():
 		assert_eq(player.cities_remaining, 4)
 
 
-# ── Game phase ────────────────────────────────────────────────────────────────
-
-
 func test_game_starts_in_preparation_phase():
 	assert_eq(_gm().game_phase, _gm().GamePhase.PREPARATION)
 
@@ -99,11 +77,7 @@ func test_first_player_index_is_valid():
 	assert_true(idx >= 0 and idx < _gm().players.size())
 
 
-# ── Preparation order ─────────────────────────────────────────────────────────
-
-
 func test_preparation_order_has_correct_length():
-	# n players → 2n steps (forward + reverse)
 	var expected = _gm().players.size() * 2
 	assert_eq(_gm().preparation_order.size(), expected)
 
@@ -116,20 +90,13 @@ func test_preparation_order_contains_all_player_indices():
 		assert_true(seen.has(i), "Player %d missing from preparation order" % i)
 
 
-# ── Dev deck ─────────────────────────────────────────────────────────────────
-
-
 func test_dev_deck_is_not_empty_at_start():
 	assert_false(_gm().deck_empty())
 
 
 func test_dev_deck_has_no_more_than_25_cards():
-	# Access the internal deck — we verify the total matches the Catan standard
 	var deck: Array = _gm()._dev_deck
 	assert_eq(deck.size(), 25)
-
-
-# ── BoardState is populated ───────────────────────────────────────────────────
 
 
 func test_board_state_has_vertices():
@@ -142,12 +109,7 @@ func test_board_state_has_edges():
 	assert_false(BoardState.edges.is_empty(), "BoardState should have edges after scene loads")
 
 
-# ── BotController is initialized ─────────────────────────────────────────────
-
-
 func test_bot_controller_is_child_of_game_manager():
-	# _bot_controller is a direct var on game_manager — find_child can race
-	# with _ready(); accessing the var directly is reliable.
 	assert_not_null(game_scene._bot_controller)
 
 

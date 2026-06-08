@@ -1,17 +1,5 @@
 extends GutTest
 
-# ── Unit Tests: GameManager pure logic ───────────────────────────────────────
-# Tests functions that have no UI/scene dependency: _count_resources,
-# _execute_player_trade, _execute_monopoly, _calc_longest_road, _dfs_road,
-# _build_dev_deck, deck_empty, resource_type_to_string.
-# Uses a lightweight stub to avoid loading the full scene.
-
-# Because GameManager extends Node2D and uses @onready nodes, we can't
-# instantiate it directly. Instead, we replicate the pure-logic functions
-# that can be extracted and test them through Player + BoardState.
-
-# ── resource_type_to_string (static mapping) ──────────────────────────────────
-
 
 class ResourceMapper:
 	func map(type: int) -> String:
@@ -60,10 +48,6 @@ func test_resource_type_unknown_is_empty():
 	assert_eq(m.map(99), "")
 
 
-# ── _count_resources ──────────────────────────────────────────────────────────
-# Replicated locally to test the pure function.
-
-
 func _count_resources(arr: Array) -> Dictionary:
 	var counts := {}
 	for r in arr:
@@ -88,10 +72,6 @@ func test_count_resources_mixed():
 	var result = _count_resources(["wood", "ore", "wood"])
 	assert_eq(result["wood"], 2)
 	assert_eq(result["ore"], 1)
-
-
-# ── Player trade execution ────────────────────────────────────────────────────
-# Tests the resource transfer logic between two players.
 
 
 func _execute_trade(player_a: Player, player_b: Player, a_gives: Array, b_gives: Array) -> void:
@@ -130,9 +110,6 @@ func test_execute_trade_with_empty_b_gives():
 	assert_eq(p2.resources["sheep"], 1)
 
 
-# ── _execute_monopoly logic ───────────────────────────────────────────────────
-
-
 func _execute_monopoly(players: Array, stealer_id: int, resource: String) -> void:
 	for i in range(players.size()):
 		if i == stealer_id:
@@ -149,7 +126,7 @@ func test_monopoly_steals_from_all_others():
 	var p2 = Player.new("Bot2", Color.RED)
 	p1.add_resource("wheat", 3)
 	p2.add_resource("wheat", 2)
-	p0.add_resource("wheat", 1)  # should not be stolen from self
+	p0.add_resource("wheat", 1)
 
 	_execute_monopoly([p0, p1, p2], 0, "wheat")
 
@@ -166,8 +143,6 @@ func test_monopoly_no_effect_when_others_have_none():
 
 	assert_eq(p0.resources["ore"], 0)
 
-
-# ── Dev Deck composition ──────────────────────────────────────────────────────
 
 const DEV_CARD_COUNTS := {0: 14, 1: 2, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1}
 
@@ -199,12 +174,9 @@ func test_dev_deck_has_5_vp_cards():
 
 func test_dev_deck_has_correct_action_cards():
 	var deck = _build_dev_deck()
-	assert_eq(deck.filter(func(c): return c == 1).size(), 2)  # Road Building
-	assert_eq(deck.filter(func(c): return c == 2).size(), 2)  # Year of Plenty
-	assert_eq(deck.filter(func(c): return c == 3).size(), 2)  # Monopoly
-
-
-# ── Preparation order ────────────────────────────────────────────────────────
+	assert_eq(deck.filter(func(c): return c == 1).size(), 2)
+	assert_eq(deck.filter(func(c): return c == 2).size(), 2)
+	assert_eq(deck.filter(func(c): return c == 3).size(), 2)
 
 
 func _build_preparation_order(n: int, first: int) -> Array:
@@ -223,7 +195,6 @@ func test_preparation_order_length_for_4_players():
 
 func test_preparation_order_has_forward_and_reverse():
 	var order = _build_preparation_order(3, 0)
-	# Forward: 0,1,2 then reverse: 2,1,0
 	assert_eq(order, [0, 1, 2, 2, 1, 0])
 
 

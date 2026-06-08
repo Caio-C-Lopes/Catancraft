@@ -1,11 +1,5 @@
 extends GutTest
 
-# ── Integration Tests: Player Trade ──────────────────────────────────────────
-# Tests the full trade flow between two players:
-# resource validation, transfer, and edge cases.
-# Simulates the _execute_player_trade / _on_player_trade_requested flow
-# using real Player objects without needing the game scene.
-
 
 class MockGM:
 	var players: Array = []
@@ -51,9 +45,6 @@ func before_each():
 	gm.players = [human, bot]
 
 
-# ── Validation: human must have resources ─────────────────────────────────────
-
-
 func test_trade_blocked_when_human_lacks_resource():
 	human.add_resource("wood", 0)
 	assert_false(gm.can_trade(0, ["wood"]))
@@ -67,9 +58,6 @@ func test_trade_allowed_when_human_has_exact_resources():
 func test_trade_blocked_when_human_has_less_than_required():
 	human.add_resource("ore", 1)
 	assert_false(gm.can_trade(0, ["ore", "ore"]))
-
-
-# ── Transfer: resources change hands correctly ────────────────────────────────
 
 
 func test_trade_transfers_wood_for_ore():
@@ -119,9 +107,6 @@ func test_trade_does_not_affect_other_resources():
 
 	assert_eq(human.resources["ore"], 5, "Human ore should be untouched")
 	assert_eq(bot.resources["brick"], 5, "Bot brick should be untouched")
-
-
-# ── Resource conservation ────────────────────────────────────────────────────
 
 
 func test_total_resources_are_conserved_after_trade():

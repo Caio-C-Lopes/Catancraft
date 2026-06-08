@@ -1,10 +1,5 @@
 extends GutTest
 
-# ── System Tests: Dev Card Lifecycle ─────────────────────────────────────────
-# Tests the full dev card flow using the real game scene:
-# buying a card (resource deduction + deck draw), playing a card (knight,
-# monopoly, year of plenty), one-per-turn restrictions, and VP card rules.
-
 var game_scene: Node
 
 
@@ -34,9 +29,6 @@ func _human() -> Player:
 	return game_scene.players[0]
 
 
-# Helper: give a player a set of cards as if they came from a previous turn
-# (dev_cards is Array[int] — typed — so we must use add_dev_card() instead
-# of direct assignment, then clear the bought-this-turn flag).
 func _give_cards(player: Player, card_types: Array) -> void:
 	player.dev_cards.clear()
 	player.dev_cards_in_hand = 0
@@ -44,9 +36,6 @@ func _give_cards(player: Player, card_types: Array) -> void:
 		player.dev_cards.append(t)
 	player.dev_cards_in_hand = player.dev_cards.size()
 	player.dev_card_bought_this_turn = false
-
-
-# ── Buying a dev card ─────────────────────────────────────────────────────────
 
 
 func test_buy_dev_card_deducts_correct_resources():
@@ -97,71 +86,59 @@ func test_cannot_buy_two_cards_in_same_turn():
 	assert_false(result, "Should not be able to buy a second dev card in the same turn")
 
 
-# ── Playing a dev card: general guards ────────────────────────────────────────
-
-
 func test_cannot_play_card_bought_same_turn():
 	_human().add_resource("ore", 1)
 	_human().add_resource("wheat", 1)
 	_human().add_resource("sheep", 1)
 	_gm().buy_dev_card(0)
-	# The last card was bought this turn — cannot play it
 	var card_type = _human().dev_cards[0]
 	var result = _gm().play_dev_card(0, 0, card_type)
 	assert_false(result, "Cannot play card bought this turn")
 
 
 func test_cannot_play_two_cards_in_same_turn():
-	# Give player two knight cards as if from a previous turn
 	_give_cards(_human(), [0, 0])
 
 	_gm().play_dev_card(0, 0, 0)
-	_human().played_dev_card_this_turn = true  # simulate state after first play
+	_human().played_dev_card_this_turn = true
 	var result = _gm().play_dev_card(0, 0, 0)
 	assert_false(result, "Cannot play a second card in the same turn")
 
 
 func test_cannot_play_vp_card():
-	_give_cards(_human(), [4])  # CHAPEL (VP card)
+	_give_cards(_human(), [4])
 	var result = _gm().play_dev_card(0, 0, 4)
 	assert_false(result, "VP cards cannot be played manually")
 
 
-# ── Knight card ───────────────────────────────────────────────────────────────
-
-
 func test_knight_increments_knights_played():
-	_give_cards(_human(), [0])  # KNIGHT
+	_give_cards(_human(), [0])
 	_gm().play_dev_card(0, 0, 0)
 	assert_eq(_human().knights_played, 1)
 
 
 func test_knight_removes_card_from_hand():
-	_give_cards(_human(), [0])  # KNIGHT
+	_give_cards(_human(), [0])
 	_gm().play_dev_card(0, 0, 0)
 	assert_eq(_human().dev_cards.size(), 0)
 
 
-# ── Largest Army ──────────────────────────────────────────────────────────────
-
-
 func test_largest_army_awarded_at_3_knights():
 	_human().knights_played = 2
-	_give_cards(_human(), [0])  # one more knight → total 3
+	_give_cards(_human(), [0])
 	_gm().play_dev_card(0, 0, 0)
 	assert_eq(game_scene.largest_army_owner, 0, "Human should receive largest army at 3 knights")
 	assert_eq(_human().points, 2, "Should receive +2 VP for largest army")
 
 
 func test_largest_army_transfers_when_surpassed():
-	# Human already has largest army with 3 knights
 	game_scene.largest_army_owner = 0
 	_human().knights_played = 3
 	_human().points = 2
 
 	var bot = game_scene.players[1]
 	bot.knights_played = 3
-	_give_cards(bot, [0])  # one more knight → bot reaches 4, surpassing human
+	_give_cards(bot, [0])
 	bot.dev_card_bought_this_turn = false
 
 	_gm().play_dev_card(1, 0, 0)
