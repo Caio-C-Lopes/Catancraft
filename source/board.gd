@@ -157,7 +157,8 @@ func generate_board():
 		):
 			var deserto_pos = child.position
 			BoardState.set_initial_robber_pos(deserto_pos)
-			var robber_node = get_tree().current_scene.find_child("Robber", true, false)
+			var root_scene = get_tree().current_scene if get_tree().current_scene else get_parent()
+			var robber_node = root_scene.find_child("Robber", true, false) if root_scene else null
 			if robber_node:
 				robber_node.moving_to(deserto_pos, true)
 				print("Ladrão posicionado no deserto em: ", deserto_pos)
@@ -629,7 +630,8 @@ func _on_hex_input_event(_viewport, event, _shape_idx, pos, _type):
 
 
 func _commit_robber_move(pos: Vector2):
-	var robber_node = get_tree().current_scene.find_child("Robber", true, false)
+	var root_scene = get_tree().current_scene if get_tree().current_scene else get_parent()
+	var robber_node = root_scene.find_child("Robber", true, false) if root_scene else null
 	if robber_node:
 		robber_node.moving_to(pos, false)
 	BoardState.update_robber_position(pos)
