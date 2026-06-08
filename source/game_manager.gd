@@ -1117,6 +1117,9 @@ func play_bot_turn():
 	# Bot tenta comprar carta de desenvolvimento
 	_bot_try_buy_dev_card(current_player_index)
 	await get_tree().create_timer(0.5).timeout
+	await get_tree().create_timer(1.0).timeout
+	_bot_try_trade(current_player_index)
+	await get_tree().create_timer(0.5).timeout
 	end_turn()
 
 
@@ -1873,3 +1876,83 @@ func _card_type_name(card_type: int) -> String:
 		8:
 			return "Mercado"
 	return "Desconhecida"
+
+
+func _bot_get_surplus_resource(bot_id: int) -> String:
+	var bot := players[bot_id]
+
+	var best_res := ""
+	var highest := 0
+
+	for res in bot.resources:
+		var amount: int = bot.resources[res]
+
+		if amount >= 4 and amount > highest:
+			highest = amount
+			best_res = res
+
+	return best_res
+	
+
+func _bot_get_needed_resource(bot_id: int) -> String:
+	var bot := players[bot_id]
+
+	var lowest := 999
+	var needed := ""
+
+	for res in bot.resources:
+		var amount: int = bot.resources[res]
+
+		if amount < lowest:
+			lowest = amount
+			needed = res
+
+	return needed
+
+func _bot_try_trade(bot_id: int) -> void:
+	var give_res := _bot_get_surplus_resource(bot_id)
+	var recv_res := _bot_get_needed_resource(bot_id)
+
+	if give_res == "" or recv_res == "":
+		return
+
+	if give_res == recv_res:
+		return
+
+	var bot := players[bot_id]
+
+	print("%s quer trocar %s por %s" % [
+		bot.player_name,
+		give_res,
+		recv_res
+	])
+
+	# Primeiro tenta trocar com humano
+	if _human_accepts_bot_trade(give_res, recv_res):
+		_execute_player_trade(
+			bot_id,
+			0,
+			[give_res],
+			[recv_res]
+		)
+
+		print("Humano aceitou a troca.")
+		return
+
+	# Se humano recusou, tenta banco
+	if bot.resources[give_res] >= 4:
+		execute_bank_trade(bot_id, give_res, recv_res)
+
+
+func _human_accepts_bot_trade(give_res: String, recv_res: String) -> bool:
+	var human := players[0]
+
+	# humano precisa ter o recurso pedido
+	if human.resources.get(recv_res, 0) <= 0:
+		return false
+
+	# aceita se estiver ganhando recurso escasso
+	if human.resources.get(give_res, 0) <= 1:
+		return true
+
+	return false
