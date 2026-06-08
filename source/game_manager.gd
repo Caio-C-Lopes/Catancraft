@@ -25,6 +25,7 @@ var is_setup_phase = true
 @export var dice_textures: Array[Texture2D]
 
 var _bot_huds: Array = []
+var _bot_controller: Node = null
 
 var _pending_trade_give: Array = []
 var _pending_trade_recv: Array = []
@@ -70,6 +71,7 @@ var _prep_settlement_pos: Vector2 = Vector2.ZERO
 var _waiting_prep_road: bool = false
 
 
+
 func resource_type_to_string(type: int) -> String:
 	match type:
 		0:
@@ -87,6 +89,11 @@ func resource_type_to_string(type: int) -> String:
 
 
 func _ready():
+	# Instancia o controlador de IA dos bots
+	_bot_controller = preload("res://source/bot_controller.gd").new()
+	_bot_controller.name = "BotController"
+	add_child(_bot_controller)
+
 	player_hud.dice_clicked.connect(roll_dice)
 	randomize()
 	await get_tree().process_frame
@@ -94,6 +101,7 @@ func _ready():
 	_build_preparation_order()
 	_build_dev_deck()
 	start_preparation_phase()
+	_bot_controller.setup(self)
 	player_hud.end_turn_pressed.connect(_on_button_pressed)
 	player_hud.build_house_pressed.connect(_on_build_house_pressed)
 	player_hud.build_road_pressed.connect(_on_build_road_pressed)
@@ -169,28 +177,32 @@ func _on_player_trade_requested(give_res: Array, recv_res: Array) -> void:
 	for res in give_counts:
 		if human.resources.get(res, 0) < give_counts[res]:
 			print("Humano não tem recursos suficientes para a oferta.")
-			player_hud._trade_panel.show_trade_result([])
+			if player_hud._trade_panel != null:
+				player_hud._trade_panel.show_trade_result([])
 			return
 
 	var accepted_by: Array = []
 	for i in range(1, players.size()):
-		if _bot_accepts_trade(i, give_res, recv_res):
+		if _bot_controller.accepts_trade(i, give_res, recv_res):
 			accepted_by.append(players[i])
 
 	if accepted_by.is_empty():
-		player_hud._trade_panel.show_trade_result([])
+		if player_hud._trade_panel != null:
+			player_hud._trade_panel.show_trade_result([])
 		return
 
 	if accepted_by.size() == 1:
 		# Só um bot aceitou — executa direto
 		var bot_id := players.find(accepted_by[0])
 		_execute_player_trade(0, bot_id, give_res, recv_res)
-		player_hud._trade_panel.show_trade_result([accepted_by[0]])
+		if player_hud._trade_panel != null:
+			player_hud._trade_panel.show_trade_result([accepted_by[0]])
 	else:
 		# Vários aceitaram — guarda estado e pede ao humano escolher
 		_pending_trade_give = give_res.duplicate()
 		_pending_trade_recv = recv_res.duplicate()
-		player_hud._trade_panel.show_trade_offers(accepted_by, give_res, recv_res)
+		if player_hud._trade_panel != null:
+			player_hud._trade_panel.show_trade_offers(accepted_by, give_res, recv_res)
 
 
 func _on_trade_partner_chosen(chosen_bot: Player) -> void:
@@ -224,53 +236,7 @@ func _count_resources(res_array: Array) -> Dictionary:
 	return counts
 
 
-## Lógica de decisão do bot: aceita a troca se conseguir o que precisa
-## e não for desperdiçar recursos escassos demais
-func _bot_accepts_trade(bot_id: int, give_res: Array, recv_res: Array) -> bool:
-	var bot := players[bot_id]
 
-	# Bot precisa ter todos os recursos pedidos pelo humano (recv_res = o que o bot vai dar)
-	var need_counts := _count_resources(recv_res)
-	for res in need_counts:
-		if bot.resources.get(res, 0) < need_counts[res]:
-			return false  # Não tem o que o humano quer
-
-	# Calcula o "valor" da troca para o bot
-	# Valor positivo = bot ganha algo que precisa
-	# Valor negativo = bot está dando algo valioso sem precisar do que recebe
-	var score := 0
-
-	# O que o bot VAI RECEBER (give_res do humano)
-	for res in give_res:
-		var current: int = bot.resources.get(res, 0)
-		# Quanto menos tiver, mais valioso é receber
-		if current == 0:
-			score += 3
-		elif current <= 2:
-			score += 2
-		else:
-			score += 1
-
-	# O que o bot VAI DAR (recv_res do humano)
-	var give_counts := _count_resources(recv_res)
-	for res in give_counts:
-		var current: int = bot.resources.get(res, 0)
-		var giving: int = give_counts[res]
-		var remaining: int = current - giving
-		# Penaliza se ficar com poucos recursos importantes
-		if remaining == 0:
-			score -= 2
-		elif remaining == 1:
-			score -= 1
-
-	# Aceita se o score for >= 0 (troca neutra ou vantajosa)
-	print(
-		(
-			"%s avaliou troca: score=%d → %s"
-			% [bot.player_name, score, "ACEITA" if score >= 0 else "RECUSA"]
-		)
-	)
-	return score >= 0
 
 
 ## Transfere recursos entre dois jogadores
@@ -481,7 +447,7 @@ func _apply_knight(player_id: int) -> void:
 	if player_id == 0:
 		robber_movement_human()
 	else:
-		robber_movement_bot()
+		_bot_controller.robber_movement(player_id)
 
 	_check_largest_army(player_id)
 
@@ -530,31 +496,10 @@ func _apply_road_building(player_id: int) -> void:
 		if board and board.has_method("show_road_highlights"):
 			board.show_road_highlights(player_id, self)
 	else:
-		# Bot coloca 2 estradas aleatórias válidas
+		# Bot coloca 2 estradas válidas via bot_controller
 		for _i in range(2):
-			_bot_place_free_road(player_id)
+			_bot_controller.place_free_road(player_id)
 
-
-func _bot_place_free_road(player_id: int) -> void:
-	for edge_key in BoardState.edges:
-		var edge: Dictionary = BoardState.edges[edge_key]
-		if edge["owner"] != null:
-			continue
-		if road_construction_check(edge_key, player_id):
-			BoardState.edges[edge_key]["owner"] = player_id
-			players[player_id].roads_remaining -= 1
-			# Spawn visual da estrada do bot
-			var board := find_child("Board")
-			if board and board.has_method("spawn_road_visual"):
-				board.spawn_road_visual(edge_key, players[player_id].player_color)
-			print(
-				(
-					"Bot %s colocou estrada gratuita em %s"
-					% [players[player_id].player_name, str(edge_key)]
-				)
-			)
-			_check_longest_road(player_id)
-			break
 
 
 ## ANO DA ABUNDÂNCIA — recebe 2 recursos à escolha do banco
@@ -568,7 +513,7 @@ func _apply_year_of_plenty(player_id: int) -> void:
 	else:
 		# Bot pega os 2 recursos mais escassos
 		for _i in range(2):
-			var rarest := _bot_choose_resource(player_id)
+			var rarest: String = _bot_controller.choose_resource(player_id) as String
 			if bank_panel.take_resource(rarest, 1):
 				players[player_id].add_resource(rarest, 1)
 		_refresh_resource_ui()
@@ -582,7 +527,7 @@ func _apply_monopoly(player_id: int) -> void:
 		_open_resource_picker("monopoly")
 	else:
 		# Bot escolhe o recurso que mais oponentes têm
-		var best_res := _bot_best_monopoly_resource(player_id)
+		var best_res: String = _bot_controller.best_monopoly_resource(player_id) as String
 		_execute_monopoly(player_id, best_res)
 
 
@@ -738,116 +683,9 @@ func _dfs_road(player_id: int, edge_key: Vector2, visited: Dictionary) -> int:
 	return 1 + best_extension
 
 
-# ── Lógica de bots para cartas ────────────────────────────────────────────────
-
-
-func _bot_choose_resource(player_id: int) -> String:
-	# Escolhe o recurso mais escasso na mão do bot
-	var res_order := ["ore", "wheat", "sheep", "wood", "brick"]
-	var min_amount := 9999
-	var chosen := "ore"
-	for r in res_order:
-		var amt: int = players[player_id].resources.get(r, 0)
-		if amt < min_amount:
-			min_amount = amt
-			chosen = r
-	return chosen
-
-
-func _bot_best_monopoly_resource(_player_id: int) -> String:
-	var totals := {"wood": 0, "brick": 0, "wheat": 0, "sheep": 0, "ore": 0}
-	for i in range(players.size()):
-		if i == _player_id:
-			continue
-		for r in totals:
-			totals[r] += players[i].resources.get(r, 0)
-	var best_res := "ore"
-	var best_amt := -1
-	for r in totals:
-		if totals[r] > best_amt:
-			best_amt = totals[r]
-			best_res = r
-	return best_res
-
-
-## Bot compra carta de desenvolvimento se puder e for conveniente
-func _bot_try_buy_dev_card(player_id: int) -> void:
-	if deck_empty():
-		return
-	var cost := {"ore": 1, "wheat": 1, "sheep": 1}
-	if players[player_id].can_afford(cost):
-		buy_dev_card(player_id)
-
-
-## Bot joga cartas de cavaleiro se disponíveis
-func _bot_play_knight_if_available(player_id: int) -> void:
-	const KNIGHT := 0
-	var cards: Array[int] = players[player_id].dev_cards
-	for i in range(cards.size()):
-		if cards[i] == KNIGHT:
-			# Não pode jogar carta comprada neste turno (assume que bot não comprou knight agora)
-			if players[player_id].dev_card_bought_this_turn and i == cards.size() - 1:
-				continue
-			play_dev_card(player_id, i, KNIGHT)
-			return
 
 
 ## Faz o Bot escolher a estrada que aponta para o melhor vértice vizinho
-func _bot_place_preparation_road(player_id: int, settlement_key: Vector2) -> void:
-	var best_edge_key: Variant = null
-	var best_edge_score: float = -1.0
-	var valid_edges: Array = []
-
-	# Encontra as arestas vazias conectadas a esta nova aldeia
-	for ek in BoardState.edges:
-		var edge = BoardState.edges[ek]
-		if edge["owner"] != null:
-			continue
-		if edge["a_vertice"] == settlement_key or edge["b_vertice"] == settlement_key:
-			valid_edges.append(ek)
-
-	if valid_edges.is_empty():
-		return
-
-	# Avalia cada estrada com base no potencial do vértice para onde ela aponta
-	for ek in valid_edges:
-		var edge = BoardState.edges[ek]
-		# Descobre qual é o vértice da outra ponta da estrada
-		var target_vertex = (
-			edge["b_vertice"] if edge["a_vertice"] == settlement_key else edge["a_vertice"]
-		)
-
-		# Calcula o score desse vértice futuro usando a lógica existente
-		var score = _score_vertex(target_vertex)
-
-		if score > best_edge_score:
-			best_edge_score = score
-			best_edge_key = ek
-
-	# Fallback caso dê empate ou erro
-	if best_edge_key == null:
-		best_edge_key = valid_edges[randi() % valid_edges.size()]
-
-	# Registra e spawna a estrada da IA
-	BoardState.edges[best_edge_key]["owner"] = player_id
-	players[player_id].roads_remaining -= 1
-
-	var board := find_child("Board")
-	if board and board.has_method("spawn_road_visual"):
-		board.spawn_road_visual(best_edge_key, players[player_id].player_color)
-
-	print(
-		(
-			"Bot %s colocou estrada de preparação em %s apontando para vértice de score %.1f"
-			% [players[player_id].player_name, str(best_edge_key), best_edge_score]
-		)
-	)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# RESTO DO GAME MANAGER (idêntico ao original — sem alterações)
-# ══════════════════════════════════════════════════════════════════════════════
-
 
 func _setup_players():
 	var p_color = GameConfig.player_color
@@ -971,7 +809,7 @@ func _preparation_next_player():
 		_hide_highlights()
 		player_hud.stop_timer()
 		await get_tree().create_timer(1.0).timeout
-		_bot_place_settlement()
+		_bot_controller.place_settlement_prep()
 
 
 func _on_preparation_vertice_selected(pos: Vector2):
@@ -993,70 +831,6 @@ func _on_preparation_vertice_selected(pos: Vector2):
 		_show_highlights_for_current(true)
 		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
 
-
-const NUMBER_SCORE = {2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
-
-
-func _bot_place_settlement():
-	var best_score: float = -1.0
-	var best_candidates: Array = []
-
-	for key in BoardState.vertices:
-		if not village_construction_check(key, current_player_index, true):
-			continue
-
-		var score = _score_vertex(key)
-
-		if score > best_score:
-			best_score = score
-			best_candidates = [key]
-		elif score == best_score:
-			best_candidates.append(key)
-
-	if best_candidates.is_empty():
-		print("Bot %s sem vértice válido." % players[current_player_index].player_name)
-	else:
-		var best_key = best_candidates[randi() % best_candidates.size()]
-		print(
-			(
-				"%s escolheu vértice com score %.1f"
-				% [players[current_player_index].player_name, best_score]
-			)
-		)
-
-		if _try_place_settlement(best_key, current_player_index, true):
-			# CHAMA A CONSTRUÇÃO DA ESTRADA INTELIGENTE DO BOT
-			_bot_place_preparation_road(current_player_index, best_key)
-
-	preparation_step += 1
-	_preparation_next_player()
-
-
-func _score_vertex(key: Vector2) -> float:
-	var hex_links = BoardState.vertices[key]["links"]
-	var total_prob: float = 0.0
-	var resource_set: Array = []
-
-	for hex in hex_links:
-		if not is_instance_valid(hex):
-			continue
-
-		var number = hex.get_meta("dice_number") if hex.has_meta("dice_number") else 0
-		var rtype = hex.get_meta("resource_type") if hex.has_meta("resource_type") else -1
-
-		if number == 0:
-			continue
-
-		if NUMBER_SCORE.has(number):
-			total_prob += NUMBER_SCORE[number]
-
-		if rtype != -1 and rtype not in resource_set:
-			resource_set.append(rtype)
-
-	var diversity_bonus: float = (resource_set.size() - 1) * 2.0
-	var coverage_bonus: float = 3.0 if resource_set.size() == 3 else 0.0
-
-	return total_prob + diversity_bonus + coverage_bonus
 
 
 func _is_edge_connected_to_vertex(edge_key: Vector2, vertex_key: Vector2) -> bool:
@@ -1108,23 +882,7 @@ func start_turn():
 
 
 func play_bot_turn():
-	await get_tree().create_timer(1.0).timeout
-	# Bot pode jogar cavaleiro antes de rolar
-	_bot_play_knight_if_available(current_player_index)
-	await get_tree().process_frame
-	while waiting_robber_move:
-		await get_tree().process_frame
-
-	await get_tree().create_timer(1.0).timeout
-	roll_dice()
-	while waiting_robber_move:
-		await get_tree().process_frame
-
-	await get_tree().create_timer(1.0).timeout
-	# Bot tenta comprar carta de desenvolvimento
-	_bot_try_buy_dev_card(current_player_index)
-	await get_tree().create_timer(0.5).timeout
-	end_turn()
+	_bot_controller.play_turn(current_player_index)
 
 
 func end_turn():
@@ -1204,7 +962,7 @@ func _on_preparation_timeout():
 
 	var chosen_key = valid_keys[randi() % valid_keys.size()]
 	if _try_place_settlement(chosen_key, current_player_index, true):
-		_bot_place_preparation_road(0, chosen_key)
+		_bot_controller.place_preparation_road(current_player_index, chosen_key)
 
 	preparation_step += 1
 	_preparation_next_player()
@@ -1259,7 +1017,7 @@ func on_dice_rolled(value: int):
 		if current_player_index == 0:
 			robber_movement_human()
 		else:
-			robber_movement_bot()
+			_bot_controller.robber_movement(current_player_index)
 	else:
 		var resources_gained = produce_resources(value)
 		dice_log.add_resources_entry(players, resources_gained)
@@ -1307,58 +1065,6 @@ func _on_human_robber_placed(_pos: Vector2):
 	waiting_robber_move = false
 	print("Humano colocou o ladrão. Jogo liberado!")
 
-
-func robber_movement_bot():
-	var board = find_child("Board")
-	var current_robber_pos = BoardState.robber_hex_pos
-	var best_hex_pos: Vector2 = Vector2.ZERO
-	var best_score: float = -1.0
-
-	const PROB = {2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
-
-	if board:
-		for child in board.get_children():
-			if not (child is Node2D and child.has_meta("resource_type")):
-				continue
-
-			var hex_pos = Vector2(round(child.position.x), round(child.position.y))
-
-			if hex_pos == current_robber_pos:
-				continue
-
-			var dice_num = child.get_meta("dice_number") if child.has_meta("dice_number") else 0
-			var prob: float = PROB.get(dice_num, 0)
-
-			var score: float = 0.0
-			for vert_key in BoardState.vertices:
-				var vert = BoardState.vertices[vert_key]
-				if vert["owner"] == null or vert["owner"] == current_player_index:
-					continue
-				if child in vert["links"]:
-					var mult = 2.0 if vert["type"] == BoardState.BuildingType.CITY else 1.0
-					score += prob * mult
-
-			if score > best_score:
-				best_score = score
-				best_hex_pos = child.position
-
-	if best_score <= 0.0 and board:
-		for child in board.get_children():
-			if not (child is Node2D and child.has_meta("resource_type")):
-				continue
-			var hex_pos = Vector2(round(child.position.x), round(child.position.y))
-			if hex_pos != current_robber_pos:
-				best_hex_pos = child.position
-				break
-
-	if best_hex_pos != Vector2.ZERO:
-		var robber_node = find_child("Robber", true, false)
-		if robber_node:
-			robber_node.moving_to(best_hex_pos, false)
-		BoardState.update_robber_position(best_hex_pos)
-		print("Bot moveu o ladrão para: ", best_hex_pos, " (score: %.1f)" % best_score)
-
-	waiting_robber_move = false
 
 
 func _try_place_settlement(pos: Vector2, player_id: int, is_preparation: bool) -> bool:
