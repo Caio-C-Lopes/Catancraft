@@ -42,7 +42,7 @@ func test_add_invalid_resource_is_ignored():
 
 func test_remove_invalid_resource_is_ignored():
 	player.remove_resource("diamonds", 5)
-	pass
+	assert_false(player.resources.has("diamonds"), "Should not add diamonds to resources")
 
 
 func test_can_afford_true_when_has_exact_resources():

@@ -16,9 +16,6 @@ var _players_container: VBoxContainer
 var _btn_play_again: Button
 var _btn_main_menu: Button
 
-# Destino do próximo botão (definido em _on_play_again / _on_main_menu)
-var _next_scene: String = ""
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready():
