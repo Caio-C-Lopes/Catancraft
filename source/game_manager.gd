@@ -2076,13 +2076,13 @@ func _bot_get_surplus_resource(bot_id: int) -> String:
 	var bot := players[bot_id]
 	var best_res := ""
 	var highest := 0
-	
+
 	for res in bot.resources:
 		var amount: int = bot.resources[res]
 		if amount >= 3 and amount > highest:
 			highest = amount
 			best_res = res
-	
+
 	return best_res
 
 
@@ -2090,47 +2090,47 @@ func _bot_get_needed_resource(bot_id: int) -> String:
 	var bot := players[bot_id]
 	var lowest := 999
 	var needed := ""
-	
+
 	for res in bot.resources:
 		var amount: int = bot.resources[res]
 		if amount < lowest:
 			lowest = amount
 			needed = res
-	
+
 	return needed
 
 
 func _human_accepts_bot_trade(give_res: String, recv_res: String) -> bool:
 	var human := players[0]
-	
+
 	if human.resources.get(recv_res, 0) <= 0:
 		return false
-	
+
 	if human.resources.get(give_res, 0) <= 1:
 		return true
-	
+
 	if human.resources.get(recv_res, 0) >= 4 and human.resources.get(give_res, 0) <= 2:
 		return true
-	
+
 	return false
 
 
 func _bot_find_trade_partner(bot_id: int, give_res: String, recv_res: String) -> int:
 	var best_score: float = -999.0
 	var best_partner: int = -1
-	
+
 	for i in range(1, players.size()):
 		if i == bot_id:
 			continue
-		
+
 		var candidate: Player = players[i]
-		
+
 		var candidate_has: int = candidate.resources.get(recv_res, 0)
 		if candidate_has <= 0:
 			continue
-		
+
 		var score: float = 0.0
-		
+
 		var current: int = candidate.resources.get(give_res, 0)
 		if current == 0:
 			score += 3.0
@@ -2138,44 +2138,44 @@ func _bot_find_trade_partner(bot_id: int, give_res: String, recv_res: String) ->
 			score += 2.0
 		else:
 			score += 1.0
-		
+
 		var remaining: int = candidate.resources.get(recv_res, 0) - 1
 		if remaining == 0:
 			score -= 2.0
 		elif remaining == 1:
 			score -= 1.0
-		
+
 		if score > best_score:
 			best_score = score
 			best_partner = i
-	
+
 	return best_partner
 
 
 func _bot_try_trade(bot_id: int) -> void:
 	var give_res := _bot_get_surplus_resource(bot_id)
 	var recv_res := _bot_get_needed_resource(bot_id)
-	
+
 	if give_res == "" or recv_res == "":
 		return
-	
+
 	if give_res == recv_res:
 		return
-	
+
 	var bot := players[bot_id]
-	
+
 	print("%s quer trocar %s por %s" % [bot.player_name, give_res, recv_res])
-	
+
 	if _human_accepts_bot_trade(give_res, recv_res):
 		_execute_player_trade(bot_id, 0, [give_res], [recv_res])
 		print("Humano aceitou a troca de %s." % bot.player_name)
 		return
-	
+
 	if bot.resources[give_res] >= 4:
 		if execute_bank_trade(bot_id, give_res, recv_res):
 			print("%s trocou com o banco." % bot.player_name)
 		return
-	
+
 	var trade_partner := _bot_find_trade_partner(bot_id, give_res, recv_res)
 	if trade_partner != -1:
 		_execute_player_trade(bot_id, trade_partner, [give_res], [recv_res])
