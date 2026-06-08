@@ -101,8 +101,6 @@ func test_execute_trade_transfers_resources_correctly():
 	assert_eq(p2.resources["wood"], 2)
 	assert_eq(p2.resources["ore"], 1)
 
-	p1.free()
-	p2.free()
 
 
 func test_execute_trade_with_empty_b_gives():
@@ -115,8 +113,6 @@ func test_execute_trade_with_empty_b_gives():
 	assert_eq(p1.resources["sheep"], 1)
 	assert_eq(p2.resources["sheep"], 1)
 
-	p1.free()
-	p2.free()
 
 
 # ── _execute_monopoly logic ───────────────────────────────────────────────────
@@ -145,7 +141,7 @@ func test_monopoly_steals_from_all_others():
 	assert_eq(p1.resources["wheat"], 0)
 	assert_eq(p2.resources["wheat"], 0)
 
-	p0.free(); p1.free(); p2.free()
+
 
 
 func test_monopoly_no_effect_when_others_have_none():
@@ -156,7 +152,7 @@ func test_monopoly_no_effect_when_others_have_none():
 
 	assert_eq(p0.resources["ore"], 0)
 
-	p0.free(); p1.free()
+
 
 
 # ── Dev Deck composition ──────────────────────────────────────────────────────

@@ -11,8 +11,7 @@ func before_each():
 	player = Player.new("Test", Color.WHITE)
 
 
-func after_each():
-	player.free()
+
 
 
 # ── Resources ─────────────────────────────────────────────────────────────────

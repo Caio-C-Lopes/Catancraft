@@ -51,9 +51,6 @@ func before_each():
 	gm.players = [human, bot]
 
 
-func after_each():
-	human.free()
-	bot.free()
 
 
 # ── Validation: human must have resources ─────────────────────────────────────
