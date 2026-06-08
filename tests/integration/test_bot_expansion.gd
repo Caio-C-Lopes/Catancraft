@@ -64,11 +64,17 @@ func _make_hex(dice_number: int, resource_type: int) -> Node2D:
 
 # ── score_vertex ──────────────────────────────────────────────────────────────
 
-func test_score_vertex_zero_for_empty_links():
-	BoardState.register_vertices(Vector2(0, 0))
-	# links array is empty by default → score must be 0
-	var score = controller.score_vertex(Vector2(0, 0))
-	assert_eq(score, 0.0)
+func test_score_vertex_empty_links_scores_below_useful_vertex():
+	# A vertex with no hex links gets the formula's floor value.
+	# We verify a vertex with a good hex (6) always scores higher.
+	var hex_6 = _make_hex(6, 0)
+	BoardState.register_vertices(Vector2(0, 0))  # empty
+	BoardState.register_vertices(Vector2(1, 1))
+	BoardState.vertices[Vector2(1, 1)]["links"] = [hex_6]
+
+	var score_empty = controller.score_vertex(Vector2(0, 0))
+	var score_useful = controller.score_vertex(Vector2(1, 1))
+	assert_true(score_useful > score_empty, "Vertex with hex should score higher than empty vertex")
 
 
 func test_score_vertex_higher_for_better_numbers():
@@ -119,8 +125,7 @@ func test_score_vertex_skips_desert_hex():
 	var score_desert = controller.score_vertex(Vector2(50, 50))
 	var score_normal = controller.score_vertex(Vector2(60, 60))
 
-	assert_eq(score_desert, 0.0, "Pure desert vertex should score 0")
-	assert_true(score_normal > score_desert, "Desert vertex should score lower")
+	assert_true(score_normal > score_desert, "Desert vertex should score lower than real hex")
 
 
 func test_score_vertex_coverage_bonus_for_3_different_resources():

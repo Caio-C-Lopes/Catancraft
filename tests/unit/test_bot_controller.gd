@@ -38,12 +38,14 @@ class MockPlayer:
 var controller: Node
 var mock_gm: MockGM
 var bot: MockPlayer
+var real_bot: Player  # used for functions that require Player type
 
 
 func before_each():
 	controller = BotController.new()
 	mock_gm = MockGM.new()
 	bot = MockPlayer.new()
+	real_bot = Player.new("TestBot", Color.BLUE)
 	mock_gm.players = [null, bot]
 	controller.setup(mock_gm)
 	add_child_autofree(controller)
@@ -140,54 +142,57 @@ func test_count_resources_duplicates():
 # ── _can_reach_goal_with_trade() ──────────────────────────────────────────────
 
 func test_can_reach_goal_with_trade_true_when_possible():
-	bot.resources = {"wood": 0, "brick": 0, "wheat": 4, "sheep": 0, "ore": 0}
+	real_bot.add_resource("wheat", 4)
 	var surplus = ["wheat"]
 	var goal = {"wood": 1}
 	# Trading 4 wheat → 1 wood satisfies the goal
-	assert_true(controller._can_reach_goal_with_trade(bot, goal, surplus))
+	assert_true(controller._can_reach_goal_with_trade(real_bot, goal, surplus))
 
 
 func test_can_reach_goal_with_trade_false_when_trade_doesnt_help():
-	bot.resources = {"wood": 0, "brick": 4, "wheat": 0, "sheep": 0, "ore": 0}
+	real_bot.add_resource("brick", 4)
 	# Goal needs wheat AND wood, but trading brick only gives 1 resource at a time
 	var surplus = ["brick"]
 	var goal = {"wood": 1, "wheat": 1}
-	assert_false(controller._can_reach_goal_with_trade(bot, goal, surplus))
+	assert_false(controller._can_reach_goal_with_trade(real_bot, goal, surplus))
 
 
 # ── _most_needed_for_goal() ───────────────────────────────────────────────────
 
 func test_most_needed_returns_resource_with_largest_deficit():
-	bot.resources = {"ore": 2, "wheat": 0}
+	real_bot.add_resource("ore", 2)
+	# wheat is 0, ore is 2; goal needs ore:3 (deficit 1), wheat:2 (deficit 2)
 	var goal = {"ore": 3, "wheat": 2}
-	# ore deficit = 1, wheat deficit = 2 → wheat is most needed
-	var result = controller._most_needed_for_goal(bot, goal)
+	var result = controller._most_needed_for_goal(real_bot, goal)
 	assert_eq(result, "wheat")
 
 
 func test_most_needed_returns_empty_when_already_affordable():
-	bot.resources = {"ore": 5, "wheat": 5}
+	real_bot.add_resource("ore", 5)
+	real_bot.add_resource("wheat", 5)
 	var goal = {"ore": 3, "wheat": 2}
-	# No deficit at all
-	var result = controller._most_needed_for_goal(bot, goal)
+	var result = controller._most_needed_for_goal(real_bot, goal)
 	assert_eq(result, "")
 
 
 # ── _least_needed_surplus() ───────────────────────────────────────────────────
 
 func test_least_needed_surplus_prefers_non_goal_resources():
-	bot.resources = {"ore": 5, "wheat": 8, "wood": 4}
+	real_bot.add_resource("ore", 5)
+	real_bot.add_resource("wheat", 8)
+	real_bot.add_resource("wood", 4)
 	var goal = {"ore": 3}
 	var surplus = ["ore", "wheat"]
 	# wheat is not in goal, so it's preferred
-	var result = controller._least_needed_surplus(bot, goal, surplus)
+	var result = controller._least_needed_surplus(real_bot, goal, surplus)
 	assert_eq(result, "wheat")
 
 
 func test_least_needed_surplus_falls_back_to_goal_resource_if_only_option():
-	bot.resources = {"ore": 6, "wheat": 2}
+	real_bot.add_resource("ore", 6)
+	real_bot.add_resource("wheat", 2)
 	var goal = {"ore": 3}
 	var surplus = ["ore"]
 	# ore is in goal but is the only surplus — fallback
-	var result = controller._least_needed_surplus(bot, goal, surplus)
+	var result = controller._least_needed_surplus(real_bot, goal, surplus)
 	assert_eq(result, "ore")
