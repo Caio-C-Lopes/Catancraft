@@ -1,7 +1,7 @@
-﻿extends GutTest
+extends GutTest
 
 var game_scene: Node
-var _dummy: Node
+var _original_scene: Node
 
 
 func before_all():
@@ -15,11 +15,8 @@ func before_all():
 func before_each():
 	_original_scene = get_tree().current_scene
 	game_scene = load("res://game.tscn").instantiate()
-	
-	_dummy = Node.new()
-	get_tree().root.add_child(_dummy)
-	get_tree().current_scene = _dummy
-	_dummy.add_child(game_scene)
+	get_tree().current_scene = game_scene
+	add_child_autofree(game_scene)
 	for _i in range(15):
 		await get_tree().process_frame
 
@@ -189,8 +186,7 @@ func test_victory_not_triggered_during_preparation():
 
 
 func after_each():
-	get_tree().current_scene = null
-	if is_instance_valid(_dummy):
-		_dummy.queue_free()
-	_dummy = null
+	if _original_scene:
+		get_tree().current_scene = _original_scene
+		_original_scene = null
 
