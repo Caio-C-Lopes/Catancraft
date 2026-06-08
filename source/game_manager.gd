@@ -131,6 +131,7 @@ func _ready():
 	# Aguarda até o _trade_panel existir antes de conectar bank_trade_requested
 	_connect_trade_panel_deferred.call_deferred()
 
+
 func _setup_dice_log_resource_textures() -> void:
 	var textures: Dictionary = {
 		"wood": load("res://card_assets/resources/WOOD.png"),
@@ -818,7 +819,8 @@ func _on_preparation_vertice_selected(pos: Vector2):
 		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
 	else:
 		_show_highlights_for_current(true)
-		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)	
+		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
+
 
 func _is_edge_connected_to_vertex(edge_key: Vector2, vertex_key: Vector2) -> bool:
 	if not BoardState.edges.has(edge_key):
@@ -1640,6 +1642,7 @@ func _on_selected_edge(pos: Vector2):
 		_refresh_resource_ui()
 		print("Estrada construída em ", pos)
 
+
 func _show_highlights_for_current(is_preparation: bool):
 	var board = find_child("Board")
 	if board and board.has_method("show_settlement_highlights"):
@@ -1864,31 +1867,31 @@ func _bot_try_trade(bot_id: int) -> void:
 	# Só tenta trocar se não estiver em meio a outra ação
 	if waiting_discard or waiting_robber_placement or waiting_robber_steal:
 		return
-	
+
 	var give_res := _bot_get_surplus_resource(bot_id)
 	var recv_res := _bot_get_needed_resource(bot_id)
-	
+
 	if give_res == "" or recv_res == "":
 		return
-	
+
 	if give_res == recv_res:
 		return
-	
+
 	var bot := players[bot_id]
 	print("%s quer trocar %s por %s" % [bot.player_name, give_res, recv_res])
-	
+
 	# Verifica se o humano aceitaria
 	if _human_accepts_bot_trade(give_res, recv_res):
 		_show_bot_trade_offer(bot_id, give_res, recv_res)
 		return
-	
+
 	# Depois tenta outros bots
 	var trade_partner := _bot_find_trade_partner(bot_id, give_res, recv_res)
 	if trade_partner != -1:
 		_execute_player_trade(bot_id, trade_partner, [give_res], [recv_res])
 		print("%s trocou com %s." % [bot.player_name, players[trade_partner].player_name])
 		return
-	
+
 	# Depois tenta banco
 	if bot.resources[give_res] >= 4:
 		if execute_bank_trade(bot_id, give_res, recv_res):
@@ -1898,13 +1901,17 @@ func _bot_try_trade(bot_id: int) -> void:
 
 # ── POPUP DE TROCA DO BOT ────────────────────────────────────────────────────
 
+
 func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	var bot := players[bot_id]
-	
+
 	# Se já existe um popup, fecha ele primeiro
 	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
 		_bot_trade_popup.queue_free()
-	
+
+	# Carrega a fonte Minecraft
+	var minecraft_font = load("res://assets/fonts/1_Minecraft-Regular.otf")
+
 	# Criar popup
 	_bot_trade_popup = Control.new()
 	_bot_trade_popup.name = "BotTradePopup"
@@ -1912,7 +1919,7 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	_bot_trade_popup.z_index = 100  # Alto para ficar sobre tudo
 	_bot_trade_popup.mouse_filter = Control.MOUSE_FILTER_STOP  # Bloqueia cliques atrás
 	$Control.add_child(_bot_trade_popup)
-	
+
 	# Fundo semi-transparente
 	var bg = ColorRect.new()
 	bg.name = "Background"
@@ -1920,27 +1927,27 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bot_trade_popup.add_child(bg)
-	
+
 	# Painel central
 	var panel = PanelContainer.new()
 	panel.name = "Panel"
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(450, 300)
-	
+
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.12, 0.2, 0.98)  # Roxo escuro elegante
+	style.bg_color = Color(0.15, 0.12, 0.2, 0.98)
 	style.border_width_left = 3
 	style.border_width_right = 3
 	style.border_width_top = 3
 	style.border_width_bottom = 3
-	style.border_color = Color(0.8, 0.7, 0.4, 1)  # Dourado
+	style.border_color = Color(0.8, 0.7, 0.4, 1)
 	style.corner_radius_top_left = 12
 	style.corner_radius_top_right = 12
 	style.corner_radius_bottom_left = 12
 	style.corner_radius_bottom_right = 12
 	panel.add_theme_stylebox_override("panel", style)
 	_bot_trade_popup.add_child(panel)
-	
+
 	# Layout vertical
 	var vbox = VBoxContainer.new()
 	vbox.name = "VBox"
@@ -1949,52 +1956,57 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(vbox)
-	
-	# Espaçador superior
+
+	# Espacador superior
 	vbox.add_child(Control.new())
-	
-	# Título
+
+	# Titulo
 	var title = Label.new()
 	title.name = "Title"
-	title.text = "💰 PROPOSTA DE TROCA 💰"
+	title.text = "TRADE PROPOSAL"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 20)
 	title.add_theme_color_override("font_color", Color(1, 0.9, 0.3, 1))
-	title.add_theme_font_override("font", load("res://assets/fonts/1_Minecraft-Regular.otf"))
+	if minecraft_font:
+		title.add_theme_font_override("font", minecraft_font)
 	vbox.add_child(title)
-	
-	# Label da oferta com ícones
+
+	# Label da oferta com icones
 	var offer_container = HBoxContainer.new()
 	offer_container.name = "OfferContainer"
 	offer_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	offer_container.add_theme_constant_override("separation", 20)
 	vbox.add_child(offer_container)
-	
-	# O que o bot dá
+
+	# O que o bot da
 	var bot_gives = VBoxContainer.new()
 	bot_gives.alignment = BoxContainer.ALIGNMENT_CENTER
 	var bot_gives_label = Label.new()
 	bot_gives_label.text = _translate_resource(recv_res)
 	bot_gives_label.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6, 1))
 	bot_gives_label.add_theme_font_size_override("font_size", 16)
+	if minecraft_font:
+		bot_gives_label.add_theme_font_override("font", minecraft_font)
 	bot_gives.add_child(bot_gives_label)
-	
+
 	var bot_gives_icon = TextureRect.new()
 	bot_gives_icon.texture = _get_resource_texture(recv_res)
 	bot_gives_icon.custom_minimum_size = Vector2(48, 48)
 	bot_gives_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	bot_gives_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	bot_gives.add_child(bot_gives_icon)
-	
+
 	offer_container.add_child(bot_gives)
-	
-	# Seta "→"
+
+	# Seta
 	var arrow = Label.new()
-	arrow.text = "➡️"
+	arrow.text = "->"
 	arrow.add_theme_font_size_override("font_size", 30)
 	arrow.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	if minecraft_font:
+		arrow.add_theme_font_override("font", minecraft_font)
 	offer_container.add_child(arrow)
-	
+
 	# O que o bot quer
 	var bot_wants = VBoxContainer.new()
 	bot_wants.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -2002,22 +2014,24 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	bot_wants_label.text = _translate_resource(give_res)
 	bot_wants_label.add_theme_color_override("font_color", Color(0.9, 0.6, 0.6, 1))
 	bot_wants_label.add_theme_font_size_override("font_size", 16)
+	if minecraft_font:
+		bot_wants_label.add_theme_font_override("font", minecraft_font)
 	bot_wants.add_child(bot_wants_label)
-	
+
 	var bot_wants_icon = TextureRect.new()
 	bot_wants_icon.texture = _get_resource_texture(give_res)
 	bot_wants_icon.custom_minimum_size = Vector2(48, 48)
 	bot_wants_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	bot_wants_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	bot_wants.add_child(bot_wants_icon)
-	
+
 	offer_container.add_child(bot_wants)
-	
-	# Linha divisória
+
+	# Linha divisoria
 	var separator = HSeparator.new()
 	separator.add_theme_constant_override("separation", 10)
 	vbox.add_child(separator)
-	
+
 	# Nome do bot
 	var bot_name_label = Label.new()
 	bot_name_label.name = "BotName"
@@ -2025,40 +2039,48 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	bot_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bot_name_label.add_theme_font_size_override("font_size", 16)
 	bot_name_label.add_theme_color_override("font_color", bot.player_color)
+	if minecraft_font:
+		bot_name_label.add_theme_font_override("font", minecraft_font)
 	vbox.add_child(bot_name_label)
-	
+
 	# Timer com contagem regressiva
 	var timer_container = HBoxContainer.new()
 	timer_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(timer_container)
-	
+
 	var timer_icon = Label.new()
-	timer_icon.text = "⏱️"
+	timer_icon.text = "TIME:"
 	timer_icon.add_theme_font_size_override("font_size", 20)
+	if minecraft_font:
+		timer_icon.add_theme_font_override("font", minecraft_font)
 	timer_container.add_child(timer_icon)
-	
+
 	var timer_label = Label.new()
 	timer_label.name = "TimerLabel"
 	timer_label.text = "20s"
 	timer_label.add_theme_font_size_override("font_size", 18)
 	timer_label.add_theme_color_override("font_color", Color(1, 0.6, 0.3, 1))
+	if minecraft_font:
+		timer_label.add_theme_font_override("font", minecraft_font)
 	timer_container.add_child(timer_label)
-	
-	# Botões
+
+	# Botoes
 	var hbox = HBoxContainer.new()
 	hbox.name = "Buttons"
 	hbox.add_theme_constant_override("separation", 30)
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(hbox)
-	
+
 	var accept_btn = Button.new()
 	accept_btn.name = "AcceptButton"
-	accept_btn.text = "✅ ACEITAR"
+	accept_btn.text = "ACCEPT"
 	accept_btn.custom_minimum_size = Vector2(140, 50)
 	accept_btn.add_theme_font_size_override("font_size", 16)
 	accept_btn.add_theme_color_override("font_color", Color(0, 0, 0, 1))
-	
-	# Estilo do botão Aceitar
+	if minecraft_font:
+		accept_btn.add_theme_font_override("font", minecraft_font)
+
+	# Estilo do botao Aceitar
 	var accept_style = StyleBoxFlat.new()
 	accept_style.bg_color = Color(0.3, 0.8, 0.3, 1)
 	accept_style.border_width_left = 2
@@ -2071,22 +2093,24 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	accept_style.corner_radius_bottom_left = 6
 	accept_style.corner_radius_bottom_right = 6
 	accept_btn.add_theme_stylebox_override("normal", accept_style)
-	
+
 	var accept_hover = accept_style.duplicate()
 	accept_hover.bg_color = Color(0.4, 0.9, 0.4, 1)
 	accept_btn.add_theme_stylebox_override("hover", accept_hover)
-	
+
 	accept_btn.pressed.connect(_on_bot_trade_accept.bind(bot_id, give_res, recv_res))
 	hbox.add_child(accept_btn)
-	
+
 	var refuse_btn = Button.new()
 	refuse_btn.name = "RefuseButton"
-	refuse_btn.text = "❌ RECUSAR"
+	refuse_btn.text = "REFUSE"
 	refuse_btn.custom_minimum_size = Vector2(140, 50)
 	refuse_btn.add_theme_font_size_override("font_size", 16)
 	refuse_btn.add_theme_color_override("font_color", Color(0, 0, 0, 1))
-	
-	# Estilo do botão Recusar
+	if minecraft_font:
+		refuse_btn.add_theme_font_override("font", minecraft_font)
+
+	# Estilo do botao Recusar
 	var refuse_style = StyleBoxFlat.new()
 	refuse_style.bg_color = Color(0.8, 0.3, 0.3, 1)
 	refuse_style.border_width_left = 2
@@ -2099,21 +2123,21 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 	refuse_style.corner_radius_bottom_left = 6
 	refuse_style.corner_radius_bottom_right = 6
 	refuse_btn.add_theme_stylebox_override("normal", refuse_style)
-	
+
 	var refuse_hover = refuse_style.duplicate()
 	refuse_hover.bg_color = Color(0.9, 0.4, 0.4, 1)
 	refuse_btn.add_theme_stylebox_override("hover", refuse_hover)
-	
+
 	refuse_btn.pressed.connect(_on_bot_trade_refuse.bind(bot_id))
 	hbox.add_child(refuse_btn)
-	
-	# Espaçador inferior
+
+	# Espacador inferior
 	vbox.add_child(Control.new())
-	
-	# Guardar referências para o timer
+
+	# Guardar referencias para o timer
 	_bot_trade_bot_id = bot_id
-	
-	# Iniciar timer de 20s com atualização visual
+
+	# Iniciar timer de 20s com atualizacao visual
 	var time_left = 20.0
 	var timer_update = func():
 		while time_left > 0 and _bot_trade_popup and is_instance_valid(_bot_trade_popup):
@@ -2125,63 +2149,78 @@ func _show_bot_trade_offer(bot_id: int, give_res: String, recv_res: String):
 					timer_node.text = "%d.%ds" % [int(time_left), int(time_left * 10) % 10]
 		if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
 			_on_bot_trade_timeout()
-	
+
 	timer_update.call()
+
 
 func _on_bot_trade_timeout():
 	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
 		_bot_trade_popup.queue_free()
 		_bot_trade_popup = null
-	
+
 	print("[TIMEOUT] Tempo esgotado! Troca recusada automaticamente.")
 	_bot_trade_bot_id = -1
+
 
 func _on_bot_trade_accept(bot_id: int, give_res: String, recv_res: String):
 	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
 		_bot_trade_popup.queue_free()
 		_bot_trade_popup = null
-	
+
 	# Verificar se o bot ainda tem os recursos
 	var bot = players[bot_id]
 	var human = players[0]
-	
-	# Bot precisa ter o que vai dar (recv_res = recurso que o bot DÁ)
+
+	# Bot precisa ter o que vai dar (recv_res = recurso que o bot DA)
 	if bot.resources.get(recv_res, 0) < 1:
-		print("%s não tem mais %s para dar!" % [bot.player_name, _translate_resource(recv_res)])
+		print("%s nao tem mais %s para dar!" % [bot.player_name, _translate_resource(recv_res)])
 		return
-	
+
 	# Humano precisa ter o que o bot quer (give_res = recurso que o bot QUER)
 	if human.resources.get(give_res, 0) < 1:
-		print("Você não tem mais %s para dar!" % _translate_resource(give_res))
+		print("Voce nao tem mais %s para dar!" % _translate_resource(give_res))
 		return
-	
-	_execute_player_trade(bot_id, 0, [recv_res], [give_res])  # Bot dá recv_res, humano dá give_res
+
+	_execute_player_trade(bot_id, 0, [recv_res], [give_res])  # Bot da recv_res, humano da give_res
 	print("%s aceitou a troca de %s." % [human.player_name, bot.player_name])
 	_refresh_resource_ui()
 	_bot_trade_bot_id = -1
+
 
 func _on_bot_trade_refuse(bot_id: int):
 	if _bot_trade_popup and is_instance_valid(_bot_trade_popup):
 		_bot_trade_popup.queue_free()
 		_bot_trade_popup = null
-	
+
 	print("Humano recusou a troca de %s." % players[bot_id].player_name)
 	_bot_trade_bot_id = -1
 
+
 func _translate_resource(res: String) -> String:
 	match res:
-		"wood": return "🌲 Madeira"
-		"brick": return "🧱 Tijolo"
-		"wheat": return "🌾 Trigo"
-		"sheep": return "🐑 Lã"
-		"ore": return "⛏️ Minério"
+		"wood":
+			return "Wood"
+		"brick":
+			return "Brick"
+		"wheat":
+			return "Wheat"
+		"sheep":
+			return "Sheep"
+		"ore":
+			return "Ore"
 	return res
+
 
 func _get_resource_texture(res: String) -> Texture2D:
 	match res:
-		"wood": return player_hud.wood_icon
-		"brick": return player_hud.brick_icon
-		"wheat": return player_hud.wheat_icon
-		"sheep": return player_hud.sheep_icon
-		"ore": return player_hud.ore_icon
+		"wood":
+			return player_hud.wood_icon
+		"brick":
+			return player_hud.brick_icon
+		"wheat":
+			return player_hud.wheat_icon
+		"sheep":
+			return player_hud.sheep_icon
+		"ore":
+			return player_hud.ore_icon
 	return null
