@@ -47,33 +47,33 @@ func _build_static_ui() -> void:
 	add_child(_panel_root)
 
 	var panel := PanelContainer.new()
-	panel.anchor_left   = 0.5
-	panel.anchor_right  = 0.5
-	panel.anchor_top    = 0.5
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.5
 	panel.anchor_bottom = 0.5
-	panel.offset_left   = -380
-	panel.offset_right  =  380
-	panel.offset_top    = -300
-	panel.offset_bottom =  300
+	panel.offset_left = -380
+	panel.offset_right = 380
+	panel.offset_top = -300
+	panel.offset_bottom = 300
 
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.09, 0.09, 0.13, 0.97)
-	panel_style.border_width_left   = 2
-	panel_style.border_width_right  = 2
-	panel_style.border_width_top    = 2
+	panel_style.border_width_left = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_top = 2
 	panel_style.border_width_bottom = 2
 	panel_style.border_color = Color(0.9, 0.75, 0.2, 1.0)
-	panel_style.corner_radius_top_left     = 10
-	panel_style.corner_radius_top_right    = 10
-	panel_style.corner_radius_bottom_left  = 10
+	panel_style.corner_radius_top_left = 10
+	panel_style.corner_radius_top_right = 10
+	panel_style.corner_radius_bottom_left = 10
 	panel_style.corner_radius_bottom_right = 10
 	panel.add_theme_stylebox_override("panel", panel_style)
 	_panel_root.add_child(panel)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left",   24)
-	margin.add_theme_constant_override("margin_right",  24)
-	margin.add_theme_constant_override("margin_top",    20)
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_bottom", 20)
 	panel.add_child(margin)
 
@@ -105,16 +105,14 @@ func _build_static_ui() -> void:
 	root_vbox.add_child(btn_row)
 
 	_btn_play_again = _make_button("Jogar Novamente", Color(0.2, 0.6, 0.2), _on_play_again)
-	_btn_main_menu  = _make_button("Menu Principal",  Color(0.5, 0.2, 0.2), _on_main_menu)
+	_btn_main_menu = _make_button("Menu Principal", Color(0.5, 0.2, 0.2), _on_main_menu)
 	btn_row.add_child(_btn_play_again)
 	btn_row.add_child(_btn_main_menu)
 
 
 # ── Chamado pelo game_manager a cada vitória ──────────────────────────────────
 func show_victory(
-	original_players: Array,
-	largest_army_owner: int,
-	longest_road_owner: int
+	original_players: Array, largest_army_owner: int, longest_road_owner: int
 ) -> void:
 	# Ordena por pontuação decrescente
 	var ranked: Array = original_players.duplicate()
@@ -213,34 +211,32 @@ func _make_header_row() -> HBoxContainer:
 
 
 func _make_player_row(
-	player: Player,
-	rank: int,
-	is_human: bool,
-	has_largest_army: bool,
-	has_longest_road: bool
+	player: Player, rank: int, is_human: bool, has_largest_army: bool, has_longest_road: bool
 ) -> PanelContainer:
 	var container := PanelContainer.new()
 
 	var style := StyleBoxFlat.new()
 	if is_human:
-		style.bg_color = Color(player.player_color.r, player.player_color.g, player.player_color.b, 0.18)
-		style.border_width_left   = 3
-		style.border_width_right  = 3
-		style.border_width_top    = 3
+		style.bg_color = Color(
+			player.player_color.r, player.player_color.g, player.player_color.b, 0.18
+		)
+		style.border_width_left = 3
+		style.border_width_right = 3
+		style.border_width_top = 3
 		style.border_width_bottom = 3
 		style.border_color = player.player_color
 	else:
 		style.bg_color = Color(1, 1, 1, 0.04)
-	style.corner_radius_top_left     = 6
-	style.corner_radius_top_right    = 6
-	style.corner_radius_bottom_left  = 6
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
 	style.corner_radius_bottom_right = 6
 	container.add_theme_stylebox_override("panel", style)
 
 	var inner_margin := MarginContainer.new()
-	inner_margin.add_theme_constant_override("margin_left",   8)
-	inner_margin.add_theme_constant_override("margin_right",  8)
-	inner_margin.add_theme_constant_override("margin_top",    6)
+	inner_margin.add_theme_constant_override("margin_left", 8)
+	inner_margin.add_theme_constant_override("margin_right", 8)
+	inner_margin.add_theme_constant_override("margin_top", 6)
 	inner_margin.add_theme_constant_override("margin_bottom", 6)
 	container.add_child(inner_margin)
 
@@ -283,13 +279,13 @@ func _make_player_row(
 
 	# Pontuações
 	var settlements_built := 5 - player.settlements_remaining
-	var cities_built      := 4 - player.cities_remaining
-	var pts_settlements   := (settlements_built - cities_built)
-	var pts_cities        := cities_built * 2
-	var pts_vp_cards      := player.count_victory_point_cards()
-	var pts_army          := 2 if has_largest_army else 0
-	var pts_road          := 2 if has_longest_road else 0
-	var pts_total         := player.get_total_points()
+	var cities_built := 4 - player.cities_remaining
+	var pts_settlements := settlements_built - cities_built
+	var pts_cities := cities_built * 2
+	var pts_vp_cards := player.count_victory_point_cards()
+	var pts_army := 2 if has_largest_army else 0
+	var pts_road := 2 if has_longest_road else 0
+	var pts_total := player.get_total_points()
 
 	var cols := [pts_total, pts_settlements, pts_cities, pts_vp_cards, pts_army, pts_road]
 
@@ -341,9 +337,9 @@ func _make_button(label_text: String, col: Color, callback: Callable) -> Button:
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = col
-	style.corner_radius_top_left     = 6
-	style.corner_radius_top_right    = 6
-	style.corner_radius_bottom_left  = 6
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
 	style.corner_radius_bottom_right = 6
 	btn.add_theme_stylebox_override("normal", style)
 
@@ -359,15 +355,23 @@ func _make_button(label_text: String, col: Color, callback: Callable) -> Button:
 # ── Helpers de texto e cor ────────────────────────────────────────────────────
 func _rank_message(rank: int) -> String:
 	match rank:
-		1: return "🏆  Você ficou em 1º lugar!"
-		2: return "🥈  Você ficou em 2º lugar!"
-		3: return "🥉  Você ficou em 3º lugar!"
-		_: return "Você ficou em %dº lugar!" % rank
+		1:
+			return "🏆  Você ficou em 1º lugar!"
+		2:
+			return "🥈  Você ficou em 2º lugar!"
+		3:
+			return "🥉  Você ficou em 3º lugar!"
+		_:
+			return "Você ficou em %dº lugar!" % rank
 
 
 func _rank_color(rank: int) -> Color:
 	match rank:
-		1: return Color(0.95, 0.82, 0.2)
-		2: return Color(0.78, 0.80, 0.85)
-		3: return Color(0.80, 0.52, 0.25)
-		_: return Color(0.65, 0.65, 0.65)
+		1:
+			return Color(0.95, 0.82, 0.2)
+		2:
+			return Color(0.78, 0.80, 0.85)
+		3:
+			return Color(0.80, 0.52, 0.25)
+		_:
+			return Color(0.65, 0.65, 0.65)
