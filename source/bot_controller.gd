@@ -9,8 +9,6 @@ func setup(game_manager: Node) -> void:
 	gm = game_manager
 
 
-
-
 func play_turn(player_id: int) -> void:
 	await gm.get_tree().create_timer(1.0).timeout
 
@@ -46,8 +44,6 @@ func play_turn(player_id: int) -> void:
 	gm.end_turn()
 
 
-
- 
 const NUMBER_SCORE := {2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3, 11: 2, 12: 1}
 
 
@@ -60,7 +56,7 @@ func score_vertex(key: Vector2) -> float:
 		if not is_instance_valid(hex):
 			continue
 		var number = hex.get_meta("dice_number") if hex.has_meta("dice_number") else 0
-		var rtype  = hex.get_meta("resource_type") if hex.has_meta("resource_type") else -1
+		var rtype = hex.get_meta("resource_type") if hex.has_meta("resource_type") else -1
 		if number == 0:
 			continue
 		if NUMBER_SCORE.has(number):
@@ -69,7 +65,7 @@ func score_vertex(key: Vector2) -> float:
 			resource_set.append(rtype)
 
 	var diversity_bonus: float = (resource_set.size() - 1) * 2.0
-	var coverage_bonus:  float = 3.0 if resource_set.size() == 3 else 0.0
+	var coverage_bonus: float = 3.0 if resource_set.size() == 3 else 0.0
 	return total_prob + diversity_bonus + coverage_bonus
 
 
@@ -93,10 +89,7 @@ func place_settlement_prep() -> void:
 	else:
 		var best_key = best_candidates[randi() % best_candidates.size()]
 		print(
-			(
-				"%s escolheu vértice com score %.1f"
-				% [gm.players[player_id].player_name, best_score]
-			)
+			"%s escolheu vértice com score %.1f" % [gm.players[player_id].player_name, best_score]
 		)
 		if gm._try_place_settlement(best_key, player_id, true):
 			place_preparation_road(player_id, best_key)
@@ -146,8 +139,6 @@ func place_preparation_road(player_id: int, settlement_key: Vector2) -> void:
 			% [gm.players[player_id].player_name, str(best_edge_key), best_edge_score]
 		)
 	)
-
-
 
 
 func robber_movement(player_id: int) -> void:
@@ -205,8 +196,6 @@ func robber_movement(player_id: int) -> void:
 		gm._execute_steal(player_id, random_victim)
 	else:
 		gm._resume_turn()
-
-
 
 
 func play_knight_if_available(player_id: int) -> void:
@@ -275,8 +264,6 @@ func place_free_road(player_id: int) -> void:
 			)
 			gm._check_longest_road(player_id)
 			break
-
-
 
 
 func try_build_city(player_id: int) -> bool:
@@ -433,15 +420,13 @@ func road_lookahead_score(start_edge_key: Vector2, player_id: int, depth: int) -
 	return best
 
 
-
-
 func try_bank_trade(player_id: int) -> bool:
 	var player = gm.players[player_id]
 	var build_goals := [
-		{"ore": 3, "wheat": 2},                           # city
+		{"ore": 3, "wheat": 2},  # city
 		{"wood": 1, "brick": 1, "wheat": 1, "sheep": 1},  # settlement
-		{"wood": 1, "brick": 1},                           # road
-		{"ore": 1, "wheat": 1, "sheep": 1},                # dev card
+		{"wood": 1, "brick": 1},  # road
+		{"ore": 1, "wheat": 1, "sheep": 1},  # dev card
 	]
 	var traded := false
 	var made_trade := true
@@ -527,6 +512,7 @@ func _least_needed_surplus(player: Player, goal: Dictionary, surplus: Array) -> 
 				best = r
 	return best
 
+
 ## Decide se o bot aceita uma troca proposta pelo humano.
 func accepts_trade(bot_id: int, give_res: Array, recv_res: Array) -> bool:
 	var bot = gm.players[bot_id]
@@ -558,7 +544,12 @@ func accepts_trade(bot_id: int, give_res: Array, recv_res: Array) -> bool:
 		elif remaining == 1:
 			score -= 1
 
-	print("%s avaliou troca: score=%d -> %s" % [bot.player_name, score, "ACEITA" if score >= 0 else "RECUSA"])
+	print(
+		(
+			"%s avaliou troca: score=%d -> %s"
+			% [bot.player_name, score, "ACEITA" if score >= 0 else "RECUSA"]
+		)
+	)
 	return score >= 0
 
 

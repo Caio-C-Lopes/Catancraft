@@ -80,7 +80,6 @@ var robber_move_time: float = 10.0
 @onready var robber_panel = $Control/PlayerHUD/RobberPanel  # Ajuste o caminho pro seu nó
 
 
-
 func resource_type_to_string(type: int) -> String:
 	match type:
 		0:
@@ -98,7 +97,6 @@ func resource_type_to_string(type: int) -> String:
 
 
 func _ready():
-	# Instancia o controlador de IA dos bots
 	_bot_controller = preload("res://source/bot_controller.gd").new()
 	_bot_controller.name = "BotController"
 	add_child(_bot_controller)
@@ -243,9 +241,6 @@ func _count_resources(res_array: Array) -> Dictionary:
 	for r in res_array:
 		counts[r] = counts.get(r, 0) + 1
 	return counts
-
-
-
 
 
 ## Transfere recursos entre dois jogadores
@@ -505,7 +500,6 @@ func _apply_road_building(player_id: int) -> void:
 			_bot_controller.place_free_road(player_id)
 
 
-
 ## ANO DA ABUNDÂNCIA — recebe 2 recursos à escolha do banco
 func _apply_year_of_plenty(player_id: int) -> void:
 	print("%s jogou Ano da Abundância!" % players[player_id].player_name)
@@ -687,9 +681,8 @@ func _dfs_road(player_id: int, edge_key: Vector2, visited: Dictionary) -> int:
 	return 1 + best_extension
 
 
-
-
 ## Faz o Bot escolher a estrada que aponta para o melhor vértice vizinho
+
 
 func _setup_players():
 	var p_color = GameConfig.player_color
@@ -827,7 +820,6 @@ func _on_preparation_vertice_selected(pos: Vector2):
 	else:
 		_show_highlights_for_current(true)
 		player_hud.start_timer(preparation_turn_time, _on_preparation_timeout)
-
 
 
 func _is_edge_connected_to_vertex(edge_key: Vector2, vertex_key: Vector2) -> bool:
