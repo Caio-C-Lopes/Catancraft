@@ -54,6 +54,7 @@ var _cards_btn: TextureButton = null
 var _vp_label: Label = null
 var _knights_label: Label = null
 var _longest_road_label: Label = null
+var _roads_longest_icon_rect: TextureRect = null
 
 # Referência fixa ao jogador humano — definida uma única vez pelo game_manager
 var _human_player: Player = null
@@ -468,6 +469,11 @@ func apply_player_color(color_name: String):
 	house_icon = h
 	road_icon = r
 	city_icon = c
+	# Ícone de longest road na cor do jogador
+	if _roads_longest_icon_rect:
+		var roads_tex = load("res://icons_assets/roads_%s.png" % color_name) as Texture2D
+		if roads_tex:
+			_roads_longest_icon_rect.texture = roads_tex
 
 
 func _setup_dice_display():
@@ -545,17 +551,13 @@ func _build_stats_panel():
 	rd_inner.add_theme_constant_override("separation", 2)
 
 	var rd_icon = TextureRect.new()
-	# Carrega diretamente do caminho para não depender do Inspector
-	var _roads_tex = load("res://icons_assets/roads.png") as Texture2D
-	if _roads_tex:
-		rd_icon.texture = _roads_tex
-	elif roads_longest_icon:
-		rd_icon.texture = roads_longest_icon
+	# Textura será aplicada em apply_player_color() com a cor certa do jogador
 	rd_icon.custom_minimum_size = Vector2(40, 40)
 	rd_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	rd_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rd_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	rd_inner.add_child(rd_icon)
+	_roads_longest_icon_rect = rd_icon
 
 	var rd_lbl = Label.new()
 	rd_lbl.text = "0"
