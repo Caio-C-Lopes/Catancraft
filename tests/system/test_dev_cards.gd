@@ -34,6 +34,18 @@ func _human() -> Player:
 	return game_scene.players[0]
 
 
+# Helper: give a player a set of cards as if they came from a previous turn
+# (dev_cards is Array[int] — typed — so we must use add_dev_card() instead
+# of direct assignment, then clear the bought-this-turn flag).
+func _give_cards(player: Player, card_types: Array) -> void:
+	player.dev_cards.clear()
+	player.dev_cards_in_hand = 0
+	for t in card_types:
+		player.dev_cards.append(t)
+	player.dev_cards_in_hand = player.dev_cards.size()
+	player.dev_card_bought_this_turn = false
+
+
 # ── Buying a dev card ─────────────────────────────────────────────────────────
 
 func test_buy_dev_card_deducts_correct_resources():
@@ -98,10 +110,8 @@ func test_cannot_play_card_bought_same_turn():
 
 
 func test_cannot_play_two_cards_in_same_turn():
-	# Give player two knight cards from a previous turn
-	_human().dev_cards = [0, 0]  # two knights
-	_human().dev_cards_in_hand = 2
-	_human().dev_card_bought_this_turn = false
+	# Give player two knight cards as if from a previous turn
+	_give_cards(_human(), [0, 0])
 
 	_gm().play_dev_card(0, 0, 0)
 	_human().played_dev_card_this_turn = true  # simulate state after first play
@@ -110,9 +120,7 @@ func test_cannot_play_two_cards_in_same_turn():
 
 
 func test_cannot_play_vp_card():
-	_human().dev_cards = [4]  # CHAPEL (VP card)
-	_human().dev_cards_in_hand = 1
-	_human().dev_card_bought_this_turn = false
+	_give_cards(_human(), [4])  # CHAPEL (VP card)
 	var result = _gm().play_dev_card(0, 0, 4)
 	assert_false(result, "VP cards cannot be played manually")
 
@@ -120,28 +128,22 @@ func test_cannot_play_vp_card():
 # ── Knight card ───────────────────────────────────────────────────────────────
 
 func test_knight_increments_knights_played():
-	_human().dev_cards = [0]
-	_human().dev_cards_in_hand = 1
-	_human().dev_card_bought_this_turn = false
+	_give_cards(_human(), [0])  # KNIGHT
 	_gm().play_dev_card(0, 0, 0)
 	assert_eq(_human().knights_played, 1)
 
 
 func test_knight_removes_card_from_hand():
-	_human().dev_cards = [0]
-	_human().dev_cards_in_hand = 1
-	_human().dev_card_bought_this_turn = false
+	_give_cards(_human(), [0])  # KNIGHT
 	_gm().play_dev_card(0, 0, 0)
 	assert_eq(_human().dev_cards.size(), 0)
 
 
-# ── Largest Army ─────────────────────────────────────────────────────────────
+# ── Largest Army ──────────────────────────────────────────────────────────────
 
 func test_largest_army_awarded_at_3_knights():
 	_human().knights_played = 2
-	_human().dev_cards = [0]
-	_human().dev_cards_in_hand = 1
-	_human().dev_card_bought_this_turn = false
+	_give_cards(_human(), [0])  # one more knight → total 3
 	_gm().play_dev_card(0, 0, 0)
 	assert_eq(game_scene.largest_army_owner, 0, "Human should receive largest army at 3 knights")
 	assert_eq(_human().points, 2, "Should receive +2 VP for largest army")
@@ -155,8 +157,7 @@ func test_largest_army_transfers_when_surpassed():
 
 	var bot = game_scene.players[1]
 	bot.knights_played = 3
-	bot.dev_cards = [0]
-	bot.dev_cards_in_hand = 1
+	_give_cards(bot, [0])  # one more knight → bot reaches 4, surpassing human
 	bot.dev_card_bought_this_turn = false
 
 	_gm().play_dev_card(1, 0, 0)
